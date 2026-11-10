@@ -105,6 +105,14 @@
   summary { cursor:pointer; font-weight:700; font-size:14.5px; }
   details p { margin:10px 0 0; color:var(--sub); line-height:1.7; font-size:14px; }
   .gback { display:inline-block; margin:22px 0 0; font-family:inherit; font-weight:700; font-size:14px; color:var(--brand); background:none; border:0; cursor:pointer; padding:0; }
+  #notice { background:linear-gradient(100deg,#2f6bff,#6a4dff); color:#fff; }
+  #notice .in { max-width:1240px; margin:0 auto; padding:11px 24px; display:flex; align-items:center; gap:10px; font-size:14px; font-weight:600; line-height:1.5; }
+  #notice .t { flex:1; word-break:keep-all; }
+  #notice a { color:#fff; text-decoration:underline; text-underline-offset:3px; white-space:nowrap; }
+  #notice .x { flex:none; background:rgba(255,255,255,.2); border:0; color:#fff; width:28px; height:28px; border-radius:50%; font-size:16px; line-height:1; cursor:pointer; padding:0; }
+  #notice .x:hover { background:rgba(255,255,255,.35); }
+  #notice[hidden] { display:none; }
+  @media (max-width:680px){ #notice .in { padding:10px 14px; font-size:13px; } }
   .more { display:block; margin:36px auto 10px; font-family:inherit; font-size:14px; font-weight:700; color:var(--text); background:var(--panel); border:1px solid var(--line); border-radius:999px; padding:12px 34px; cursor:pointer; box-shadow:var(--shadow); transition:all .15s; }
   .more:hover { border-color:var(--brand); color:var(--brand); }
   .more[hidden] { display:none; }
@@ -136,6 +144,8 @@
   <button class="favbtn" id="fav" type="button">♡ 즐겨찾기</button>
   <button class="iconbtn" id="theme" type="button" aria-label="화면 모드 전환" title="화면 모드 전환"></button>
 </div></div>
+
+<div id="notice" hidden><div class="in"><span>📢</span><span class="t"></span><button class="x" type="button" aria-label="공지 닫기">✕</button></div></div>
 
 <div id="viewList">
 <section class="hero">
@@ -287,6 +297,20 @@ $("tabList").addEventListener("click", () => { history.pushState("", document.ti
 $("gback").addEventListener("click", () => $("tabList").click());
 window.addEventListener("hashchange", route);
 route();
+(function(){
+  const box = $("notice");
+  fetch("notice.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).then(n => {
+    const text = (n && n.text || "").trim();
+    if (!n || !n.enabled || !text) return;
+    let h = 0; for (const c of text + (n.link || "")) h = (h * 31 + c.charCodeAt(0)) | 0;
+    const id = String(h);
+    try { if (localStorage.getItem("notice_closed") === id) return; } catch(e) {}
+    const t = box.querySelector(".t"); t.textContent = text + " ";
+    if (n.link && /^https?:\/\//i.test(n.link)) { const a = document.createElement("a"); a.href = n.link; a.target = "_blank"; a.rel = "noopener noreferrer"; a.textContent = "자세히 보기"; t.appendChild(a); }
+    box.hidden = false;
+    box.querySelector(".x").onclick = () => { box.hidden = true; try { localStorage.setItem("notice_closed", id); } catch(e) {} };
+  }).catch(() => {});
+})();
 function appUrl(href){
   try {
     const u = new URL(href);
