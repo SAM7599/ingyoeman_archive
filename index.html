@@ -46,7 +46,7 @@
 
   .wrap { max-width:1240px; margin:0 auto; padding:18px 24px 10px; }
   .bar { display:flex; align-items:center; gap:12px; margin-bottom:20px; }
-  .chips { display:flex; gap:8px; overflow-x:auto; flex:1; scrollbar-width:none; padding:2px; }
+  .chips { display:flex; flex-wrap:wrap; gap:8px; overflow-x:auto; flex:1; scrollbar-width:none; padding:2px; }
   .chips::-webkit-scrollbar { display:none; }
   .chip { flex:none; font-family:inherit; font-size:14px; font-weight:600; color:var(--sub); background:var(--chip); border:0; border-radius:999px; padding:9px 18px; cursor:pointer; transition:all .15s; }
   .chip:hover { color:var(--text); }
@@ -117,7 +117,7 @@
     .hero { padding:28px 14px 6px; } .wrap { padding:14px; }
     .grid { grid-template-columns:1fr 1fr; gap:20px 12px; } .title { font-size:13px; } .play b { width:40px; height:40px; } .play b::after { border-left-width:11px; border-top-width:7px; border-bottom-width:7px; }
     .count { display:none; }
-    .bar { flex-wrap:wrap; } .chips { flex:1 1 100%; } select { margin-left:auto; }
+    .bar { flex-wrap:wrap; } .chips { flex:1 1 100%; flex-wrap:nowrap; } select { margin-left:auto; }
   }
 </style>
 </head>
@@ -236,8 +236,9 @@ function filtered(){
   return list;
 }
 function renderChips(){
-  const cats = [...new Set(all.map(v => v.category).filter(Boolean))].sort();
-  $("chips").innerHTML = ["", ...cats].map(c => `<button class="chip ${c === cat ? "on" : ""}" data-c="${esc(c)}">${c ? esc(c) : "전체"}</button>`).join("");
+  const fixed = (window.SITE && window.SITE.categories) || [];
+  const extra = [...new Set(all.map(v => v.category).filter(Boolean))].filter(c => !fixed.includes(c)).sort();
+  $("chips").innerHTML = ["", ...fixed, ...extra].map(c => `<button class="chip ${c === cat ? "on" : ""}" data-c="${esc(c)}">${c ? esc(c) : "전체"}</button>`).join("");
 }
 function render(){
   const list = filtered();
