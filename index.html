@@ -307,11 +307,14 @@ route();
     if (!n || !n.enabled || !text) return;
     let h = 0; for (const c of text + (n.link || "")) h = (h * 31 + c.charCodeAt(0)) | 0;
     const id = String(h);
-    try { if (localStorage.getItem("notice_closed") === id) return; } catch(e) {}
+    const closable = n.closable === true;
+    if (closable) { try { if (localStorage.getItem("notice_closed") === id) return; } catch(e) {} }
     const t = box.querySelector(".t"); t.textContent = text + " ";
     if (n.link && /^https?:\/\//i.test(n.link)) { const a = document.createElement("a"); a.href = n.link; a.target = "_blank"; a.rel = "noopener noreferrer"; a.textContent = "자세히 보기"; t.appendChild(a); }
     box.hidden = false;
-    box.querySelector(".x").onclick = () => { box.hidden = true; try { localStorage.setItem("notice_closed", id); } catch(e) {} };
+    const x = box.querySelector(".x");
+    if (closable) x.onclick = () => { box.hidden = true; try { localStorage.setItem("notice_closed", id); } catch(e) {} };
+    else x.remove();
   }).catch(() => {});
 })();
 /* 드래그(선택)·오른쪽 클릭 막기 (검색창 입력은 그대로 가능) */
