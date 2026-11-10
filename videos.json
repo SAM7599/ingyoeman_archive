@@ -1,0 +1,6 @@
+[
+  {"title": "(예시) 첫 번째 다시보기 제목", "date": "2012-05-01", "category": "예능", "duration": "1:23:45", "thumb": "", "url": "https://cafe.naver.com/"},
+  {"title": "(예시) 두 번째 다시보기 제목", "date": "2013-08-15", "category": "음악", "duration": "42:10", "thumb": "", "url": "https://cafe.naver.com/"},
+  {"title": "(예시) 세 번째 다시보기 제목입니다 조금 길게 써서 두 줄이 되는지 확인", "date": "2014-02-20", "category": "기타", "duration": "2:05:00", "thumb": "", "url": "https://cafe.naver.com/"},
+  {"title": "(예시) 네 번째 다시보기 제목", "date": "2015-11-03", "category": "예능", "duration": "58:30", "thumb": "", "url": "https://cafe.naver.com/"}
+]
