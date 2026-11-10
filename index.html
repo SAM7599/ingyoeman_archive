@@ -266,7 +266,7 @@ function render(){
 }
 function reset(){ shown = PAGE; render(); }
 
-fetch("videos.json").then(r => r.json()).then(data => { all = data; renderChips(); render(); })
+fetch("videos.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).then(data => { all = data; renderChips(); render(); })
   .catch(() => { $("grid").innerHTML = `<div class="empty">목록을 불러오지 못했어요</div>`; });
 
 function applyTheme(t){ document.documentElement.setAttribute("data-theme", t); $("theme").textContent = t === "dark" ? "☀" : "☾"; }
