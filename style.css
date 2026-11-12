@@ -204,6 +204,11 @@ footer a { color:var(--tint); text-underline-offset:3px; }
 
 /* ── 떠 있는 것들 ── */
 .bottom { display:none; }
+.fb { position:fixed; left:22px; bottom:22px; z-index:15; height:46px; padding:0 18px 0 14px; border:1px solid var(--line); border-radius:99px; background:var(--surface); color:var(--ink); text-decoration:none; font-size:14px; font-weight:700; display:inline-flex; align-items:center; gap:8px; box-shadow:0 6px 20px rgba(0,0,0,.25); }
+.fb svg { width:19px; height:19px; color:var(--accent); }
+.fb:hover { border-color:var(--accent); }
+.g-item p + p { margin-top:12px; }
+footer a + a { margin-left:14px; }
 .totop { position:fixed; right:22px; bottom:22px; z-index:15; width:46px; height:46px; border:1px solid var(--line); border-radius:50%; background:var(--surface); cursor:pointer; display:grid; place-items:center; box-shadow:0 6px 20px rgba(0,0,0,.25); }
 .totop svg { width:20px; height:20px; }
 .menu { position:absolute; z-index:30; min-width:176px; padding:6px; background:var(--surface); border:1px solid var(--line); border-radius:14px; box-shadow:0 14px 40px rgba(0,0,0,.35); }
@@ -273,6 +278,8 @@ footer a { color:var(--tint); text-underline-offset:3px; }
   .bottom .tab { display:flex; flex-direction:column; align-items:center; gap:3px; padding:9px 0 8px; font-size:11.5px; font-weight:600; color:var(--sub); text-decoration:none; }
   .bottom svg { width:22px; height:22px; }
   .bottom .tab.on { color:var(--accent); }
+  .fb { left:14px; bottom:calc(76px + env(safe-area-inset-bottom)); width:46px; padding:0; justify-content:center; }
+  .fb span { display:none; }
   .totop { right:14px; bottom:calc(76px + env(safe-area-inset-bottom)); }
   #toast { bottom:calc(84px + env(safe-area-inset-bottom)); }
   .m-acts .btn { flex:1 1 auto; justify-content:center; }
