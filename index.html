@@ -13,7 +13,7 @@
   if (!t) t = (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "light" : "dark";
   document.documentElement.setAttribute("data-theme", t); })();
 </script>
-<link rel="stylesheet" href="style.css?v=13">
+<link rel="stylesheet" href="style.css?v=14">
 </head>
 <body>
 
@@ -86,7 +86,9 @@
   <div class="g-item"><h3>시리즈</h3>
     <p><b>시리즈</b>에서는 아오오니저택, 경찰과 도둑처럼 같은 콘텐츠를 한데 모아 볼 수 있어요. 영상 아래의 시리즈 이름을 눌러도 같은 시리즈가 모여요. 제목으로 자동 분류해서 빠지거나 잘못 들어간 영상이 있을 수 있어요.</p></div>
   <div class="g-item"><h3>오늘의 다시보기</h3>
-    <p>첫 화면 맨 위 큰 배너에 매일 다른 영상을 하나 골라 드려요. <b>다른 영상</b>을 누르면 바로 바뀌어요.</p></div>
+    <p>첫 화면 맨 위 큰 배너에 매일 다른 영상을 하나 골라 드려요.</p></div>
+  <div class="g-item"><h3>랜덤 뽑기</h3>
+    <p>뭘 볼지 모르겠으면 <b>랜덤 뽑기</b>를 눌러 보세요. 카드를 누르면 영상 하나가 뽑혀요. 분류나 시리즈를 고른 상태에서 누르면 그 안에서만 뽑아요. 카페 좋아요가 5개 이상이면 <b>희귀</b>, 10개 이상이면 <b>전설</b> 카드로 나와요.</p></div>
   <div class="g-item"><h3>즐겨찾기</h3>
     <p>영상의 하트를 누르면 <b>즐겨찾기</b>에 모여요. 지금 쓰는 기기와 브라우저에만 저장되고, 인터넷 사용 기록을 지우면 함께 사라질 수 있어요.</p></div>
   <div class="g-item"><h3>열어본 영상</h3>
@@ -143,8 +145,29 @@
   </div>
 </div>
 
+<div class="gacha" id="gacha" hidden>
+  <div class="g-stage" role="dialog" aria-modal="true" aria-labelledby="gTitle">
+    <button class="x" id="gClose" type="button" aria-label="닫기">✕</button>
+    <p class="g-title" id="gTitle"></p>
+    <div class="g-wrap">
+      <div class="g-fx" id="gFx" aria-hidden="true"></div>
+      <div class="g-card" id="gCard" role="button" tabindex="0" aria-label="카드 뽑기">
+        <div class="g-inner">
+          <div class="g-back"><span class="logo-mark" aria-hidden="true"></span><b>잉여맨 추억자료실</b><i>눌러서 뽑기</i></div>
+          <div class="g-front"><div class="g-face" id="gFace"></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="g-acts" id="gActs">
+      <a class="btn primary" id="gGo" target="_blank" rel="noopener noreferrer">다시보기</a>
+      <button class="btn glass" id="gFav" type="button"></button>
+      <button class="btn glass" id="gAgain" type="button">한 번 더 뽑기</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast" role="status"></div>
-<script src="config.js?v=13"></script>
-<script src="app.js?v=13"></script>
+<script src="config.js?v=14"></script>
+<script src="app.js?v=14"></script>
 </body>
 </html>
