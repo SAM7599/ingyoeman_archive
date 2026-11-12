@@ -4,8 +4,7 @@
 사이트 주소: https://sam7599.github.io/ingyoeman_archive/
 
 ## 파일 설명
-- `videos.json` : 영상 목록 (제목 `title`, 날짜 `date`, 분류 `category`, 카페 글 주소 `url`, 선택: 썸네일 `thumb`, 길이 `duration`, 유튜브 주소 `youtube`)
+- `videos.json` : 영상 목록 (제목 `title`, 분류 `category`, 카페 글 주소 `url`, 선택: 썸네일 `thumb`, 길이 `duration`, 유튜브 주소 `youtube`)
 - `notice.json` : 맨 위 공지
 - `config.js` : 분류 이름과 순서
 - `index.html`, `style.css`, `app.js` : 화면과 동작
-- `fonts/` : 갈무리 글꼴 (SIL Open Font License 1.1, © Lee Minseo)
