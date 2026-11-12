@@ -13,7 +13,7 @@
   if (!t) t = (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "light" : "dark";
   document.documentElement.setAttribute("data-theme", t); })();
 </script>
-<link rel="stylesheet" href="style.css?v=11">
+<link rel="stylesheet" href="style.css?v=13">
 </head>
 <body>
 
@@ -26,8 +26,10 @@
     </a>
     <nav class="nav" aria-label="메뉴">
       <a class="tab" href="#" data-tab="all">다시보기</a>
+      <a class="tab" href="#rank" data-tab="rank">인기 랭킹</a>
+      <a class="tab" href="#series" data-tab="series">시리즈</a>
       <a class="tab" href="#fav" data-tab="fav">즐겨찾기<b class="nFav"></b></a>
-      <a class="tab" href="#recent" data-tab="recent">최근 열어본 영상</a>
+      <a class="tab" href="#recent" data-tab="recent">열어본 영상</a>
       <a class="tab" href="#guide" data-tab="guide">이용방법</a>
     </nav>
     <label class="search">
@@ -35,7 +37,8 @@
       <input id="q" type="search" placeholder="제목이나 분류로 검색" autocomplete="off" aria-label="제목이나 분류로 검색">
       <kbd>/</kbd>
     </label>
-    <a class="btn cafe" data-cafe target="_blank" rel="noopener noreferrer">카페 가기<svg class="out" viewBox="0 0 24 24"><path d="M9 6h9v9M18 6L7 17"/></svg></a>
+    <a class="btn cafe" data-cafe target="_blank" rel="noopener noreferrer">카페<span class="hm">&nbsp;가기</span><svg class="out" viewBox="0 0 24 24"><path d="M9 6h9v9M18 6L7 17"/></svg></a>
+    <a class="round help" href="#guide" aria-label="이용방법" title="이용방법">?</a>
     <button class="round" id="theme" type="button" aria-label="밝은 화면 / 어두운 화면 바꾸기" title="밝은 화면 / 어두운 화면 바꾸기"></button>
   </div>
 </header>
@@ -52,8 +55,10 @@
     <div class="browse-h">
       <h1 class="page-h" id="pageH">전체 영상</h1>
       <span class="count" id="count"></span>
+      <a class="btn back" id="back" href="#series" hidden>시리즈 목록</a>
       <select id="sort" aria-label="정렬">
         <option value="new">최근 올라온 순</option>
+        <option value="likes">좋아요 많은 순</option>
         <option value="old">먼저 올라온 순</option>
         <option value="title">제목순</option>
       </select>
@@ -62,6 +67,7 @@
         <button type="button" id="vList" aria-label="목록으로 보기" title="목록으로 보기"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
       </div>
     </div>
+    <p class="page-note" id="pageNote" hidden></p>
     <div id="grid" class="grid"></div>
     <div id="sentinel"></div>
   </div>
@@ -75,12 +81,16 @@
     <p>여기는 다시보기 링크를 모아 둔 곳이에요. 영상 카드나 <b>다시보기</b> 버튼을 누르면 <b>네이버 카페 글</b>이 열려요. 컴퓨터는 새 탭으로, 휴대폰은 <b>네이버 카페 앱</b>으로 열려요. 영상은 카페에 있어서 카페 가입이나 네이버 로그인이 필요할 수 있어요.</p></div>
   <div class="g-item"><h3>영상 찾기</h3>
     <p>맨 위 <b>검색창</b>에 제목 일부나 분류 이름을 적어요. 여러 단어를 띄어 쓰면 모두 들어간 영상만 나와요. 첫 화면에는 분류별로 영상이 한 줄씩 나오고, 옆으로 넘겨 볼 수 있어요. <b>전체 보기</b>나 위쪽 <b>분류 버튼</b>을 누르면 그 분류만 모아 볼 수 있어요.</p></div>
+  <div class="g-item"><h3>인기 랭킹</h3>
+    <p><b>인기 랭킹</b>에서는 네이버 카페에서 좋아요를 많이 받은 영상을 순서대로 볼 수 있어요. 분류 버튼을 누르면 그 분류 안에서의 순위가 나와요. 좋아요 수는 목록을 정리한 때의 숫자라 지금 카페와 조금 다를 수 있어요.</p></div>
+  <div class="g-item"><h3>시리즈</h3>
+    <p><b>시리즈</b>에서는 아오오니저택, 경찰과 도둑처럼 같은 콘텐츠를 한데 모아 볼 수 있어요. 영상 아래의 시리즈 이름을 눌러도 같은 시리즈가 모여요. 제목으로 자동 분류해서 빠지거나 잘못 들어간 영상이 있을 수 있어요.</p></div>
   <div class="g-item"><h3>오늘의 다시보기</h3>
     <p>첫 화면 맨 위 큰 배너에 매일 다른 영상을 하나 골라 드려요. <b>다른 영상</b>을 누르면 바로 바뀌어요.</p></div>
   <div class="g-item"><h3>즐겨찾기</h3>
     <p>영상의 하트를 누르면 <b>즐겨찾기</b>에 모여요. 지금 쓰는 기기와 브라우저에만 저장되고, 인터넷 사용 기록을 지우면 함께 사라질 수 있어요.</p></div>
   <div class="g-item"><h3>열어본 영상</h3>
-    <p>한 번 누른 영상에는 <b>열어봄</b> 표시가 붙고 <b>최근 열어본 영상</b>에 쌓여서 다시 찾기 쉬워요. 영상은 카페에서 재생되기 때문에 끝까지 봤는지는 표시하지 않아요. 기록은 제목 옆 <b>점 세 개</b> 메뉴에서 지울 수 있어요.</p></div>
+    <p>한 번 누른 영상에는 <b>열어봄</b> 표시가 붙고 <b>열어본 영상</b>에 쌓여서 다시 찾기 쉬워요. 영상은 카페에서 재생되기 때문에 끝까지 봤는지는 표시하지 않아요. 기록은 제목 옆 <b>점 세 개</b> 메뉴에서 지울 수 있어요.</p></div>
   <div class="g-item"><h3>친구에게 보내기와 썸네일 제보</h3>
     <p>영상 제목 옆 <b>점 세 개</b>를 누르면 메뉴가 나와요. <b>링크 복사</b>로 그 영상 주소를 복사해 보낼 수 있고, <b>썸네일 제보</b>로 영상 그림을 보내 줄 수 있어요. 제보는 GitHub 로그인이 필요해요.</p></div>
 
@@ -100,9 +110,10 @@
 
 <nav class="bottom" aria-label="메뉴">
   <a class="tab" href="#" data-tab="all"><svg viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v9h-5v-6H9v6H4z"/></svg>다시보기</a>
+  <a class="tab" href="#rank" data-tab="rank"><svg viewBox="0 0 24 24"><path d="M5 20v-7h4v7zM10 20V5h4v15zM15 20v-10h4v10z"/></svg>랭킹</a>
+  <a class="tab" href="#series" data-tab="series"><svg viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="11" rx="2"/><path d="M7 5h10"/></svg>시리즈</a>
   <a class="tab" href="#fav" data-tab="fav"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>즐겨찾기</a>
   <a class="tab" href="#recent" data-tab="recent"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v4.5l3 2"/></svg>열어본</a>
-  <a class="tab" href="#guide" data-tab="guide"><svg viewBox="0 0 24 24"><path d="M5 5h14v14H5z"/><path d="M9 9h6M9 12.5h6M9 16h3"/></svg>이용방법</a>
 </nav>
 
 <a class="fb" data-feedback target="_blank" rel="noopener noreferrer" aria-label="피드백 / 버그 제보" title="피드백 / 버그 제보"><svg viewBox="0 0 24 24"><path d="M5 5h14v10H10l-5 4z"/></svg><span>피드백 / 버그 제보</span></a>
@@ -133,7 +144,7 @@
 </div>
 
 <div id="toast" role="status"></div>
-<script src="config.js?v=11"></script>
-<script src="app.js?v=11"></script>
+<script src="config.js?v=13"></script>
+<script src="app.js?v=13"></script>
 </body>
 </html>
