@@ -16,7 +16,7 @@
   if (m !== "on" && m !== "off") m = (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) ? "off" : "on";
   document.documentElement.setAttribute("data-motion", m); })();
 </script>
-<link rel="stylesheet" href="style.css?v=16">
+<link rel="stylesheet" href="style.css?v=17">
 </head>
 <body>
 
@@ -90,9 +90,9 @@
   <div class="g-item"><h3>오늘의 다시보기</h3>
     <p>첫 화면 맨 위 큰 배너에 매일 다른 영상을 하나 골라 드려요.</p></div>
   <div class="g-item"><h3>랜덤 뽑기</h3>
-    <p>뭘 볼지 모르겠으면 <b>랜덤 뽑기</b>를 눌러 보세요. 카드를 누르면 영상 하나가 뽑혀요. 분류나 시리즈를 고른 상태에서 누르면 그 안에서만 뽑아요. 카페 좋아요가 5개 이상이면 <b>희귀</b>, 10개 이상이면 <b>전설</b> 카드로 나와요.</p></div>
+    <p>뭘 볼지 모르겠으면 <b>랜덤 뽑기</b>를 눌러 보세요. 카드를 누르면 영상 하나가 뽑혀요. 분류나 시리즈를 고른 상태에서 누르면 그 안에서만 뽑아요. 카페 좋아요가 5개 이상이면 <b>희귀</b>, 10개 이상이면 <b>전설</b> 카드로 나와요. 뽑을 때 효과음이 나고, 뽑기 화면 왼쪽 위 버튼이나 설정에서 끌 수 있어요.</p></div>
   <div class="g-item"><h3>화면 설정</h3>
-    <p>맨 위 오른쪽의 <b>설정 버튼</b>을 누르면 <b>어두운 화면</b>과 <b>움직임 줄이기</b>를 켜고 끌 수 있어요. 움직임 줄이기를 켜면 화면이 움직이는 효과가 사라지고, 랜덤 뽑기도 바로 결과가 나와요. 고른 설정은 이 기기에 기억돼요.</p></div>
+    <p>맨 위 오른쪽의 <b>설정 버튼</b>을 누르면 <b>어두운 화면</b>, <b>움직임 줄이기</b>, <b>뽑기 소리</b>를 켜고 끌 수 있어요. 움직임 줄이기를 켜면 화면이 움직이는 효과가 사라지고, 랜덤 뽑기도 바로 결과가 나와요. 고른 설정은 이 기기에 기억돼요.</p></div>
   <div class="g-item"><h3>즐겨찾기</h3>
     <p>영상의 하트를 누르면 <b>즐겨찾기</b>에 모여요. 지금 쓰는 기기와 브라우저에만 저장되고, 인터넷 사용 기록을 지우면 함께 사라질 수 있어요.</p></div>
   <div class="g-item"><h3>열어본 영상</h3>
@@ -129,6 +129,7 @@
 <div class="menu set" id="setMenu" hidden role="menu">
   <button type="button" id="theme" role="menuitemcheckbox"><span>어두운 화면</span><i class="sw"></i></button>
   <button type="button" id="motion" role="menuitemcheckbox"><span>움직임 줄이기</span><i class="sw"></i></button>
+  <button type="button" id="sound" role="menuitemcheckbox"><span>뽑기 소리</span><i class="sw"></i></button>
   <a href="#guide" role="menuitem">이용방법</a>
 </div>
 
@@ -157,6 +158,7 @@
 
 <div class="gacha" id="gacha" hidden>
   <div class="g-stage" role="dialog" aria-modal="true" aria-labelledby="gTitle">
+    <button class="g-snd" id="gSound" type="button"></button>
     <button class="x" id="gClose" type="button" aria-label="닫기">✕</button>
     <p class="g-title" id="gTitle"></p>
     <div class="g-wrap">
@@ -177,7 +179,7 @@
 </div>
 
 <div id="toast" role="status"></div>
-<script src="config.js?v=16"></script>
-<script src="app.js?v=16"></script>
+<script src="config.js?v=17"></script>
+<script src="app.js?v=17"></script>
 </body>
 </html>

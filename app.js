@@ -239,6 +239,52 @@
     window.open("https://github.com/" + SITE.repo + "/issues/new?labels=thumbnail&title=" + encodeURIComponent("[썸네일] " + v.title) + "&body=" + encodeURIComponent(body), "_blank", "noopener");
   }
 
+  /* ── 뽑기 효과음 (파일 없이 브라우저가 직접 만드는 소리) ── */
+  let actx = null;
+  const soundOn = () => store.get("sound", "on") !== "off";
+  function ac() {
+    if (!soundOn()) return null;
+    try { const C = window.AudioContext || window.webkitAudioContext; if (!C) return null; actx = actx || new C(); if (actx.state === "suspended") actx.resume(); return actx; } catch (e) { return null; }
+  }
+  function tone(f, at, dur, type, vol, f2) {
+    const a = ac(); if (!a) return;
+    const t = a.currentTime + at, o = a.createOscillator(), g = a.createGain();
+    o.type = type || "sine"; o.frequency.setValueAtTime(f, t);
+    if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + dur);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol || 0.1, t + 0.015); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(a.destination); o.start(t); o.stop(t + dur + 0.05);
+  }
+  function whoosh(at, dur, vol) {
+    const a = ac(); if (!a) return;
+    const n = Math.floor(a.sampleRate * dur), buf = a.createBuffer(1, n, a.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+    const t = a.currentTime + at, src = a.createBufferSource(), bp = a.createBiquadFilter(), g = a.createGain();
+    src.buffer = buf; bp.type = "bandpass"; bp.Q.value = 0.8;
+    bp.frequency.setValueAtTime(400, t); bp.frequency.exponentialRampToValueAtTime(5000, t + dur);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + dur * 0.35); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    src.connect(bp); bp.connect(g); g.connect(a.destination); src.start(t); src.stop(t + dur + 0.05);
+  }
+  function sfxDraw(tier, shakeMs) {   // 흔들릴 때 두근두근 → 뒤집힐 때 짠
+    if (!ac()) return;
+    const s = shakeMs / 1000, gap = tier === "legend" ? 0.085 : 0.11, steps = Math.floor(s / gap);
+    for (let i = 0; i < steps; i++) tone(200 + (i / Math.max(1, steps)) * (tier === "legend" ? 620 : tier === "rare" ? 420 : 260), i * gap, 0.06, "triangle", 0.05 + 0.05 * i / Math.max(1, steps));
+    if (tier === "legend") tone(70, 0, s, "sawtooth", 0.05, 180);
+    whoosh(Math.max(0, s - 0.12), 0.34, 0.16);
+    const notes = tier === "legend" ? [523, 659, 784, 1047, 1319, 1568] : tier === "rare" ? [523, 659, 784, 1047] : [659, 880];
+    notes.forEach((f, i) => tone(f, s + 0.1 + i * (tier === "normal" ? 0.09 : 0.075), tier === "normal" ? 0.35 : 0.55, "sine", 0.11));
+    if (tier !== "normal") tone(notes[0] / 2, s + 0.1, 0.9, "triangle", 0.07);
+    if (tier === "legend") for (let i = 0; i < 10; i++) tone(1800 + Math.random() * 2200, s + 0.55 + i * 0.07, 0.16, "sine", 0.04);
+  }
+  function syncSound() {
+    const on = soundOn();
+    $("sound").setAttribute("aria-checked", on);
+    $("gSound").textContent = on ? "소리 켜짐" : "소리 꺼짐"; $("gSound").setAttribute("aria-pressed", on);
+  }
+  function toggleSound() { store.set("sound", soundOn() ? "off" : "on"); syncSound(); if (soundOn()) tone(880, 0, 0.18, "sine", 0.1); }
+  $("sound").addEventListener("click", toggleSound);
+  $("gSound").addEventListener("click", toggleSound);
+  syncSound();
+
   /* ── 랜덤 뽑기 (카드 뽑기 연출) ── */
   const calm = () => document.documentElement.getAttribute("data-motion") === "off";
   const tierOf = v => (v.likes || 0) >= 10 ? ["legend", "전설"] : (v.likes || 0) >= 5 ? ["rare", "희귀"] : ["normal", "일반"];
@@ -268,7 +314,7 @@
   }
   function openGacha() {
     if (all.length < 2) return;
-    closeMenu(); gBusy = false;
+    closeMenu(); gBusy = false; ac();
     $("gacha").hidden = false; document.body.style.overflow = "hidden";
     gachaReady(); $("gCard").focus({ preventScroll: true });
   }
@@ -284,6 +330,8 @@
     if (gBusy || card.classList.contains("flip")) return;
     gBusy = true;
     const quick = calm(), tier = card.dataset.tier;
+    const shakeMs = quick ? 0 : tier === "legend" ? 1500 : tier === "rare" ? 1150 : 850;
+    sfxDraw(tier, shakeMs);
     $("gTitle").textContent = "두근두근…";
     card.classList.add("shake");
     setTimeout(() => {
@@ -294,11 +342,11 @@
         $("gTitle").textContent = tier === "legend" ? "전설 카드가 나왔어요!" : tier === "rare" ? "희귀 카드예요!" : "이 영상이 뽑혔어요";
         $("gActs").classList.add("show"); gBusy = false;
       }, quick ? 0 : 620);
-    }, quick ? 0 : tier === "legend" ? 1500 : tier === "rare" ? 1150 : 850);
+    }, shakeMs);
   }
   $("gCard").addEventListener("click", gachaGo);
   $("gCard").addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); gachaGo(); } });
-  $("gAgain").addEventListener("click", () => { if (gBusy) return; gachaReady(); setTimeout(gachaGo, calm() ? 0 : 260); });
+  $("gAgain").addEventListener("click", () => { if (gBusy) return; ac(); gachaReady(); setTimeout(gachaGo, calm() ? 0 : 260); });
   $("gFav").addEventListener("click", () => gv && toggleFav(key(gv)));
   $("gGo").addEventListener("click", e => { if (gv) { const v = gv; if (ytId(v)) closeGacha(); follow(e, v, $("gGo").href); } });
   $("gClose").addEventListener("click", closeGacha);
