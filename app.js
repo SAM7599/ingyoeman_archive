@@ -13,12 +13,12 @@
   const SITE = window.SITE || {};
   const CATS = SITE.categories || [];
 
-  let all = [], tab = "all", cat = "", shown = PAGE, todayKey = null, menuFor = null, current = null;
+  let all = [], SERIES = [], ser = "", tab = "all", cat = "", shown = PAGE, todayKey = null, menuFor = null, current = null;
   let favs = new Set(store.get("favs", []));
   let recent = store.get("recent", []);   // 열어본 영상 (자동)
   let view = store.get("view2", "grid") === "rows" ? "rows" : "grid";
   const savedSort = store.get("sort", "new");
-  $("sort").value = ["new", "old", "title"].includes(savedSort) ? savedSort : "new";
+  $("sort").value = ["new", "old", "title", "likes"].includes(savedSort) ? savedSort : "new";
 
   const key = v => (v.url || "") + "|" + (v.title || "");
   const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -46,8 +46,11 @@
   function pool() {
     if (tab === "fav") return all.filter(v => favs.has(key(v)));
     if (tab === "recent") return recent.map(byKey).filter(Boolean);
+    if (tab === "rank") return ranked(all);
+    if (tab === "series") return ser ? all.filter(v => v._s.includes(ser)) : [];
     return all;
   }
+  const ranked = list => list.filter(v => v.likes > 0).sort((a, b) => b.likes - a.likes || order(a) - order(b));   // 카페 좋아요 많은 순
   const words = () => $("q").value.trim().toLowerCase().split(/\s+/).filter(Boolean);
   function filtered() {
     const w = words(), s = $("sort").value;
@@ -57,6 +60,8 @@
       return w.every(x => hay.includes(x));
     });
     if (tab === "recent" && s === "new") return list;   // 본 순서 그대로
+    if (tab === "rank") return list.slice(0, 100);        // 순위 그대로, 100위까지
+    if (s === "likes") return list.sort((a, b) => (b.likes || 0) - (a.likes || 0) || order(b) - order(a));
     return list.sort((a, b) => s === "title" ? (a.title || "").localeCompare(b.title || "", "ko") : s === "old" ? order(a) - order(b) : order(b) - order(a));
   }
   const isHome = () => tab === "all" && !cat && !words().length;
@@ -69,16 +74,21 @@
     return t.split(re).map((p, i) => i % 2 ? "<mark>" + esc(p) + "</mark>" : esc(p)).join("");
   }
   const picHtml = (v, hl) => v.thumb ? `<img src="${esc(v.thumb)}" alt="" loading="lazy">` : `<div class="ph"><b>${hl ? mark(v.title) : esc(v.title)}</b></div>`;   // 썸네일이 없으면 제목 카드
-  function cardHtml(v, shelf) {
-    const k = key(v), on = favs.has(k), seen = recent.includes(k) && tab !== "recent" && !shelf, rows = view === "rows" && !shelf;
-    const info = `<div class="t"><h3>${shelf ? esc(v.title) : mark(v.title)}</h3><span class="cat-dot" style="--c:${dot(v.category)}">${esc(v.category || "기타")}</span></div>`;
+  function cardHtml(v, shelf, rank) {
+    const k = key(v), on = favs.has(k), seen = recent.includes(k) && tab !== "recent" && !shelf, rows = (view === "rows" || tab === "rank") && !shelf;
+    const sn = v._s && v._s.find(n => n !== ser), showLikes = v.likes > 0 && (rank || $("sort").value === "likes" && !shelf);
+    const meta = `<div class="meta"><span class="cat-dot" style="--c:${dot(v.category)}">${esc(v.category || "기타")}</span>${showLikes ? `<span class="lk">♥ ${v.likes}</span>` : ""}${sn ? `<span class="ser" role="link" tabindex="0" data-ser="${esc(sn)}">${esc(sn)}</span>` : ""}</div>`;
+    const info = `<div class="t"><h3>${shelf ? esc(v.title) : mark(v.title)}</h3>${meta}</div>`;
     const dots = `<button class="dots" type="button" aria-label="더 보기 메뉴" aria-haspopup="menu">${DOTS}</button>`;
     const heart = `<button class="heart ${on ? "on" : ""}" type="button" aria-label="${on ? "즐겨찾기에서 빼기" : "즐겨찾기에 담기"}" title="즐겨찾기">${HEART}</button>`;
-    const thumb = `<div class="thumb" style="--g:${grad(v.category)}">${picHtml(v, !shelf)}${seen ? `<span class="seen">열어봄</span>` : ""}${v.duration ? `<span class="dur">${esc(v.duration)}</span>` : ""}</div>`;
+    const thumb = `<div class="thumb" style="--g:${grad(v.category)}">${picHtml(v, !shelf)}${rank && !rows ? `<span class="rkb">${rank}</span>` : seen ? `<span class="seen">열어봄</span>` : ""}${v.duration ? `<span class="dur">${esc(v.duration)}</span>` : ""}</div>`;
     const a = `href="${esc(safeUrl(v.url))}" target="_blank" rel="noopener noreferrer"`;
     return `<article class="card ${v.thumb ? "" : "no-thumb"}" data-k="${esc(k)}">` + (rows
-      ? `<a ${a}>${thumb}<div class="info">${info}</div><span class="go">${ytId(v) ? "바로 보기" : "다시보기" + OUT}</span></a>${heart}${dots}`
+      ? `${rank ? `<span class="rk ${rank <= 3 ? "top" : ""}">${rank}</span>` : ""}<a ${a}>${thumb}<div class="info">${info}</div><span class="go">${ytId(v) ? "바로 보기" : "다시보기" + OUT}</span></a>${heart}${dots}`
       : `<a ${a}>${thumb}</a><div class="info">${info}${dots}</div>${heart}`) + `</article>`;
+  }
+  function tilesHtml() {   // 시리즈 목록
+    return SERIES.map(x => `<a class="tile" href="#series=${encodeURIComponent(x.name)}" style="--g:linear-gradient(135deg,hsl(${hash(x.name) % 360} 46% 40%),hsl(${(hash(x.name) + 40) % 360} 46% 24%))"><b>${esc(x.name)}</b><span>${x.n}편</span></a>`).join("");
   }
   function emptyHtml() {
     const q = $("q").value.trim();
@@ -116,7 +126,10 @@
   function renderHome() {   // 첫 화면: 분류별로 한 줄씩
     const sorted = all.slice().sort((a, b) => order(b) - order(a));
     const extra = [...new Set(all.map(v => v.category).filter(c => c && !CATS.includes(c)))].sort();
+    const top = ranked(all).slice(0, 10);
     $("home").innerHTML =
+      (top.length ? `<section class="row"><div class="row-h"><h2>인기 영상</h2><a class="more" href="#rank">랭킹 전체 보기</a></div>
+        <div class="rail-wrap">${ARR(-1)}<div class="rail">${top.map((v, i) => cardHtml(v, true, i + 1)).join("")}</div>${ARR(1)}</div></section>` : "") +
       rowHtml("최근 열어본 영상", recent.map(byKey).filter(Boolean), `<a class="more" href="#recent">전체 보기</a>`) +
       rowHtml("즐겨찾기", sorted.filter(v => favs.has(key(v))), `<a class="more" href="#fav">전체 보기</a>`) +
       [...CATS, ...extra].map(c => rowHtml(c, sorted.filter(v => v.category === c), `<button class="more" type="button" data-cat="${esc(c)}">전체 보기</button>`, c)).join("") ||
@@ -130,25 +143,34 @@
   }
   function render() {
     const home = isHome(), list = home ? [] : filtered(), q = $("q").value.trim();
+    const tiles = tab === "series" && !ser && !q, rank = tab === "rank";
     document.querySelectorAll(".nFav").forEach(el => { el.textContent = favs.size || ""; });
     $("home").hidden = !home; $("browse").hidden = home;
     renderChips(); renderToday();
+    $("chips").hidden = tiles;
     if (home) return renderHome();
-    $("pageH").textContent = q ? "검색 결과" : tab === "fav" ? "즐겨찾기" : tab === "recent" ? "최근 열어본 영상" : cat && cat !== "*" ? cat : "전체 영상";
-    $("count").textContent = list.length + "개";
-    $("grid").className = "grid" + (view === "rows" ? " rows" : "");
+    $("pageH").textContent = tiles ? "시리즈" : rank ? "인기 랭킹" : tab === "series" && ser ? ser : q ? "검색 결과" : tab === "fav" ? "즐겨찾기" : tab === "recent" ? "열어본 영상" : cat && cat !== "*" ? cat : "전체 영상";
+    $("count").textContent = tiles ? SERIES.length + "개" : list.length + (tab === "series" ? "편" : "개");
+    $("back").hidden = !(tab === "series" && ser);
+    $("sort").hidden = tiles || rank; document.querySelector(".seg").hidden = tiles || rank;
+    const note = tiles ? "같은 콘텐츠끼리 묶었어요. 제목으로 자동 분류해서 빠지거나 잘못 들어간 영상이 있을 수 있어요."
+      : rank ? "네이버 카페에서 좋아요를 많이 받은 순서예요. 목록을 정리한 때의 숫자라 지금과 조금 다를 수 있어요." : "";
+    $("pageNote").hidden = !note; $("pageNote").textContent = note;
+    $("grid").className = tiles ? "grid tiles" : "grid" + (view === "rows" || rank ? " rows" : "");
     $("vGrid").classList.toggle("on", view === "grid"); $("vList").classList.toggle("on", view === "rows");
-    $("grid").innerHTML = list.slice(0, shown).map(v => cardHtml(v)).join("") || emptyHtml();
-    $("sentinel").hidden = list.length <= shown;
+    $("grid").innerHTML = tiles ? tilesHtml() : list.slice(0, shown).map((v, i) => cardHtml(v, false, rank ? i + 1 : 0)).join("") || emptyHtml();
+    $("sentinel").hidden = tiles || list.length <= shown;
   }
   function reset() { shown = PAGE; render(); }
 
   /* ── 화면 바꾸기 ── */
   function route() {
     let h = location.hash.replace("#", ""); try { h = decodeURIComponent(h); } catch (e) {}
-    const next = ["fav", "recent", "guide"].includes(h) ? h : "all";
-    if (next !== tab) cat = "";
-    tab = next;
+    const next = ["fav", "recent", "guide", "rank", "series"].includes(h) ? h : h.startsWith("series=") ? "series" : "all";
+    const nextSer = h.startsWith("series=") ? h.slice(7) : "";
+    if (next !== tab || nextSer !== ser) cat = "";
+    if (nextSer !== ser) $("q").value = "";
+    tab = next; ser = nextSer;
     $("viewGuide").hidden = tab !== "guide"; $("viewList").hidden = tab === "guide";
     document.querySelectorAll(".tab").forEach(a => a.classList.toggle("on", a.dataset.tab === tab));
     closeMenu();
@@ -235,6 +257,7 @@
   /* ── 누르기 ── */
   function onCards(e) {
     if (e.target.closest("[data-reset]")) { $("q").value = ""; cat = ""; return reset(); }
+    const sr = e.target.closest("[data-ser]"); if (sr) { e.preventDefault(); location.hash = "series=" + encodeURIComponent(sr.dataset.ser); return; }
     const card = e.target.closest(".card"); if (!card) return;
     const v = byKey(card.dataset.k); if (!v) return;
     if (e.target.closest(".heart")) return toggleFav(key(v));
@@ -272,6 +295,7 @@
       if (!$("menu").hidden) closeMenu(); else if (!$("modal").hidden) closeModal();
       else if (document.activeElement === $("q")) { $("q").value = ""; $("q").blur(); reset(); }
     }
+    if (e.key === "Enter" && e.target.matches && e.target.matches("[data-ser]")) { e.preventDefault(); location.hash = "series=" + encodeURIComponent(e.target.dataset.ser); }
     if (e.key === "/" && !/input|textarea|select/i.test(e.target.tagName)) { e.preventDefault(); $("q").focus(); }
   });
   window.addEventListener("scroll", () => { $("totop").hidden = window.scrollY < 700; if (!$("menu").hidden && Math.abs(window.scrollY - openMenu.y) > 60) closeMenu(); }, { passive: true });
@@ -311,6 +335,13 @@
 
   /* ── 시작 ── */
   fetch("videos.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json())
-    .then(data => { all = Array.isArray(data) ? data : []; all.forEach((v, i) => { v._i = i; }); route(); })
+    .then(data => {
+      all = Array.isArray(data) ? data : [];
+      const defs = (SITE.series || []).map(x => { try { return { name: x[0], re: new RegExp(x[1], "i") }; } catch (e) { return null; } }).filter(Boolean);
+      all.forEach((v, i) => { v._i = i; v._s = defs.filter(x => x.re.test(v.title || "")).map(x => x.name); });
+      SERIES = defs.map(x => ({ name: x.name, n: all.filter(v => v._s.includes(x.name)).length })).filter(x => x.n >= 3).sort((a, b) => b.n - a.n);
+      const ok = new Set(SERIES.map(x => x.name)); all.forEach(v => { v._s = v._s.filter(n => ok.has(n)); });
+      route();
+    })
     .catch(() => { route(); $("grid").innerHTML = `<div class="empty"><b>목록을 불러오지 못했어요</b>잠시 뒤 새로고침해 주세요.</div>`; });
 })();
