@@ -3,6 +3,7 @@
 // categories: 위쪽 분류 버튼 목록 (이 순서대로 보여요)
 window.SITE = {
   repo: "SAM7599/ingyoeman_archive",
+  cafe: "https://cafe.naver.com/youtubecreateringyoe",   // 네이버 카페 주소
   categories: [
     "탈출맵", "상황극", "게임", "하이라이트", "콘텐츠특집", "잉여맨뒷담화",
     "아프리카TV", "게스트출연", "개인녹화본", "펌녹화본",
