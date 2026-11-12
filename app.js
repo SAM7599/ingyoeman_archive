@@ -279,6 +279,7 @@
   window.addEventListener("hashchange", route);
   if ("IntersectionObserver" in window) new IntersectionObserver(es => { if (es[0].isIntersecting && !$("sentinel").hidden) { shown += PAGE; render(); } }, { rootMargin: "600px" }).observe($("sentinel"));
 
+  document.querySelectorAll("[data-feedback]").forEach(a => { if (/^https?:\/\//i.test(SITE.feedback || "")) a.href = SITE.feedback; else a.hidden = true; });
   document.querySelectorAll("[data-cafe]").forEach(a => { if (/^https?:\/\//i.test(SITE.cafe || "")) a.href = SITE.cafe; else a.hidden = true; });
 
   /* ── 밝은 화면 / 어두운 화면 ── */

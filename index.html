@@ -13,7 +13,7 @@
   if (!t) t = (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "light" : "dark";
   document.documentElement.setAttribute("data-theme", t); })();
 </script>
-<link rel="stylesheet" href="style.css?v=10">
+<link rel="stylesheet" href="style.css?v=11">
 </head>
 <body>
 
@@ -84,6 +84,10 @@
   <div class="g-item"><h3>친구에게 보내기와 썸네일 제보</h3>
     <p>영상 제목 옆 <b>점 세 개</b>를 누르면 메뉴가 나와요. <b>링크 복사</b>로 그 영상 주소를 복사해 보낼 수 있고, <b>썸네일 제보</b>로 영상 그림을 보내 줄 수 있어요. 제보는 GitHub 로그인이 필요해요.</p></div>
 
+  <div class="g-item"><h3>피드백 / 버그 제보</h3>
+    <p>고쳤으면 하는 점이나 잘못된 링크를 발견하면 화면 왼쪽 아래 <b>피드백 / 버그 제보</b> 버튼을 눌러 주세요. 네이버 카페 채팅방이 열려요. 네이버 로그인과 카페 가입이 필요할 수 있어요. 바로 열리지 않으면 카페의 <b>채팅</b>에서 <b>잉여맨추억자료실 (VOD 사이트)</b> 채팅방을 찾아 들어오시면 돼요.</p>
+    <p><a class="btn" data-feedback target="_blank" rel="noopener noreferrer">채팅방 열기</a></p></div>
+
   <h2>자주 묻는 질문</h2>
   <details><summary>영상이 안 열려요</summary><p>카페에 가입하지 않았거나 로그인이 안 된 경우가 많아요. 네이버에 로그인한 뒤 카페 가입 여부를 확인해 주세요. 카페 글이 지워졌을 수도 있어요.</p></details>
   <details><summary>영상이 이 사이트에 직접 들어 있나요?</summary><p>아니요. 여기는 카페 영상을 쉽게 찾도록 모아 둔 목록이에요. 영상은 네이버 카페에 있고, 누르면 카페 글로 이동해요.</p></details>
@@ -92,7 +96,7 @@
   <a class="btn" href="#">다시보기 목록으로</a>
 </main>
 
-<footer><p>비공식 팬 자료실이에요. 영상은 네이버 카페 「잉여맨추억자료실」에 있어요.</p><p><a data-cafe target="_blank" rel="noopener noreferrer">네이버 카페로 가기</a></p></footer>
+<footer><p>비공식 팬 자료실이에요. 영상은 네이버 카페 「잉여맨추억자료실」에 있어요.</p><p><a data-cafe target="_blank" rel="noopener noreferrer">네이버 카페로 가기</a> <a data-feedback target="_blank" rel="noopener noreferrer">피드백 / 버그 제보</a></p></footer>
 
 <nav class="bottom" aria-label="메뉴">
   <a class="tab" href="#" data-tab="all"><svg viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v9h-5v-6H9v6H4z"/></svg>다시보기</a>
@@ -100,6 +104,8 @@
   <a class="tab" href="#recent" data-tab="recent"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v4.5l3 2"/></svg>열어본</a>
   <a class="tab" href="#guide" data-tab="guide"><svg viewBox="0 0 24 24"><path d="M5 5h14v14H5z"/><path d="M9 9h6M9 12.5h6M9 16h3"/></svg>이용방법</a>
 </nav>
+
+<a class="fb" data-feedback target="_blank" rel="noopener noreferrer" aria-label="피드백 / 버그 제보" title="피드백 / 버그 제보"><svg viewBox="0 0 24 24"><path d="M5 5h14v10H10l-5 4z"/></svg><span>피드백 / 버그 제보</span></a>
 
 <button class="totop" id="totop" type="button" aria-label="맨 위로" hidden><svg viewBox="0 0 24 24"><path d="M6 14l6-6 6 6"/></svg></button>
 
@@ -127,7 +133,7 @@
 </div>
 
 <div id="toast" role="status"></div>
-<script src="config.js?v=10"></script>
-<script src="app.js?v=10"></script>
+<script src="config.js?v=11"></script>
+<script src="app.js?v=11"></script>
 </body>
 </html>
