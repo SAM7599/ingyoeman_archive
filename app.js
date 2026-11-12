@@ -79,7 +79,7 @@
   function cardHtml(v, shelf, rank) {
     const k = key(v), on = favs.has(k), seen = recent.includes(k) && tab !== "recent" && !shelf, rows = (view === "rows" || tab === "rank") && !shelf;
     const sn = v._s && v._s.find(n => n !== ser), showLikes = v.likes > 0 && (rank || $("sort").value === "likes" && !shelf);
-    const meta = `<div class="meta"><span class="cat-dot" style="--c:${dot(v.category)}">${esc(v.category || "기타")}</span>${showLikes ? `<span class="lk">♥ ${v.likes}</span>` : ""}${sn ? `<span class="ser" role="link" tabindex="0" data-ser="${esc(sn)}">${esc(sn)}</span>` : ""}</div>`;
+    const meta = `<div class="meta"><span class="cat-dot" style="--c:${dot(v.category)}">${esc(v.category || "기타")}</span>${showLikes ? `<span class="lk">♥ ${v.likes}</span>` : ""}${repCount(v) ? `<span class="rp">썸네일 제보 ${repCount(v)}건</span>` : ""}${sn ? `<span class="ser" role="link" tabindex="0" data-ser="${esc(sn)}">${esc(sn)}</span>` : ""}</div>`;
     const info = `<div class="t"><h3>${shelf ? esc(v.title) : mark(v.title)}</h3>${meta}</div>`;
     const dots = `<button class="dots" type="button" aria-label="더 보기 메뉴" aria-haspopup="menu">${DOTS}</button>`;
     const heart = `<button class="heart ${on ? "on" : ""} ${k === popKey ? "pop" : ""}" type="button" aria-label="${on ? "즐겨찾기에서 빼기" : "즐겨찾기에 담기"}" title="즐겨찾기">${HEART}</button>`;
@@ -240,7 +240,7 @@
   }
 
   /* ── 랜덤 뽑기 (카드 뽑기 연출) ── */
-  const calm = () => window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const calm = () => document.documentElement.getAttribute("data-motion") === "off";
   const tierOf = v => (v.likes || 0) >= 10 ? ["legend", "전설"] : (v.likes || 0) >= 5 ? ["rare", "희귀"] : ["normal", "일반"];
   function drawPool() { const l = isHome() || tab === "guide" ? all : filtered(); return l.length > 1 ? l : all; }
   function drawLabel() {
@@ -304,12 +304,39 @@
   $("gClose").addEventListener("click", closeGacha);
   $("gacha").addEventListener("click", e => { if (e.target === $("gacha")) closeGacha(); });
 
+  /* ── 썸네일 제보 건수 (GitHub에 열려 있는 제보 글을 세요) ── */
+  let reports = {};
+  const repCount = v => reports["n" + num(v)] || reports["t" + (v.title || "")] || 0;
+  function countReports(list) {
+    const m = {};
+    (Array.isArray(list) ? list : []).forEach(i => {
+      if (i.pull_request || !/^\[썸네일\]/.test(i.title || "")) return;
+      const u = ((i.body || "").match(/cafe\.naver\.com\/[^\s/]+\/(\d+)/) || [])[1];
+      const k = u ? "n" + u : "t" + i.title.replace(/^\[썸네일\]\s*/, "");
+      m[k] = (m[k] || 0) + 1;
+    });
+    return m;
+  }
+  function loadReports() {
+    if (!SITE.repo) return;
+    let c = null; try { c = JSON.parse(sessionStorage.getItem("reports") || "null"); } catch (e) {}
+    if (c && Date.now() - c.t < 5 * 60 * 1000) { reports = c.m || {}; return; }
+    fetch("https://api.github.com/repos/" + SITE.repo + "/issues?state=open&per_page=100", { headers: { Accept: "application/vnd.github+json" } })
+      .then(r => r.ok ? r.json() : Promise.reject()).then(list => {
+        reports = countReports(list);
+        try { sessionStorage.setItem("reports", JSON.stringify({ t: Date.now(), m: reports })); } catch (e) {}
+        if (all.length && Object.keys(reports).length) render();
+      }).catch(() => {});
+  }
+  loadReports();
+
   /* ── 점 세 개 메뉴 ── */
   function openMenu(btn, v) {
     const m = $("menu"), k = key(v);
     menuFor = v; openMenu.y = window.scrollY;
     m.querySelector('[data-act="fav"]').textContent = favs.has(k) ? "즐겨찾기에서 빼기" : "즐겨찾기에 담기";
     m.querySelector('[data-act="seen"]').hidden = !recent.includes(k);
+    m.querySelector('[data-act="report"]').textContent = "썸네일 제보" + (repCount(v) ? " (지금 " + repCount(v) + "건)" : "");
     m.hidden = false;
     const r = btn.getBoundingClientRect(), w = m.offsetWidth, h = m.offsetHeight;
     const below = r.bottom + h + 12 <= window.innerHeight;
@@ -343,7 +370,7 @@
   $("grid").addEventListener("click", onCards);
   $("home").addEventListener("click", e => {
     const m = e.target.closest("[data-cat]"); if (m) { cat = m.dataset.cat; reset(); return window.scrollTo(0, 0); }
-    const a = e.target.closest(".arr"); if (a) { const r = a.parentNode.querySelector(".rail"); return r.scrollBy({ left: +a.dataset.dir * r.clientWidth * 0.85, behavior: "smooth" }); }
+    const a = e.target.closest(".arr"); if (a) { const r = a.parentNode.querySelector(".rail"); return r.scrollBy({ left: +a.dataset.dir * r.clientWidth * 0.85, behavior: calm() ? "auto" : "smooth" }); }
     onCards(e);
   });
   $("home").addEventListener("scroll", e => { const w = e.target.closest && e.target.closest(".rail-wrap"); if (w) syncArrows(w); }, true);
@@ -363,31 +390,51 @@
   $("mGo").addEventListener("click", e => current && follow(e, current, $("mGo").href));
   $("mClose").addEventListener("click", () => closeModal());
   $("modal").addEventListener("click", e => { if (e.target === $("modal")) closeModal(); });
-  $("totop").addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
-  document.addEventListener("click", e => { if (!$("menu").hidden && !e.target.closest(".menu")) closeMenu(); });
+  $("totop").addEventListener("click", () => window.scrollTo({ top: 0, behavior: calm() ? "auto" : "smooth" }));
+  document.addEventListener("click", e => { if (!$("menu").hidden && !e.target.closest(".menu")) closeMenu(); if (!$("setMenu").hidden && !e.target.closest(".menu")) closeSet(); });
   document.addEventListener("keydown", e => {
     if (e.key === "Escape") {
-      if (!$("menu").hidden) closeMenu(); else if (!$("modal").hidden) closeModal(); else if (!$("gacha").hidden) closeGacha();
+      if (!$("setMenu").hidden) closeSet(); else if (!$("menu").hidden) closeMenu(); else if (!$("modal").hidden) closeModal(); else if (!$("gacha").hidden) closeGacha();
       else if (document.activeElement === $("q")) { $("q").value = ""; $("q").blur(); reset(); }
     }
     if (e.key === "Enter" && e.target.matches && e.target.matches("[data-ser]")) { e.preventDefault(); location.hash = "series=" + encodeURIComponent(e.target.dataset.ser); }
     if (e.key === "/" && !/input|textarea|select/i.test(e.target.tagName)) { e.preventDefault(); $("q").focus(); }
   });
   window.addEventListener("scroll", () => { $("totop").hidden = window.scrollY < 700; if (!$("menu").hidden && Math.abs(window.scrollY - openMenu.y) > 60) closeMenu(); }, { passive: true });
-  window.addEventListener("resize", () => { closeMenu(); $("home").querySelectorAll(".rail-wrap").forEach(syncArrows); });
+  window.addEventListener("resize", () => { closeMenu(); closeSet(); $("home").querySelectorAll(".rail-wrap").forEach(syncArrows); });
   window.addEventListener("hashchange", route);
   if ("IntersectionObserver" in window) new IntersectionObserver(es => { if (es[0].isIntersecting && !$("sentinel").hidden) { shown += PAGE; render(); } }, { rootMargin: "600px" }).observe($("sentinel"));
 
   document.querySelectorAll("[data-feedback]").forEach(a => { if (/^https?:\/\//i.test(SITE.feedback || "")) a.href = SITE.feedback; else a.hidden = true; });
   document.querySelectorAll("[data-cafe]").forEach(a => { if (/^https?:\/\//i.test(SITE.cafe || "")) a.href = SITE.cafe; else a.hidden = true; });
 
-  /* ── 밝은 화면 / 어두운 화면 ── */
-  function applyTheme(t) { document.documentElement.setAttribute("data-theme", t); $("theme").textContent = t === "dark" ? "☀" : "☾"; }
-  applyTheme(document.documentElement.getAttribute("data-theme"));
+  /* ── 화면 설정 (어두운 화면 / 움직임 줄이기) ── */
+  const root = document.documentElement;
+  function syncSet() {
+    $("theme").setAttribute("aria-checked", root.getAttribute("data-theme") === "dark");
+    $("motion").setAttribute("aria-checked", root.getAttribute("data-motion") === "off");
+  }
+  syncSet();
   $("theme").addEventListener("click", () => {
-    const t = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
-    applyTheme(t); try { localStorage.setItem("theme", t); } catch (e) {}
+    const t = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    root.setAttribute("data-theme", t); try { localStorage.setItem("theme", t); } catch (e) {} syncSet();
   });
+  $("motion").addEventListener("click", () => {
+    const m = root.getAttribute("data-motion") === "off" ? "on" : "off";
+    root.setAttribute("data-motion", m); try { localStorage.setItem("motion", m); } catch (e) {} syncSet();
+    toast(m === "off" ? "움직임 줄이기를 켰어요" : "움직임 줄이기를 껐어요");
+  });
+  function closeSet() { $("setMenu").hidden = true; $("set").setAttribute("aria-expanded", "false"); }
+  $("set").addEventListener("click", e => {
+    e.stopPropagation();
+    const m = $("setMenu"); if (!m.hidden) return closeSet();
+    closeMenu(); m.hidden = false; $("set").setAttribute("aria-expanded", "true");
+    const r = $("set").getBoundingClientRect();
+    m.style.top = r.bottom + 8 + window.scrollY + "px";
+    m.style.left = Math.max(8, r.right - m.offsetWidth) + window.scrollX + "px";
+  });
+  $("setMenu").addEventListener("click", e => { if (e.target.closest("a")) closeSet(); });
+
 
   /* ── 공지 (notice.json) ── */
   fetch("notice.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).then(n => {

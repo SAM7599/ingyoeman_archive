@@ -41,7 +41,7 @@ svg { fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stro
 .search input:focus { outline:0; border-color:var(--accent); }
 .search kbd { position:absolute; right:11px; top:50%; transform:translateY(-50%); font:600 12px var(--font); color:var(--sub); border:1px solid var(--line); border-radius:6px; padding:1px 7px; pointer-events:none; }
 .search input:focus ~ kbd, .search input:not(:placeholder-shown) ~ kbd { display:none; }
-.btn.cafe { flex:none; }
+.btn.cafe { flex:none; gap:5px; }
 .round { flex:none; width:42px; height:42px; border:1px solid var(--line); border-radius:12px; background:var(--surface); cursor:pointer; font-size:17px; line-height:1; }
 .round:hover { border-color:var(--accent); }
 
@@ -104,6 +104,7 @@ svg { fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stro
 .btn.back { height:38px; border-radius:10px; font-size:14px; padding:0 12px; }
 .page-note { margin:-8px 0 18px; color:var(--sub); font-size:14px; word-break:keep-all; }
 .meta { display:flex; flex-wrap:wrap; align-items:center; gap:3px 10px; }
+.rp { font-size:12.5px; font-weight:600; color:var(--accent); white-space:nowrap; }
 .lk { font-size:13px; font-weight:700; color:var(--heart); }
 .ser { cursor:pointer; font-size:12.5px; font-weight:600; color:var(--tint); text-decoration:none; border:1px solid var(--line); border-radius:99px; padding:1px 9px; white-space:nowrap; }
 .ser:hover { border-color:var(--tint); }
@@ -116,7 +117,15 @@ svg { fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stro
 .tile b { font-size:17px; font-weight:800; letter-spacing:-.4px; word-break:keep-all; }
 .tile span { font-size:13px; color:rgba(255,255,255,.8); }
 .tile:hover { box-shadow:0 0 0 2px var(--bg), 0 0 0 4px var(--accent); }
-.round.help { display:none; text-decoration:none; place-items:center; font-weight:800; }
+.round svg { width:20px; height:20px; }
+#set { display:grid; place-items:center; }
+.menu.set { min-width:210px; position:absolute; }
+.menu.set button, .menu.set a { display:flex; align-items:center; justify-content:space-between; gap:14px; width:100%; padding:11px 12px; border-radius:9px; font-size:14.5px; font-weight:500; color:inherit; text-decoration:none; }
+.menu.set a:hover { background:var(--raise); }
+.sw { flex:none; position:relative; width:38px; height:22px; border-radius:99px; background:var(--line); }
+.sw::after { content:""; position:absolute; left:3px; top:3px; width:16px; height:16px; border-radius:50%; background:var(--sub); transition:transform .16s, background-color .16s; }
+[aria-checked="true"] .sw { background:var(--accent); }
+[aria-checked="true"] .sw::after { transform:translateX(16px); background:var(--on-accent); }
 .browse-h select { height:38px; border-radius:10px; font-size:14px; padding:0 10px; font-weight:500; }
 
 /* ── 분류와 도구 ── */
@@ -291,7 +300,6 @@ footer a + a { margin-left:14px; }
   .rows .card > a { gap:11px; }
   .guide { padding:22px 16px 6px; }
   footer { padding:36px 20px calc(96px + env(safe-area-inset-bottom)); }
-  .round.help { display:grid; }
   .rk { width:28px; font-size:16px; } .rk.top { font-size:19px; }
   .grid.tiles { grid-template-columns:1fr 1fr; gap:10px; }
   .tile { min-height:88px; padding:13px; } .tile b { font-size:15.5px; }
@@ -309,7 +317,9 @@ footer a + a { margin-left:14px; }
   .m-acts .btn { flex:1 1 auto; justify-content:center; }
   .m-body { padding:16px 18px 20px; }
 }
-@media (prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } #toast, .thumb, .arr { transition:none; } .g-inner { transition:none !important; } }
+/* 움직임 줄이기를 켰을 때 */
+html[data-motion="off"] { scroll-behavior:auto; }
+html[data-motion="off"] *, html[data-motion="off"] *::before, html[data-motion="off"] *::after { animation:none !important; transition:none !important; }
 @media (max-width:400px) {
   .top-in { gap:6px; }
   .logo { font-size:15px; gap:7px; }
@@ -366,7 +376,7 @@ footer a + a { margin-left:14px; }
 }
 
 /* ── 움직임 (움직임 줄이기를 켠 기기에서는 꺼져요) ── */
-@media (prefers-reduced-motion:no-preference) {
+@media all {
   @keyframes up { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:none; } }
   @keyframes fade { from { opacity:0; } to { opacity:1; } }
   @keyframes pop { 0% { transform:scale(1); } 40% { transform:scale(1.4); } 100% { transform:scale(1); } }
