@@ -255,7 +255,9 @@ footer a { color:var(--tint); text-underline-offset:3px; }
   .go { height:32px; padding:0 9px; font-size:0; gap:0; border:0; }
   .go .out { width:17px; height:17px; }
   .rows .dots { display:grid; }
-  .chips { flex-wrap:nowrap; overflow-x:auto; scrollbar-width:none; margin:0 -16px 20px; padding:4px 16px; -webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 36px),transparent); mask-image:linear-gradient(90deg,#000 calc(100% - 36px),transparent); }
+  .chips { gap:6px; margin-bottom:20px; }
+  .chip { height:34px; padding:0 11px; font-size:13.5px; gap:6px; }
+  .chip em { font-size:12px; }
   .tools { gap:6px; }
   .tools select { flex:1; min-width:0; }
   .grid { grid-template-columns:1fr 1fr; gap:20px 10px; }
