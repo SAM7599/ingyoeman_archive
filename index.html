@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>잉여맨 추억자료실</title>
-<meta name="description" content="그 시절 잉여맨 방송 다시보기를 한곳에 모아 둔 팬 자료실">
+<title>잉여맨 추억자료실 - VOD 다시보기</title>
+<meta name="description" content="잉여맨 방송 VOD 다시보기 링크를 한곳에 모아 둔 팬 자료실">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%234347d9'/%3E%3Cpath d='M13 9.5l10 6.5-10 6.5z' fill='%23ffb347'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
@@ -13,7 +13,7 @@
   if (!t) t = (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "light" : "dark";
   document.documentElement.setAttribute("data-theme", t); })();
 </script>
-<link rel="stylesheet" href="style.css?v=4">
+<link rel="stylesheet" href="style.css?v=6">
 </head>
 <body>
 
@@ -22,9 +22,10 @@
     <a class="logo" href="#" aria-label="잉여맨 추억자료실 처음으로">
       <span class="logo-mark" aria-hidden="true"></span>
       <span>잉여맨 추억자료실</span>
+      <small>VOD 다시보기</small>
     </a>
     <nav class="nav" aria-label="메뉴">
-      <a class="tab" href="#" data-tab="all">전체 영상</a>
+      <a class="tab" href="#" data-tab="all">다시보기</a>
       <a class="tab" href="#fav" data-tab="fav">즐겨찾기<b class="nFav"></b></a>
       <a class="tab" href="#recent" data-tab="recent">최근 열어본 영상</a>
       <a class="tab" href="#guide" data-tab="guide">이용방법</a>
@@ -34,6 +35,7 @@
       <input id="q" type="search" placeholder="제목이나 분류로 검색" autocomplete="off" aria-label="제목이나 분류로 검색">
       <kbd>/</kbd>
     </label>
+    <a class="btn cafe" data-cafe target="_blank" rel="noopener noreferrer">카페 가기<svg class="out" viewBox="0 0 24 24"><path d="M9 6h9v9M18 6L7 17"/></svg></a>
     <button class="round" id="theme" type="button" aria-label="밝은 화면 / 어두운 화면 바꾸기" title="밝은 화면 / 어두운 화면 바꾸기"></button>
   </div>
 </header>
@@ -41,26 +43,20 @@
 <div id="notice" hidden><div class="notice-in"><b>공지</b><span class="t"></span><button class="x" type="button" aria-label="공지 닫기">✕</button></div></div>
 
 <main id="viewList" class="page">
-  <section class="today" id="today" hidden aria-label="오늘의 추억"></section>
-
-  <section class="shelf" id="shelf" hidden>
-    <div class="shelf-h"><h2>최근 열어본 영상</h2><a href="#recent">모두 보기</a></div>
-    <div class="shelf-row" id="shelfRow"></div>
-  </section>
-
-  <h1 class="page-h" id="pageH">전체 영상</h1>
+  <h1 class="page-h" id="pageH">VOD 다시보기</h1>
+  <p class="page-sub">잉여맨 방송 다시보기 링크를 모아 둔 곳이에요. 누르면 네이버 카페 글로 이동하고, 카페 가입이나 로그인이 필요할 수 있어요.</p>
+  <section class="today" id="today" hidden aria-label="오늘의 다시보기"></section>
   <div class="chips" id="chips" role="group" aria-label="분류"></div>
   <div class="tools">
     <span class="count" id="count"></span>
-    <button class="chk" id="unseen" type="button" aria-pressed="false">다 본 영상 숨기기</button>
     <select id="sort" aria-label="정렬">
       <option value="new">최근 올라온 순</option>
       <option value="old">먼저 올라온 순</option>
       <option value="title">제목순</option>
     </select>
     <div class="seg" role="group" aria-label="보기 방식">
-      <button type="button" id="vGrid" aria-label="큰 그림으로 보기" title="큰 그림으로 보기"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg></button>
       <button type="button" id="vList" aria-label="목록으로 보기" title="목록으로 보기"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+      <button type="button" id="vGrid" aria-label="그림으로 보기" title="그림으로 보기"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg></button>
     </div>
   </div>
 
@@ -72,31 +68,31 @@
   <h1>이용방법</h1>
   <p class="lead">처음 오셨어도 어렵지 않아요.</p>
 
-  <div class="g-item"><h3>영상 보기</h3>
-    <p>영상을 누르면 <b>네이버 카페 글</b>이 열려요. 컴퓨터는 새 탭으로, 휴대폰은 <b>네이버 카페 앱</b>으로 열려요. 영상은 카페에 있어서 카페 가입이나 네이버 로그인이 필요할 수 있어요.</p></div>
+  <div class="g-item"><h3>다시보기 열기</h3>
+    <p>여기는 다시보기 링크를 모아 둔 곳이에요. 제목이나 <b>다시보기</b> 버튼을 누르면 <b>네이버 카페 글</b>이 열려요. 컴퓨터는 새 탭으로, 휴대폰은 <b>네이버 카페 앱</b>으로 열려요. 영상은 카페에 있어서 카페 가입이나 네이버 로그인이 필요할 수 있어요.</p></div>
   <div class="g-item"><h3>영상 찾기</h3>
     <p>맨 위 <b>검색창</b>에 제목 일부나 분류 이름을 적어요. 여러 단어를 띄어 쓰면 모두 들어간 영상만 나와요. 탈출맵, 상황극 같은 <b>분류 버튼</b>으로 골라 볼 수도 있어요.</p></div>
-  <div class="g-item"><h3>오늘의 추억</h3>
-    <p>첫 화면 맨 위에 매일 다른 영상을 하나 골라 드려요. <b>다른 추억 보기</b>를 누르면 바로 다른 영상으로 바뀌어요.</p></div>
+  <div class="g-item"><h3>오늘의 다시보기</h3>
+    <p>목록 위에 매일 다른 영상을 하나 골라 드려요. <b>다른 영상</b>을 누르면 바로 바뀌어요.</p></div>
   <div class="g-item"><h3>즐겨찾기</h3>
     <p>영상의 하트를 누르면 <b>즐겨찾기</b>에 모여요. 지금 쓰는 기기와 브라우저에만 저장되고, 인터넷 사용 기록을 지우면 함께 사라질 수 있어요.</p></div>
-  <div class="g-item"><h3>열어본 영상과 다 본 영상</h3>
-    <p>한 번 누른 영상에는 <b>열어봄</b> 표시가 붙고 <b>최근 열어본 영상</b>에 쌓여요. 영상은 카페에서 재생돼서 끝까지 봤는지는 사이트가 알 수 없어요. 다 본 영상은 제목 옆 <b>점 세 개</b> 메뉴에서 <b>다 본 영상으로 표시</b>를 눌러 직접 표시해 주세요. <b>다 본 영상 숨기기</b>를 켜면 표시한 영상이 목록에서 빠져요.</p></div>
+  <div class="g-item"><h3>열어본 영상</h3>
+    <p>한 번 누른 영상에는 <b>열어봄</b> 표시가 붙고 <b>최근 열어본 영상</b>에 쌓여서 다시 찾기 쉬워요. 영상은 카페에서 재생되기 때문에 끝까지 봤는지는 표시하지 않아요. 기록은 제목 옆 <b>점 세 개</b> 메뉴에서 지울 수 있어요.</p></div>
   <div class="g-item"><h3>친구에게 보내기와 썸네일 제보</h3>
     <p>영상 제목 옆 <b>점 세 개</b>를 누르면 메뉴가 나와요. <b>링크 복사</b>로 그 영상 주소를 복사해 보낼 수 있고, <b>썸네일 제보</b>로 영상 그림을 보내 줄 수 있어요. 제보는 GitHub 로그인이 필요해요.</p></div>
 
   <h2>자주 묻는 질문</h2>
   <details><summary>영상이 안 열려요</summary><p>카페에 가입하지 않았거나 로그인이 안 된 경우가 많아요. 네이버에 로그인한 뒤 카페 가입 여부를 확인해 주세요. 카페 글이 지워졌을 수도 있어요.</p></details>
-  <details><summary>영상이 이 사이트에 직접 들어 있나요?</summary><p>아니요. 여기는 카페 영상을 쉽게 찾도록 모아 둔 목록이에요. 영상은 네이버 카페에 있어요.</p></details>
+  <details><summary>영상이 이 사이트에 직접 들어 있나요?</summary><p>아니요. 여기는 카페 영상을 쉽게 찾도록 모아 둔 목록이에요. 영상은 네이버 카페에 있고, 누르면 카페 글로 이동해요.</p></details>
   <details><summary>영상 날짜는 왜 안 보이나요?</summary><p>오래된 영상이라 방송한 날짜를 정확히 알 수 없어서 표시하지 않아요.</p></details>
-  <details><summary>즐겨찾기나 다 봤어요 표시가 사라졌어요</summary><p>브라우저 기록을 지웠거나 다른 기기로 접속하면 보이지 않아요. 기기마다 따로 저장돼요.</p></details>
-  <a class="btn" href="#">전체 영상으로</a>
+  <details><summary>즐겨찾기나 열어봄 표시가 사라졌어요</summary><p>브라우저 기록을 지웠거나 다른 기기로 접속하면 보이지 않아요. 기기마다 따로 저장돼요.</p></details>
+  <a class="btn" href="#">다시보기 목록으로</a>
 </main>
 
-<footer><p>비공식 팬 자료실이에요. 영상은 네이버 카페 「잉여맨추억자료실」에 있어요.</p></footer>
+<footer><p>비공식 팬 자료실이에요. 영상은 네이버 카페 「잉여맨추억자료실」에 있어요.</p><p><a data-cafe target="_blank" rel="noopener noreferrer">네이버 카페로 가기</a></p></footer>
 
 <nav class="bottom" aria-label="메뉴">
-  <a class="tab" href="#" data-tab="all"><svg viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v9h-5v-6H9v6H4z"/></svg>전체</a>
+  <a class="tab" href="#" data-tab="all"><svg viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v9h-5v-6H9v6H4z"/></svg>다시보기</a>
   <a class="tab" href="#fav" data-tab="fav"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>즐겨찾기</a>
   <a class="tab" href="#recent" data-tab="recent"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v4.5l3 2"/></svg>열어본</a>
   <a class="tab" href="#guide" data-tab="guide"><svg viewBox="0 0 24 24"><path d="M5 5h14v14H5z"/><path d="M9 9h6M9 12.5h6M9 16h3"/></svg>이용방법</a>
@@ -107,7 +103,7 @@
 <div class="menu" id="menu" hidden role="menu">
   <button type="button" data-act="share" role="menuitem">링크 복사</button>
   <button type="button" data-act="fav" role="menuitem"></button>
-  <button type="button" data-act="seen" role="menuitem"></button>
+  <button type="button" data-act="seen" role="menuitem">열어본 기록에서 지우기</button>
   <button type="button" data-act="report" role="menuitem">썸네일 제보</button>
 </div>
 
@@ -119,9 +115,8 @@
       <span class="cat-dot" id="mCat"></span>
       <h2 id="mTitle"></h2>
       <div class="m-acts">
-        <a class="btn primary" id="mGo" target="_blank" rel="noopener noreferrer">카페에서 보기</a>
+        <a class="btn primary" id="mGo" target="_blank" rel="noopener noreferrer">다시보기</a>
         <button class="btn" id="mFav" type="button"></button>
-        <button class="btn" id="mDone" type="button"></button>
         <button class="btn" id="mShare" type="button">링크 복사</button>
       </div>
     </div>
@@ -129,7 +124,7 @@
 </div>
 
 <div id="toast" role="status"></div>
-<script src="config.js?v=4"></script>
-<script src="app.js?v=4"></script>
+<script src="config.js?v=6"></script>
+<script src="app.js?v=6"></script>
 </body>
 </html>

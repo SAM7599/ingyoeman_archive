@@ -16,9 +16,7 @@
   let all = [], tab = "all", cat = "", shown = PAGE, todayKey = null, menuFor = null, current = null;
   let favs = new Set(store.get("favs", []));
   let recent = store.get("recent", []);   // 열어본 영상 (자동)
-  let done = new Set(store.get("done", []));   // 다 본 영상 (직접 표시)
-  let view = store.get("view", "grid") === "rows" ? "rows" : "grid";
-  let unseen = false;
+  let view = store.get("view", "rows") === "grid" ? "grid" : "rows";   // 기본은 링크 목록
   const savedSort = store.get("sort", "new");
   $("sort").value = ["new", "old", "title"].includes(savedSort) ? savedSort : "new";
 
@@ -41,6 +39,7 @@
   const byKey = k => all.find(v => key(v) === k);
   function toast(t) { const el = $("toast"); el.textContent = t; el.classList.add("show"); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove("show"), 2200); }
   const HEART = `<svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>`;
+  const OUT = `<svg class="out" viewBox="0 0 24 24"><path d="M9 6h9v9M18 6L7 17"/></svg>`;
   const DOTS = `<svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg>`;
 
   /* ── 목록 고르기 ── */
@@ -54,14 +53,13 @@
     const w = words(), s = $("sort").value;
     const list = pool().filter(v => {
       if (cat && v.category !== cat) return false;
-      if (unseen && done.has(key(v))) return false;
       const hay = ((v.title || "") + " " + (v.category || "")).toLowerCase();
       return w.every(x => hay.includes(x));
     });
     if (tab === "recent" && s === "new") return list;   // 본 순서 그대로
     return list.sort((a, b) => s === "title" ? (a.title || "").localeCompare(b.title || "", "ko") : s === "old" ? order(a) - order(b) : order(b) - order(a));
   }
-  const isHome = () => tab === "all" && !cat && !unseen && !words().length;
+  const isHome = () => tab === "all" && !cat && !words().length;
 
   /* ── 그리기 ── */
   function mark(title) {   // 검색어에 색칠
@@ -70,23 +68,23 @@
     const re = new RegExp("(" + w.map(x => x.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|") + ")", "gi");
     return t.split(re).map((p, i) => i % 2 ? "<mark>" + esc(p) + "</mark>" : esc(p)).join("");
   }
-  const picHtml = v => v.thumb ? `<img src="${esc(v.thumb)}" alt="" loading="lazy">` : `<div class="ph"><span>${esc(v.category || "")}</span></div>`;
+  const picHtml = v => v.thumb ? `<img src="${esc(v.thumb)}" alt="" loading="lazy">` : `<div class="ph ${ytId(v) ? "play" : ""}">${ytId(v) ? "" : OUT}<span>${esc(v.category || "")}</span></div>`;
   function cardHtml(v, shelf) {
-    const k = key(v), on = favs.has(k), fin = done.has(k), seen = !fin && recent.includes(k) && tab !== "recent" && !shelf, rows = view === "rows" && !shelf;
+    const k = key(v), on = favs.has(k), seen = recent.includes(k) && tab !== "recent" && !shelf, rows = view === "rows" && !shelf;
     const info = `<div class="t"><h3>${shelf ? esc(v.title) : mark(v.title)}</h3><span class="cat-dot" style="--c:${dot(v.category)}">${esc(v.category || "기타")}</span></div>`;
     const dots = `<button class="dots" type="button" aria-label="더 보기 메뉴" aria-haspopup="menu">${DOTS}</button>`;
     const heart = `<button class="heart ${on ? "on" : ""}" type="button" aria-label="${on ? "즐겨찾기에서 빼기" : "즐겨찾기에 담기"}" title="즐겨찾기">${HEART}</button>`;
-    const thumb = `<div class="thumb" style="--g:${grad(v.category)}">${picHtml(v)}${fin ? `<span class="seen fin">다 봤어요</span>` : seen ? `<span class="seen">열어봄</span>` : ""}${v.duration ? `<span class="dur">${esc(v.duration)}</span>` : ""}</div>`;
+    const thumb = `<div class="thumb" style="--g:${grad(v.category)}">${picHtml(v)}${seen ? `<span class="seen">열어봄</span>` : ""}${v.duration ? `<span class="dur">${esc(v.duration)}</span>` : ""}</div>`;
     const a = `href="${esc(safeUrl(v.url))}" target="_blank" rel="noopener noreferrer"`;
-    return `<article class="card ${fin ? "is-seen" : ""}" data-k="${esc(k)}">` + (rows
-      ? `<a ${a}>${thumb}<div class="info">${info}</div></a>${heart}${dots}`
+    return `<article class="card" data-k="${esc(k)}">` + (rows
+      ? `<a ${a}>${thumb}<div class="info">${info}</div><span class="go">${ytId(v) ? "바로 보기" : "다시보기" + OUT}</span></a>${heart}${dots}`
       : `<a ${a}>${thumb}</a><div class="info">${info}${dots}</div>${heart}`) + `</article>`;
   }
   function emptyHtml() {
     const q = $("q").value.trim();
     if (!all.length) return `<div class="empty"><b>아직 등록된 영상이 없어요</b>곧 채워질 예정이에요.</div>`;
-    if (tab === "fav" && !favs.size) return `<div class="empty"><b>즐겨찾기가 비어 있어요</b>영상의 하트를 누르면 여기에 모여요.<br><a class="btn" href="#">영상 보러 가기</a></div>`;
-    if (tab === "recent" && !recent.length) return `<div class="empty"><b>아직 열어본 영상이 없어요</b>영상을 눌러 보면 여기에 차례로 쌓여요.<br><a class="btn" href="#">영상 보러 가기</a></div>`;
+    if (tab === "fav" && !favs.size) return `<div class="empty"><b>즐겨찾기가 비어 있어요</b>영상의 하트를 누르면 여기에 모여요.<br><a class="btn" href="#">다시보기 목록으로</a></div>`;
+    if (tab === "recent" && !recent.length) return `<div class="empty"><b>아직 열어본 영상이 없어요</b>영상을 눌러 보면 여기에 차례로 쌓여요.<br><a class="btn" href="#">다시보기 목록으로</a></div>`;
     return `<div class="empty"><b>${q ? "‘" + esc(q) + "’ 검색 결과가 없어요" : "조건에 맞는 영상이 없어요"}</b>검색어를 줄이거나 분류를 바꿔 보세요.<br><button class="btn" type="button" data-reset>조건 모두 풀기</button></div>`;
   }
   function renderChips() {
@@ -103,29 +101,22 @@
     const v = isHome() && all.length > 2 ? (byKey(todayKey) || all[hash(new Date().toDateString()) % all.length]) : null;
     box.hidden = !v; if (!v) return;
     todayKey = key(v); box.dataset.k = todayKey;
-    box.innerHTML = `<div class="pic" style="--g:${grad(v.category)}">${picHtml(v)}</div>
-      <div class="txt"><span class="label">오늘의 추억</span><h2>${esc(v.title)}</h2>
-      <span class="cat-dot" style="--c:${dot(v.category)}">${esc(v.category || "기타")}</span>
-      <div class="acts"><a class="btn primary" data-go href="${esc(safeUrl(v.url))}" target="_blank" rel="noopener noreferrer">보러 가기</a>
-      <button class="btn" type="button" data-next>다른 추억 보기</button>
-      <button class="btn" type="button" data-fav>${favs.has(todayKey) ? "♥ 담았어요" : "♡ 즐겨찾기"}</button></div></div>`;
-  }
-  function renderShelf() {
-    const list = isHome() ? recent.map(byKey).filter(Boolean).slice(0, 12) : [];
-    $("shelf").hidden = !list.length;
-    $("shelfRow").innerHTML = list.map(v => cardHtml(v, true)).join("");
+    box.innerHTML = `<span class="label">오늘의 다시보기</span>
+      <div class="txt"><h2>${esc(v.title)}</h2><span class="cat-dot" style="--c:${dot(v.category)}">${esc(v.category || "기타")}</span></div>
+      <div class="acts"><a class="btn primary" data-go href="${esc(safeUrl(v.url))}" target="_blank" rel="noopener noreferrer">${ytId(v) ? "바로 보기" : "다시보기" + OUT}</a>
+      <button class="btn" type="button" data-next>다른 영상</button>
+      <button class="btn" type="button" data-fav aria-label="즐겨찾기">${favs.has(todayKey) ? "♥" : "♡"}</button></div>`;
   }
   function render() {
     const list = filtered(), q = $("q").value.trim();
     document.querySelectorAll(".nFav").forEach(el => { el.textContent = favs.size || ""; });
-    $("pageH").textContent = q ? "검색 결과" : tab === "fav" ? "즐겨찾기" : tab === "recent" ? "최근 열어본 영상" : cat || "전체 영상";
+    $("pageH").textContent = q ? "검색 결과" : tab === "fav" ? "즐겨찾기" : tab === "recent" ? "최근 열어본 영상" : cat || "VOD 다시보기";
     $("count").textContent = "영상 " + list.length + "개";
-    $("unseen").setAttribute("aria-pressed", unseen);
     $("grid").className = "grid" + (view === "rows" ? " rows" : "");
     $("vGrid").classList.toggle("on", view === "grid"); $("vList").classList.toggle("on", view === "rows");
     $("grid").innerHTML = list.slice(0, shown).map(v => cardHtml(v)).join("") || emptyHtml();
     $("sentinel").hidden = list.length <= shown;
-    renderChips(); renderToday(); renderShelf();
+    renderChips(); renderToday();
   }
   function reset() { shown = PAGE; render(); }
 
@@ -133,7 +124,7 @@
   function route() {
     let h = location.hash.replace("#", ""); try { h = decodeURIComponent(h); } catch (e) {}
     const next = ["fav", "recent", "guide"].includes(h) ? h : "all";
-    if (next !== tab) { cat = ""; unseen = false; }
+    if (next !== tab) cat = "";
     tab = next;
     $("viewGuide").hidden = tab !== "guide"; $("viewList").hidden = tab === "guide";
     document.querySelectorAll(".tab").forEach(a => a.classList.toggle("on", a.dataset.tab === tab));
@@ -167,12 +158,12 @@
     $("mScreen").classList.toggle("still", !id);
     $("mCat").textContent = v.category || "기타"; $("mCat").style.setProperty("--c", dot(v.category));
     $("mTitle").textContent = v.title || "";
-    $("mGo").href = safeUrl(v.url); $("mGo").textContent = id ? "원본 글 열기" : "카페에서 보기"; $("mGo").hidden = safeUrl(v.url) === "#";
+    $("mGo").href = safeUrl(v.url); $("mGo").innerHTML = (id ? "원본 글 열기" : "다시보기") + OUT; $("mGo").hidden = safeUrl(v.url) === "#";
     syncModalFav();
     $("modal").hidden = false; document.body.style.overflow = "hidden"; $("mClose").focus();
     if (id) { markSeen(v); render(); }
   }
-  function syncModalFav() { if (!current) return; $("mFav").textContent = favs.has(key(current)) ? "♥ 담았어요" : "♡ 즐겨찾기"; $("mDone").textContent = done.has(key(current)) ? "✓ 다 봤어요" : "다 본 영상으로 표시"; }
+  function syncModalFav() { if (!current) return; $("mFav").textContent = favs.has(key(current)) ? "♥ 담았어요" : "♡ 즐겨찾기"; }
   function closeModal(keepHash) {
     $("modal").hidden = true; $("mScreen").innerHTML = ""; document.body.style.overflow = ""; current = null;
     if (!keepHash && location.hash.startsWith("#v=")) history.replaceState(null, "", location.pathname + location.search);
@@ -180,10 +171,6 @@
   function toggleFav(k) {
     if (favs.has(k)) { favs.delete(k); toast("즐겨찾기에서 뺐어요"); } else { favs.add(k); toast("즐겨찾기에 담았어요"); }
     store.set("favs", [...favs]); render(); syncModalFav();
-  }
-  function toggleDone(k) {
-    if (done.has(k)) { done.delete(k); toast("다 봤어요 표시를 지웠어요"); } else { done.add(k); toast("다 본 영상으로 표시했어요"); }
-    store.set("done", [...done]); render(); syncModalFav();
   }
   function share(v) {
     const url = location.origin + location.pathname + "#v=" + vid(v);
@@ -202,7 +189,7 @@
     const m = $("menu"), k = key(v);
     menuFor = v; openMenu.y = window.scrollY;
     m.querySelector('[data-act="fav"]').textContent = favs.has(k) ? "즐겨찾기에서 빼기" : "즐겨찾기에 담기";
-    m.querySelector('[data-act="seen"]').textContent = done.has(k) ? "다 봤어요 표시 지우기" : "다 본 영상으로 표시";
+    m.querySelector('[data-act="seen"]').hidden = !recent.includes(k);
     m.hidden = false;
     const r = btn.getBoundingClientRect(), w = m.offsetWidth, h = m.offsetHeight;
     const below = r.bottom + h + 12 <= window.innerHeight;
@@ -218,13 +205,13 @@
     else if (a === "fav") toggleFav(k);
     else if (a === "report") report(v);
     else if (a === "seen") {
-      toggleDone(k);
+      recent = recent.filter(x => x !== k); store.set("recent", recent); toast("열어본 기록에서 지웠어요"); render();
     }
   });
 
   /* ── 누르기 ── */
   function onCards(e) {
-    if (e.target.closest("[data-reset]")) { $("q").value = ""; cat = ""; unseen = false; return reset(); }
+    if (e.target.closest("[data-reset]")) { $("q").value = ""; cat = ""; return reset(); }
     const card = e.target.closest(".card"); if (!card) return;
     const v = byKey(card.dataset.k); if (!v) return;
     if (e.target.closest(".heart")) return toggleFav(key(v));
@@ -233,7 +220,6 @@
     const link = e.target.closest("a"); if (link) follow(e, v, link.href);
   }
   $("grid").addEventListener("click", onCards);
-  $("shelfRow").addEventListener("click", onCards);
   $("today").addEventListener("click", e => {
     const v = byKey($("today").dataset.k); if (!v) return;
     const go = e.target.closest("[data-go]"); if (go) return follow(e, v, go.href);
@@ -243,11 +229,9 @@
   $("chips").addEventListener("click", e => { const b = e.target.closest(".chip"); if (!b) return; cat = b.dataset.c; reset(); });
   $("q").addEventListener("input", () => { if (tab === "guide") location.hash = ""; reset(); });
   $("sort").addEventListener("change", () => { store.set("sort", $("sort").value); reset(); });
-  $("unseen").addEventListener("click", () => { unseen = !unseen; reset(); });
   $("vGrid").addEventListener("click", () => { view = "grid"; store.set("view", view); render(); });
   $("vList").addEventListener("click", () => { view = "rows"; store.set("view", view); render(); });
   $("mFav").addEventListener("click", () => current && toggleFav(key(current)));
-  $("mDone").addEventListener("click", () => current && toggleDone(key(current)));
   $("mShare").addEventListener("click", () => current && share(current));
   $("mGo").addEventListener("click", e => current && follow(e, current, $("mGo").href));
   $("mClose").addEventListener("click", () => closeModal());
@@ -265,6 +249,8 @@
   window.addEventListener("resize", closeMenu);
   window.addEventListener("hashchange", route);
   if ("IntersectionObserver" in window) new IntersectionObserver(es => { if (es[0].isIntersecting && !$("sentinel").hidden) { shown += PAGE; render(); } }, { rootMargin: "600px" }).observe($("sentinel"));
+
+  document.querySelectorAll("[data-cafe]").forEach(a => { if (/^https?:\/\//i.test(SITE.cafe || "")) a.href = SITE.cafe; else a.hidden = true; });
 
   /* ── 밝은 화면 / 어두운 화면 ── */
   function applyTheme(t) { document.documentElement.setAttribute("data-theme", t); $("theme").textContent = t === "dark" ? "☀" : "☾"; }
