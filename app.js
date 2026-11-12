@@ -16,7 +16,7 @@
   let all = [], tab = "all", cat = "", shown = PAGE, todayKey = null, menuFor = null, current = null;
   let favs = new Set(store.get("favs", []));
   let recent = store.get("recent", []);   // 열어본 영상 (자동)
-  let view = store.get("view", "rows") === "grid" ? "grid" : "rows";   // 기본은 링크 목록
+  let view = store.get("view2", "grid") === "rows" ? "rows" : "grid";
   const savedSort = store.get("sort", "new");
   $("sort").value = ["new", "old", "title"].includes(savedSort) ? savedSort : "new";
 
@@ -52,7 +52,7 @@
   function filtered() {
     const w = words(), s = $("sort").value;
     const list = pool().filter(v => {
-      if (cat && v.category !== cat) return false;
+      if (cat && cat !== "*" && v.category !== cat) return false;
       const hay = ((v.title || "") + " " + (v.category || "")).toLowerCase();
       return w.every(x => hay.includes(x));
     });
@@ -68,15 +68,15 @@
     const re = new RegExp("(" + w.map(x => x.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|") + ")", "gi");
     return t.split(re).map((p, i) => i % 2 ? "<mark>" + esc(p) + "</mark>" : esc(p)).join("");
   }
-  const picHtml = v => v.thumb ? `<img src="${esc(v.thumb)}" alt="" loading="lazy">` : `<div class="ph ${ytId(v) ? "play" : ""}">${ytId(v) ? "" : OUT}<span>${esc(v.category || "")}</span></div>`;
+  const picHtml = (v, hl) => v.thumb ? `<img src="${esc(v.thumb)}" alt="" loading="lazy">` : `<div class="ph"><b>${hl ? mark(v.title) : esc(v.title)}</b></div>`;   // 썸네일이 없으면 제목 카드
   function cardHtml(v, shelf) {
     const k = key(v), on = favs.has(k), seen = recent.includes(k) && tab !== "recent" && !shelf, rows = view === "rows" && !shelf;
     const info = `<div class="t"><h3>${shelf ? esc(v.title) : mark(v.title)}</h3><span class="cat-dot" style="--c:${dot(v.category)}">${esc(v.category || "기타")}</span></div>`;
     const dots = `<button class="dots" type="button" aria-label="더 보기 메뉴" aria-haspopup="menu">${DOTS}</button>`;
     const heart = `<button class="heart ${on ? "on" : ""}" type="button" aria-label="${on ? "즐겨찾기에서 빼기" : "즐겨찾기에 담기"}" title="즐겨찾기">${HEART}</button>`;
-    const thumb = `<div class="thumb" style="--g:${grad(v.category)}">${picHtml(v)}${seen ? `<span class="seen">열어봄</span>` : ""}${v.duration ? `<span class="dur">${esc(v.duration)}</span>` : ""}</div>`;
+    const thumb = `<div class="thumb" style="--g:${grad(v.category)}">${picHtml(v, !shelf)}${seen ? `<span class="seen">열어봄</span>` : ""}${v.duration ? `<span class="dur">${esc(v.duration)}</span>` : ""}</div>`;
     const a = `href="${esc(safeUrl(v.url))}" target="_blank" rel="noopener noreferrer"`;
-    return `<article class="card" data-k="${esc(k)}">` + (rows
+    return `<article class="card ${v.thumb ? "" : "no-thumb"}" data-k="${esc(k)}">` + (rows
       ? `<a ${a}>${thumb}<div class="info">${info}</div><span class="go">${ytId(v) ? "바로 보기" : "다시보기" + OUT}</span></a>${heart}${dots}`
       : `<a ${a}>${thumb}</a><div class="info">${info}${dots}</div>${heart}`) + `</article>`;
   }
@@ -88,35 +88,58 @@
     return `<div class="empty"><b>${q ? "‘" + esc(q) + "’ 검색 결과가 없어요" : "조건에 맞는 영상이 없어요"}</b>검색어를 줄이거나 분류를 바꿔 보세요.<br><button class="btn" type="button" data-reset>조건 모두 풀기</button></div>`;
   }
   function renderChips() {
-    const p = pool(), n = {};
+    const p = pool(), n = {}, home = tab === "all";
     p.forEach(v => { n[v.category] = (n[v.category] || 0) + 1; });
     const extra = Object.keys(n).filter(c => c && c !== "undefined" && !CATS.includes(c)).sort();
-    $("chips").innerHTML = ["", ...CATS, ...extra].map(c => {
-      const cnt = c ? (n[c] || 0) : p.length;
-      return `<button class="chip ${c === cat ? "on" : ""} ${c && !cnt && c !== cat ? "zero" : ""}" type="button" data-c="${esc(c)}">${c ? `<i style="--c:${dot(c)}"></i>` : ""}${c ? esc(c) : "전체"}<em>${cnt}</em></button>`;
-    }).join("");
+    const chip = (c, label, cnt, zero) => `<button class="chip ${c === cat ? "on" : ""} ${zero ? "zero" : ""}" type="button" data-c="${esc(c)}">${c && c !== "*" ? `<i style="--c:${dot(c)}"></i>` : ""}${esc(label)}${cnt == null ? "" : `<em>${cnt}</em>`}</button>`;
+    $("chips").innerHTML = (home ? chip("", "홈") + chip("*", "전체 영상", p.length) : chip("", "전체", p.length)) +
+      [...CATS, ...extra].map(c => chip(c, c, n[c] || 0, !n[c] && c !== cat)).join("");
   }
   function renderToday() {
     const box = $("today");
-    const v = isHome() && all.length > 2 ? (byKey(todayKey) || all[hash(new Date().toDateString()) % all.length]) : null;
+    const v = isHome() && all.length ? (byKey(todayKey) || all[hash(new Date().toDateString()) % all.length]) : null;
     box.hidden = !v; if (!v) return;
     todayKey = key(v); box.dataset.k = todayKey;
-    box.innerHTML = `<span class="label">오늘의 다시보기</span>
-      <div class="txt"><h2>${esc(v.title)}</h2><span class="cat-dot" style="--c:${dot(v.category)}">${esc(v.category || "기타")}</span></div>
+    box.innerHTML = `<div class="hero-bg" style="--g:${grad(v.category)}">${v.thumb ? `<img src="${esc(v.thumb)}" alt="">` : ""}</div>
+      <div class="hero-in"><span class="label">오늘의 다시보기</span><h2>${esc(v.title)}</h2>
+      <p class="hero-meta"><span class="cat-dot" style="--c:${dot(v.category)}">${esc(v.category || "기타")}</span><span>${ytId(v) ? "바로 재생돼요" : "네이버 카페에서 재생돼요"}</span></p>
       <div class="acts"><a class="btn primary" data-go href="${esc(safeUrl(v.url))}" target="_blank" rel="noopener noreferrer">${ytId(v) ? "바로 보기" : "다시보기" + OUT}</a>
-      <button class="btn" type="button" data-next>다른 영상</button>
-      <button class="btn" type="button" data-fav aria-label="즐겨찾기">${favs.has(todayKey) ? "♥" : "♡"}</button></div>`;
+      <button class="btn glass" type="button" data-fav>${favs.has(todayKey) ? "♥ 담았어요" : "♡ 즐겨찾기"}</button>
+      ${all.length > 1 ? `<button class="btn glass" type="button" data-next>다른 영상</button>` : ""}</div></div>`;
+  }
+  const ARR = d => `<button class="arr ${d < 0 ? "l" : "r"}" type="button" data-dir="${d}" aria-label="${d < 0 ? "앞으로" : "뒤로"} 넘기기"><svg viewBox="0 0 24 24"><path d="${d < 0 ? "M14 6l-6 6 6 6" : "M10 6l6 6-6 6"}"/></svg></button>`;
+  function rowHtml(title, list, more, c) {
+    if (!list.length) return "";
+    return `<section class="row"><div class="row-h"><h2>${c ? `<i style="--c:${dot(c)}"></i>` : ""}${esc(title)}<em>${list.length}</em></h2>${more}</div>
+      <div class="rail-wrap">${ARR(-1)}<div class="rail">${list.slice(0, 14).map(v => cardHtml(v, true)).join("")}</div>${ARR(1)}</div></section>`;
+  }
+  function renderHome() {   // 첫 화면: 분류별로 한 줄씩
+    const sorted = all.slice().sort((a, b) => order(b) - order(a));
+    const extra = [...new Set(all.map(v => v.category).filter(c => c && !CATS.includes(c)))].sort();
+    $("home").innerHTML =
+      rowHtml("최근 열어본 영상", recent.map(byKey).filter(Boolean), `<a class="more" href="#recent">전체 보기</a>`) +
+      rowHtml("즐겨찾기", sorted.filter(v => favs.has(key(v))), `<a class="more" href="#fav">전체 보기</a>`) +
+      [...CATS, ...extra].map(c => rowHtml(c, sorted.filter(v => v.category === c), `<button class="more" type="button" data-cat="${esc(c)}">전체 보기</button>`, c)).join("") ||
+      `<div class="empty"><b>아직 등록된 영상이 없어요</b>곧 채워질 예정이에요.</div>`;
+    $("home").querySelectorAll(".rail-wrap").forEach(syncArrows);
+  }
+  function syncArrows(w) {
+    const r = w.querySelector(".rail");
+    w.querySelector(".arr.l").hidden = r.scrollLeft < 8;
+    w.querySelector(".arr.r").hidden = r.scrollLeft + r.clientWidth > r.scrollWidth - 8;
   }
   function render() {
-    const list = filtered(), q = $("q").value.trim();
+    const home = isHome(), list = home ? [] : filtered(), q = $("q").value.trim();
     document.querySelectorAll(".nFav").forEach(el => { el.textContent = favs.size || ""; });
-    $("pageH").textContent = q ? "검색 결과" : tab === "fav" ? "즐겨찾기" : tab === "recent" ? "최근 열어본 영상" : cat || "VOD 다시보기";
-    $("count").textContent = "영상 " + list.length + "개";
+    $("home").hidden = !home; $("browse").hidden = home;
+    renderChips(); renderToday();
+    if (home) return renderHome();
+    $("pageH").textContent = q ? "검색 결과" : tab === "fav" ? "즐겨찾기" : tab === "recent" ? "최근 열어본 영상" : cat && cat !== "*" ? cat : "전체 영상";
+    $("count").textContent = list.length + "개";
     $("grid").className = "grid" + (view === "rows" ? " rows" : "");
     $("vGrid").classList.toggle("on", view === "grid"); $("vList").classList.toggle("on", view === "rows");
     $("grid").innerHTML = list.slice(0, shown).map(v => cardHtml(v)).join("") || emptyHtml();
     $("sentinel").hidden = list.length <= shown;
-    renderChips(); renderToday();
   }
   function reset() { shown = PAGE; render(); }
 
@@ -220,17 +243,23 @@
     const link = e.target.closest("a"); if (link) follow(e, v, link.href);
   }
   $("grid").addEventListener("click", onCards);
+  $("home").addEventListener("click", e => {
+    const m = e.target.closest("[data-cat]"); if (m) { cat = m.dataset.cat; reset(); return window.scrollTo(0, 0); }
+    const a = e.target.closest(".arr"); if (a) { const r = a.parentNode.querySelector(".rail"); return r.scrollBy({ left: +a.dataset.dir * r.clientWidth * 0.85, behavior: "smooth" }); }
+    onCards(e);
+  });
+  $("home").addEventListener("scroll", e => { const w = e.target.closest && e.target.closest(".rail-wrap"); if (w) syncArrows(w); }, true);
   $("today").addEventListener("click", e => {
     const v = byKey($("today").dataset.k); if (!v) return;
     const go = e.target.closest("[data-go]"); if (go) return follow(e, v, go.href);
     if (e.target.closest("[data-fav]")) return toggleFav(key(v));
     if (e.target.closest("[data-next]")) { const rest = all.filter(x => key(x) !== todayKey); todayKey = key(rest[Math.floor(Math.random() * rest.length)]); renderToday(); }
   });
-  $("chips").addEventListener("click", e => { const b = e.target.closest(".chip"); if (!b) return; cat = b.dataset.c; reset(); });
+  $("chips").addEventListener("click", e => { const b = e.target.closest(".chip"); if (!b) return; cat = b.dataset.c; if (b.dataset.c === "" && tab === "all") $("q").value = ""; reset(); });
   $("q").addEventListener("input", () => { if (tab === "guide") location.hash = ""; reset(); });
   $("sort").addEventListener("change", () => { store.set("sort", $("sort").value); reset(); });
-  $("vGrid").addEventListener("click", () => { view = "grid"; store.set("view", view); render(); });
-  $("vList").addEventListener("click", () => { view = "rows"; store.set("view", view); render(); });
+  $("vGrid").addEventListener("click", () => { view = "grid"; store.set("view2", view); render(); });
+  $("vList").addEventListener("click", () => { view = "rows"; store.set("view2", view); render(); });
   $("mFav").addEventListener("click", () => current && toggleFav(key(current)));
   $("mShare").addEventListener("click", () => current && share(current));
   $("mGo").addEventListener("click", e => current && follow(e, current, $("mGo").href));
@@ -246,7 +275,7 @@
     if (e.key === "/" && !/input|textarea|select/i.test(e.target.tagName)) { e.preventDefault(); $("q").focus(); }
   });
   window.addEventListener("scroll", () => { $("totop").hidden = window.scrollY < 700; if (!$("menu").hidden && Math.abs(window.scrollY - openMenu.y) > 60) closeMenu(); }, { passive: true });
-  window.addEventListener("resize", closeMenu);
+  window.addEventListener("resize", () => { closeMenu(); $("home").querySelectorAll(".rail-wrap").forEach(syncArrows); });
   window.addEventListener("hashchange", route);
   if ("IntersectionObserver" in window) new IntersectionObserver(es => { if (es[0].isIntersecting && !$("sentinel").hidden) { shown += PAGE; render(); } }, { rootMargin: "600px" }).observe($("sentinel"));
 

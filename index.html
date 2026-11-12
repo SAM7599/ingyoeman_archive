@@ -13,7 +13,7 @@
   if (!t) t = (window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches) ? "light" : "dark";
   document.documentElement.setAttribute("data-theme", t); })();
 </script>
-<link rel="stylesheet" href="style.css?v=6">
+<link rel="stylesheet" href="style.css?v=8">
 </head>
 <body>
 
@@ -43,25 +43,28 @@
 <div id="notice" hidden><div class="notice-in"><b>공지</b><span class="t"></span><button class="x" type="button" aria-label="공지 닫기">✕</button></div></div>
 
 <main id="viewList" class="page">
-  <h1 class="page-h" id="pageH">VOD 다시보기</h1>
-  <p class="page-sub">잉여맨 방송 다시보기 링크를 모아 둔 곳이에요. 누르면 네이버 카페 글로 이동하고, 카페 가입이나 로그인이 필요할 수 있어요.</p>
-  <section class="today" id="today" hidden aria-label="오늘의 다시보기"></section>
+  <section class="hero" id="today" hidden aria-label="오늘의 다시보기"></section>
   <div class="chips" id="chips" role="group" aria-label="분류"></div>
-  <div class="tools">
-    <span class="count" id="count"></span>
-    <select id="sort" aria-label="정렬">
-      <option value="new">최근 올라온 순</option>
-      <option value="old">먼저 올라온 순</option>
-      <option value="title">제목순</option>
-    </select>
-    <div class="seg" role="group" aria-label="보기 방식">
-      <button type="button" id="vList" aria-label="목록으로 보기" title="목록으로 보기"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
-      <button type="button" id="vGrid" aria-label="그림으로 보기" title="그림으로 보기"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg></button>
-    </div>
-  </div>
 
-  <div id="grid" class="grid"></div>
-  <div id="sentinel"></div>
+  <div id="home"></div>
+
+  <div id="browse" hidden>
+    <div class="browse-h">
+      <h1 class="page-h" id="pageH">전체 영상</h1>
+      <span class="count" id="count"></span>
+      <select id="sort" aria-label="정렬">
+        <option value="new">최근 올라온 순</option>
+        <option value="old">먼저 올라온 순</option>
+        <option value="title">제목순</option>
+      </select>
+      <div class="seg" role="group" aria-label="보기 방식">
+        <button type="button" id="vGrid" aria-label="그림으로 보기" title="그림으로 보기"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg></button>
+        <button type="button" id="vList" aria-label="목록으로 보기" title="목록으로 보기"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+      </div>
+    </div>
+    <div id="grid" class="grid"></div>
+    <div id="sentinel"></div>
+  </div>
 </main>
 
 <main id="viewGuide" class="guide" hidden>
@@ -69,11 +72,11 @@
   <p class="lead">처음 오셨어도 어렵지 않아요.</p>
 
   <div class="g-item"><h3>다시보기 열기</h3>
-    <p>여기는 다시보기 링크를 모아 둔 곳이에요. 제목이나 <b>다시보기</b> 버튼을 누르면 <b>네이버 카페 글</b>이 열려요. 컴퓨터는 새 탭으로, 휴대폰은 <b>네이버 카페 앱</b>으로 열려요. 영상은 카페에 있어서 카페 가입이나 네이버 로그인이 필요할 수 있어요.</p></div>
+    <p>여기는 다시보기 링크를 모아 둔 곳이에요. 영상 카드나 <b>다시보기</b> 버튼을 누르면 <b>네이버 카페 글</b>이 열려요. 컴퓨터는 새 탭으로, 휴대폰은 <b>네이버 카페 앱</b>으로 열려요. 영상은 카페에 있어서 카페 가입이나 네이버 로그인이 필요할 수 있어요.</p></div>
   <div class="g-item"><h3>영상 찾기</h3>
-    <p>맨 위 <b>검색창</b>에 제목 일부나 분류 이름을 적어요. 여러 단어를 띄어 쓰면 모두 들어간 영상만 나와요. 탈출맵, 상황극 같은 <b>분류 버튼</b>으로 골라 볼 수도 있어요.</p></div>
+    <p>맨 위 <b>검색창</b>에 제목 일부나 분류 이름을 적어요. 여러 단어를 띄어 쓰면 모두 들어간 영상만 나와요. 첫 화면에는 분류별로 영상이 한 줄씩 나오고, 옆으로 넘겨 볼 수 있어요. <b>전체 보기</b>나 위쪽 <b>분류 버튼</b>을 누르면 그 분류만 모아 볼 수 있어요.</p></div>
   <div class="g-item"><h3>오늘의 다시보기</h3>
-    <p>목록 위에 매일 다른 영상을 하나 골라 드려요. <b>다른 영상</b>을 누르면 바로 바뀌어요.</p></div>
+    <p>첫 화면 맨 위 큰 배너에 매일 다른 영상을 하나 골라 드려요. <b>다른 영상</b>을 누르면 바로 바뀌어요.</p></div>
   <div class="g-item"><h3>즐겨찾기</h3>
     <p>영상의 하트를 누르면 <b>즐겨찾기</b>에 모여요. 지금 쓰는 기기와 브라우저에만 저장되고, 인터넷 사용 기록을 지우면 함께 사라질 수 있어요.</p></div>
   <div class="g-item"><h3>열어본 영상</h3>
@@ -124,7 +127,7 @@
 </div>
 
 <div id="toast" role="status"></div>
-<script src="config.js?v=6"></script>
-<script src="app.js?v=6"></script>
+<script src="config.js?v=8"></script>
+<script src="app.js?v=8"></script>
 </body>
 </html>
