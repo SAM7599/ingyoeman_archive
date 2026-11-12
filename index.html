@@ -3,364 +3,142 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>잉여맨 추억자료실 - 다시보기</title>
+<title>잉여맨 추억자료실</title>
+<meta name="description" content="2012년 그 시절 잉여맨 방송 다시보기를 한곳에 모아 둔 팬 자료실">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23ffd21f'/%3E%3Cpath d='M12 8l12 8-12 8z' fill='%230f2f8f'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <script>
 (function(){ var t = null; try { t = localStorage.getItem("theme"); } catch(e) {}
   if (!t) t = (window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches) ? "dark" : "light";
   document.documentElement.setAttribute("data-theme", t); })();
 </script>
-<style>
-  :root {
-    --bg:#f5f7fb; --panel:#ffffff; --text:#151a24; --sub:#6b7485; --line:#e4e8f0;
-    --brand:#2f6bff; --brand2:#6a8dff; --heart:#ff4d6d; --chip:#eaeff9;
-    --shadow:0 1px 2px rgba(20,30,60,.06), 0 6px 20px rgba(20,30,60,.06);
-    --shadow-h:0 2px 4px rgba(20,30,60,.08), 0 14px 32px rgba(47,107,255,.18);
-  }
-  :root[data-theme="dark"] { --bg:#0d1017; --panel:#161a23; --text:#eef1f7; --sub:#8f99ad; --line:#242a37; --chip:#1d2330;
-    --shadow:0 1px 2px rgba(0,0,0,.4); --shadow-h:0 2px 4px rgba(0,0,0,.5), 0 14px 32px rgba(47,107,255,.25); color-scheme:dark; }
-  * { box-sizing:border-box; }
-  body { -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
-  input, textarea { -webkit-user-select:text; user-select:text; }
-  img, a { -webkit-user-drag:none; user-drag:none; }
-  html { scroll-behavior:smooth; }
-  body { margin:0; background:var(--bg); color:var(--text); font-family:"Pretendard Variable",Pretendard,-apple-system,"Malgun Gothic","Apple SD Gothic Neo",sans-serif; font-size:14px; -webkit-font-smoothing:antialiased; }
-
-  .nav { position:sticky; top:0; z-index:10; backdrop-filter:saturate(1.6) blur(14px); background:color-mix(in srgb, var(--bg) 82%, transparent); border-bottom:1px solid var(--line); }
-  .nav-in { max-width:1240px; margin:0 auto; padding:12px 24px; display:flex; align-items:center; gap:14px; }
-  .logo { font-weight:800; font-size:17px; letter-spacing:-.4px; display:flex; align-items:center; gap:9px; white-space:nowrap; }
-  .logo i { width:26px; height:26px; border-radius:8px; background:linear-gradient(135deg,var(--brand),var(--brand2)); display:inline-flex; align-items:center; justify-content:center; }
-  .logo i::after { content:""; border-left:9px solid #fff; border-top:5.5px solid transparent; border-bottom:5.5px solid transparent; margin-left:2px; }
-  .sp { flex:1; }
-  .search { position:relative; width:300px; max-width:100%; }
-  .search svg { position:absolute; left:12px; top:50%; transform:translateY(-50%); width:16px; height:16px; stroke:var(--sub); fill:none; stroke-width:2; }
-  input, select { font-family:inherit; font-size:14px; color:var(--text); background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:10px 14px; transition:border-color .15s, box-shadow .15s; }
-  .search input { width:100%; padding-left:38px; }
-  input:focus, select:focus { outline:0; border-color:var(--brand); box-shadow:0 0 0 4px rgba(47,107,255,.15); }
-  .favbtn { font-family:inherit; font-size:14px; font-weight:600; color:var(--text); background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:10px 14px; cursor:pointer; white-space:nowrap; transition:all .15s; }
-  .favbtn:hover { border-color:var(--heart); }
-  .favbtn.on { background:var(--heart); border-color:var(--heart); color:#fff; }
-
-  .hero { max-width:1240px; margin:0 auto; padding:44px 24px 10px; }
-  .hero small { color:var(--brand); font-weight:700; letter-spacing:.14em; font-size:12px; }
-  .hero h1 { margin:8px 0 8px; font-size:clamp(28px,5vw,44px); letter-spacing:-1.4px; line-height:1.15; font-weight:800; }
-  .hero h1 em { font-style:normal; background:linear-gradient(100deg,var(--brand),#8a5cff); -webkit-background-clip:text; background-clip:text; color:transparent; }
-  .hero p { margin:0; color:var(--sub); font-size:15px; }
-
-  .wrap { max-width:1240px; margin:0 auto; padding:18px 24px 10px; }
-  .bar { display:flex; align-items:center; gap:12px; margin-bottom:20px; }
-  .chips { display:flex; flex-wrap:wrap; gap:8px; overflow-x:auto; flex:1; scrollbar-width:none; padding:2px; }
-  .chips::-webkit-scrollbar { display:none; }
-  .chip { flex:none; font-family:inherit; font-size:14px; font-weight:600; color:var(--sub); background:var(--chip); border:0; border-radius:999px; padding:9px 18px; cursor:pointer; transition:all .15s; }
-  .chip:hover { color:var(--text); }
-  .chip.on { background:var(--text); color:var(--bg); }
-  .count { color:var(--sub); font-size:13px; white-space:nowrap; }
-  select { padding:9px 12px; }
-
-  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:26px 20px; }
-  .card { position:relative; }
-  .card a { display:block; color:inherit; text-decoration:none; }
-  .thumb { position:relative; aspect-ratio:16/9; border-radius:16px; overflow:hidden; box-shadow:var(--shadow); transition:transform .25s cubic-bezier(.2,.7,.2,1), box-shadow .25s; }
-  .card:hover .thumb { transform:translateY(-4px); box-shadow:var(--shadow-h); }
-  .bg { position:absolute; inset:0; background-size:cover; background-position:center; transition:transform .5s cubic-bezier(.2,.7,.2,1); }
-  .card:hover .bg { transform:scale(1.06); }
-  .play { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; }
-  .play b { width:54px; height:54px; border-radius:50%; background:rgba(255,255,255,.2); backdrop-filter:blur(6px); border:1px solid rgba(255,255,255,.35); display:flex; align-items:center; justify-content:center; opacity:.9; transition:transform .25s, opacity .25s; }
-  .play b::after { content:""; border-left:15px solid #fff; border-top:9px solid transparent; border-bottom:9px solid transparent; margin-left:4px; }
-  .card:hover .play b { transform:scale(1.12); opacity:1; }
-  .tag { position:absolute; left:10px; top:10px; font-size:11px; font-weight:700; letter-spacing:.04em; color:#fff; background:rgba(0,0,0,.45); backdrop-filter:blur(6px); padding:4px 9px; border-radius:999px; }
-  .dur { position:absolute; right:10px; bottom:10px; font-size:12px; font-weight:600; color:#fff; background:rgba(0,0,0,.6); backdrop-filter:blur(6px); padding:3px 8px; border-radius:8px; font-variant-numeric:tabular-nums; }
-  .info { padding:12px 4px 0; }
-  .title { font-weight:700; font-size:15px; line-height:1.4; letter-spacing:-.2px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; min-height:2.8em; transition:color .15s; }
-  .card:hover .title { color:var(--brand); }
-  .meta { margin-top:6px; font-size:13px; color:var(--sub); }
-  .meta i { font-style:normal; opacity:.5; margin:0 6px; }
-  .heart { position:absolute; top:8px; right:8px; z-index:2; width:36px; height:36px; border-radius:50%; border:0; background:rgba(0,0,0,.42); backdrop-filter:blur(6px); color:#fff; font-size:18px; line-height:1; cursor:pointer; transition:transform .15s, background .15s; }
-  .heart:hover { transform:scale(1.12); }
-  .heart.on { background:#fff; color:var(--heart); }
-  .rep { position:absolute; top:50px; right:8px; z-index:2; width:36px; height:36px; border-radius:50%; border:0; background:rgba(0,0,0,.42); backdrop-filter:blur(6px); color:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center; opacity:0; transform:translateY(-4px); transition:opacity .2s, transform .2s, background .15s; }
-  .rep svg { width:17px; height:17px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
-  .card:hover .rep, .rep:focus-visible { opacity:1; transform:none; }
-  .rep:hover { background:var(--brand); }
-  @media (hover:none) { .rep { opacity:1; transform:none; } }
-  .iconbtn { font-family:inherit; font-size:17px; line-height:1; color:var(--text); background:var(--panel); border:1px solid var(--line); border-radius:12px; width:42px; height:42px; cursor:pointer; transition:all .15s; }
-  .iconbtn:hover { border-color:var(--brand); color:var(--brand); }
-  #toast { position:fixed; left:50%; bottom:28px; transform:translate(-50%,20px); background:var(--text); color:var(--bg); font-size:13px; font-weight:600; padding:11px 18px; border-radius:999px; opacity:0; pointer-events:none; transition:all .25s; z-index:50; max-width:90vw; }
-  #toast.show { opacity:1; transform:translate(-50%,0); }
-  .navtabs { display:flex; gap:4px; margin-left:10px; }
-  .navtab { font-family:inherit; font-size:14px; font-weight:600; color:var(--sub); background:none; border:0; border-radius:10px; padding:8px 14px; cursor:pointer; transition:all .15s; }
-  .navtab:hover { color:var(--text); background:var(--chip); }
-  .navtab.on { color:var(--brand); background:var(--chip); }
-  body.guide .search, body.guide .favbtn { display:none; }
-  .guide-wrap { max-width:900px; margin:0 auto; padding:44px 24px 10px; }
-  .guide-wrap small { color:var(--brand); font-weight:700; letter-spacing:.14em; font-size:12px; }
-  .guide-wrap h1 { margin:8px 0 8px; font-size:clamp(26px,4.5vw,38px); letter-spacing:-1.2px; font-weight:800; }
-  .guide-wrap > p { margin:0 0 28px; color:var(--sub); font-size:15px; }
-  .step { display:flex; gap:16px; background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:20px; margin-bottom:14px; box-shadow:var(--shadow); }
-  .step .n { flex:none; width:36px; height:36px; border-radius:12px; background:linear-gradient(135deg,var(--brand),var(--brand2)); color:#fff; font-weight:800; display:flex; align-items:center; justify-content:center; }
-  .step h3 { margin:2px 0 6px; font-size:17px; letter-spacing:-.3px; }
-  .step p, .step li { margin:0; color:var(--sub); font-size:14px; line-height:1.7; }
-  .step ul { margin:6px 0 0; padding-left:18px; }
-  .step b { color:var(--text); }
-  .faq { margin-top:30px; }
-  .faq h2 { font-size:20px; margin:0 0 12px; letter-spacing:-.4px; }
-  details { background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:14px 18px; margin-bottom:10px; }
-  summary { cursor:pointer; font-weight:700; font-size:14.5px; }
-  details p { margin:10px 0 0; color:var(--sub); line-height:1.7; font-size:14px; }
-  .gback { display:inline-block; margin:22px 0 0; font-family:inherit; font-weight:700; font-size:14px; color:var(--brand); background:none; border:0; cursor:pointer; padding:0; }
-  #notice { background:linear-gradient(100deg,#2f6bff,#6a4dff); color:#fff; }
-  #notice .in { max-width:1240px; margin:0 auto; padding:11px 24px; display:flex; align-items:center; gap:10px; font-size:14px; font-weight:600; line-height:1.5; }
-  #notice .t { flex:1; word-break:keep-all; }
-  #notice a { color:#fff; text-decoration:underline; text-underline-offset:3px; white-space:nowrap; }
-  #notice .x { flex:none; background:rgba(255,255,255,.2); border:0; color:#fff; width:28px; height:28px; border-radius:50%; font-size:16px; line-height:1; cursor:pointer; padding:0; }
-  #notice .x:hover { background:rgba(255,255,255,.35); }
-  #notice[hidden] { display:none; }
-  @media (max-width:680px){ #notice .in { padding:10px 14px; font-size:13px; } }
-  .more { display:block; margin:36px auto 10px; font-family:inherit; font-size:14px; font-weight:700; color:var(--text); background:var(--panel); border:1px solid var(--line); border-radius:999px; padding:12px 34px; cursor:pointer; box-shadow:var(--shadow); transition:all .15s; }
-  .more:hover { border-color:var(--brand); color:var(--brand); }
-  .more[hidden] { display:none; }
-  .empty { grid-column:1/-1; text-align:center; color:var(--sub); padding:90px 20px; border:1px dashed var(--line); border-radius:16px; }
-  footer { text-align:center; color:var(--sub); font-size:12px; line-height:1.8; padding:40px 20px 50px; }
-  @media (max-width:680px){
-    .nav-in { padding:10px 14px; flex-wrap:wrap; } .search { order:3; width:100%; } .sp { display:none; } .favbtn { margin-left:auto; } .iconbtn { width:40px; height:40px; }
-    .nav-in { gap:8px; } .logo { font-size:15px; gap:7px; } .navtab { padding:8px 9px; font-size:13px; } body.guide .iconbtn { margin-left:auto; }
-    .navtabs { margin-left:0; } .guide-wrap { padding:28px 14px 6px; } .step { padding:16px; gap:12px; }
-    .hero { padding:28px 14px 6px; } .wrap { padding:14px; }
-    .grid { grid-template-columns:1fr 1fr; gap:20px 12px; } .title { font-size:13px; } .play b { width:40px; height:40px; } .play b::after { border-left-width:11px; border-top-width:7px; border-bottom-width:7px; }
-    .count { display:none; }
-    .bar { flex-wrap:wrap; } .chips { flex:1 1 100%; flex-wrap:nowrap; } select { margin-left:auto; }
-  }
-</style>
+<link rel="stylesheet" href="style.css?v=2">
 </head>
 <body>
-<div class="nav"><div class="nav-in">
-  <div class="logo"><i></i>잉여맨 추억자료실</div>
-  <div class="navtabs">
-    <button class="navtab on" id="tabList" type="button">다시보기</button>
-    <button class="navtab" id="tabGuide" type="button">이용방법</button>
+
+<header class="top">
+  <div class="top-in">
+    <a class="logo" href="#" id="home" aria-label="잉여맨 추억자료실 처음으로">
+      <span class="logo-mark" aria-hidden="true"></span>
+      <span class="logo-text">잉여맨 추억자료실</span>
+    </a>
+    <label class="search">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+      <input id="q" type="search" placeholder="영상 제목 검색" autocomplete="off" aria-label="영상 제목 검색">
+    </label>
+    <button class="sq" id="theme" type="button" aria-label="밝은 화면 / 어두운 화면 바꾸기" title="밝은 화면 / 어두운 화면 바꾸기"></button>
   </div>
-  <div class="sp"></div>
-  <div class="search">
-    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
-    <input id="q" type="search" placeholder="다시보기 검색">
-  </div>
-  <button class="favbtn" id="fav" type="button">♡ 즐겨찾기</button>
-  <button class="iconbtn" id="theme" type="button" aria-label="화면 모드 전환" title="화면 모드 전환"></button>
-</div></div>
-
-<div id="notice" hidden><div class="in"><span>📢</span><span class="t"></span><button class="x" type="button" aria-label="공지 닫기">✕</button></div></div>
-
-<div id="viewList">
-<section class="hero">
-  <small>VOD ARCHIVE</small>
-  <h1>그때 그 시절,<br><em>다시보기</em> 자료실</h1>
-  <p>영상을 누르면 네이버 카페 게시글로 이동해요</p>
-</section>
-
-<div class="wrap">
-  <div class="bar">
-    <div class="chips" id="chips"></div>
-    <span class="count" id="count"></span>
-    <select id="sort">
-      <option value="new">최신순</option>
-      <option value="old">오래된순</option>
-      <option value="title">제목순</option>
-    </select>
-  </div>
-  <div class="grid" id="grid"></div>
-  <button class="more" id="more" hidden>더 보기</button>
-</div>
-</div>
-
-<div id="viewGuide" hidden>
-  <div class="guide-wrap">
-    <small>HOW TO USE</small>
-    <h1>이용방법</h1>
-    <p>처음 오셨어도 어렵지 않아요. 아래 순서대로 보시면 돼요.</p>
-
-    <div class="step"><div class="n">1</div><div>
-      <h3>영상 보기</h3>
-      <p>보고 싶은 영상 카드를 누르면 <b>네이버 카페 게시글</b>이 열려요. 컴퓨터에서는 새 탭으로 열리고, 휴대폰에서는 <b>네이버 카페 앱</b>이 설치돼 있으면 앱으로 열려요. 영상은 이 사이트가 아니라 카페에 있어서, 카페 가입이나 네이버 로그인이 필요할 수 있어요.</p>
-    </div></div>
-
-    <div class="step"><div class="n">2</div><div>
-      <h3>영상 찾기</h3>
-      <ul>
-        <li><b>검색</b>: 위쪽 검색창에 제목 일부를 입력하세요.</li>
-        <li><b>분류</b>: 목록 위 동그란 버튼(예능, 음악 등)을 누르면 그 분류만 보여요.</li>
-        <li><b>정렬</b>: 오른쪽 메뉴에서 최신순, 오래된순, 제목순을 고를 수 있어요.</li>
-      </ul>
-    </div></div>
-
-    <div class="step"><div class="n">3</div><div>
-      <h3>즐겨찾기 ♡</h3>
-      <p>카드 오른쪽 위 하트를 누르면 즐겨찾기에 담겨요. 위쪽 <b>즐겨찾기</b> 버튼을 누르면 담은 영상만 모아 볼 수 있어요. 다시 누르면 전체 목록으로 돌아와요.</p>
-      <ul><li>즐겨찾기는 <b>지금 쓰는 기기와 브라우저에만</b> 저장돼요. 휴대폰과 컴퓨터는 따로 관리돼요.</li>
-      <li>브라우저의 인터넷 사용 기록을 지우면 함께 사라질 수 있어요.</li></ul>
-    </div></div>
-
-    <div class="step"><div class="n">4</div><div>
-      <h3>썸네일 제보 📷</h3>
-      <p>영상 썸네일이 없거나 마음에 안 들면 알려주세요. 카드의 <b>카메라 아이콘</b>을 누르면 GitHub 글쓰기 창이 열리고, 영상 정보가 미리 채워져 있어요. 아래 칸에 이미지를 끌어다 놓거나 주소를 붙여넣고 올리면 끝이에요.</p>
-      <ul><li>컴퓨터에서는 카드에 마우스를 올리면 카메라 아이콘이 나타나요.</li>
-      <li>제보하려면 GitHub 로그인이 필요해요. 확인 후 사이트에 반영돼요.</li></ul>
-    </div></div>
-
-    <div class="step"><div class="n">5</div><div>
-      <h3>화면 모드 바꾸기 ☾ / ☀</h3>
-      <p>오른쪽 위 둥근 버튼을 누르면 밝은 화면과 어두운 화면이 바뀌어요. 고른 모드는 기억해 둬요.</p>
-    </div></div>
-
-    <div class="faq">
-      <h2>자주 묻는 질문</h2>
-      <details><summary>영상이 안 열려요</summary><p>카페에 가입하지 않았거나 로그인이 안 된 경우가 많아요. 네이버 로그인 후 카페 가입 여부를 확인해 주세요. 카페 글이 삭제됐을 수도 있어요.</p></details>
-      <details><summary>영상이 이 사이트에 직접 들어 있나요?</summary><p>아니요. 이 사이트는 카페 영상을 쉽게 찾도록 모아 둔 목록이에요. 실제 영상은 모두 네이버 카페에 있어요.</p></details>
-      <details><summary>새 영상은 언제 올라오나요?</summary><p>카페에 새 영상이 올라오면 목록에도 추가돼요. 바로 반영되지 않을 수 있어요.</p></details>
-      <details><summary>즐겨찾기가 사라졌어요</summary><p>브라우저 기록을 지웠거나 다른 기기에서 접속했을 수 있어요. 즐겨찾기는 각 기기에 따로 저장돼요.</p></details>
+  <nav class="tabs" aria-label="메뉴">
+    <div class="tabs-in">
+      <a class="tab" href="#" data-tab="all">다시보기</a>
+      <a class="tab" href="#fav" data-tab="fav">즐겨찾기 <b id="nFav">0</b></a>
+      <a class="tab" href="#recent" data-tab="recent">최근 본 영상 <b id="nRecent">0</b></a>
+      <a class="tab" href="#guide" data-tab="guide">이용방법</a>
     </div>
-    <button class="gback" id="gback" type="button">← 다시보기 목록으로</button>
+  </nav>
+</header>
+
+<div id="notice" hidden><div class="notice-in"><span class="notice-tag">공지</span><span class="t"></span><button class="x" type="button" aria-label="공지 닫기">✕</button></div></div>
+
+<main id="viewList" class="layout">
+  <aside class="side" aria-label="분류">
+    <h2 class="side-h">분류</h2>
+    <div class="cats" id="cats"></div>
+  </aside>
+
+  <section class="main">
+    <div class="intro" id="intro">
+      <h1>그때 그 방송, 여기 다 모아 뒀어요</h1>
+      <p>영상을 누르면 네이버 카페 글이 열려요.</p>
+    </div>
+
+    <div class="tools">
+      <strong class="count" id="count"></strong>
+      <span class="grow"></span>
+      <button class="btn" id="random" type="button">아무거나 보기</button>
+      <select id="year" aria-label="연도"></select>
+      <select id="sort" aria-label="정렬">
+        <option value="new">최신순</option>
+        <option value="old">오래된순</option>
+        <option value="title">제목순</option>
+      </select>
+      <div class="seg" role="group" aria-label="보기 방식">
+        <button type="button" id="vGrid" aria-label="큰 그림으로 보기" title="큰 그림으로 보기"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7"/><rect x="13" y="4" width="7" height="7"/><rect x="4" y="13" width="7" height="7"/><rect x="13" y="13" width="7" height="7"/></svg></button>
+        <button type="button" id="vList" aria-label="목록으로 보기" title="목록으로 보기"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+      </div>
+    </div>
+
+    <div id="grid" class="grid"></div>
+    <button class="more" id="more" type="button" hidden>더 보기</button>
+  </section>
+</main>
+
+<main id="viewGuide" class="guide" hidden>
+  <h1>이용방법</h1>
+  <p class="lead">처음 오셨어도 어렵지 않아요. 순서대로 보시면 돼요.</p>
+
+  <ol class="steps">
+    <li>
+      <h3>영상 보기</h3>
+      <p>보고 싶은 영상을 누르면 <b>네이버 카페 글</b>이 열려요. 컴퓨터에서는 새 탭으로, 휴대폰에서는 <b>네이버 카페 앱</b>으로 열려요. 영상은 카페에 있어서 카페 가입이나 네이버 로그인이 필요할 수 있어요.</p>
+    </li>
+    <li>
+      <h3>영상 찾기</h3>
+      <p><b>검색</b>: 맨 위 검색창에 제목 일부를 적어요.<br>
+      <b>분류</b>: 탈출맵, 상황극 같은 분류를 누르면 그것만 보여요.<br>
+      <b>연도와 정렬</b>: 목록 위에서 연도를 고르거나 최신순, 오래된순, 제목순으로 바꿔요.<br>
+      <b>보기 방식</b>: 큰 그림으로 보거나, 게시판처럼 한 줄씩 볼 수 있어요.</p>
+    </li>
+    <li>
+      <h3>즐겨찾기</h3>
+      <p>영상의 하트(♡)를 누르면 담겨요. 위쪽 <b>즐겨찾기</b> 메뉴에서 모아 볼 수 있어요. 지금 쓰는 기기와 브라우저에만 저장되고, 인터넷 사용 기록을 지우면 함께 사라질 수 있어요.</p>
+    </li>
+    <li>
+      <h3>최근 본 영상</h3>
+      <p>눌러 본 영상은 <b>최근 본 영상</b> 메뉴에 차례로 쌓여요. 보다 만 영상을 다시 찾을 때 편해요.</p>
+    </li>
+    <li>
+      <h3>아무거나 보기</h3>
+      <p>뭘 볼지 모르겠으면 <b>아무거나 보기</b>를 눌러 보세요. 영상 하나를 골라 드려요.</p>
+    </li>
+    <li>
+      <h3>썸네일 제보</h3>
+      <p>영상의 <b>카메라 버튼</b>을 누르면 GitHub 글쓰기 창이 열리고 영상 정보가 미리 채워져요. 이미지를 끌어다 놓고 올리면 돼요. GitHub 로그인이 필요하고, 확인 후 반영돼요.</p>
+    </li>
+  </ol>
+
+  <h2>자주 묻는 질문</h2>
+  <details><summary>영상이 안 열려요</summary><p>카페에 가입하지 않았거나 로그인이 안 된 경우가 많아요. 네이버에 로그인한 뒤 카페 가입 여부를 확인해 주세요. 카페 글이 지워졌을 수도 있어요.</p></details>
+  <details><summary>영상이 이 사이트에 직접 들어 있나요?</summary><p>아니요. 여기는 카페 영상을 쉽게 찾도록 모아 둔 목록이에요. 영상은 네이버 카페에 있어요.</p></details>
+  <details><summary>즐겨찾기가 사라졌어요</summary><p>브라우저 기록을 지웠거나 다른 기기로 접속하면 보이지 않아요. 기기마다 따로 저장돼요.</p></details>
+  <details><summary>새 영상은 언제 올라오나요?</summary><p>운영자가 확인하는 대로 목록에 추가해요. 카페보다 조금 늦을 수 있어요.</p></details>
+  <a class="btn" href="#">다시보기 목록으로</a>
+</main>
+
+<footer>
+  <p>비공식 팬 자료실이에요. 영상은 네이버 카페 「잉여맨추억자료실」에 있어요.</p>
+</footer>
+
+<div class="modal" id="modal" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+    <button class="x" id="mClose" type="button" aria-label="닫기">✕</button>
+    <div class="m-screen" id="mScreen"></div>
+    <div class="m-body">
+      <span class="m-cat" id="mCat"></span>
+      <h2 id="mTitle"></h2>
+      <p class="m-date" id="mDate"></p>
+      <div class="m-acts">
+        <a class="btn primary" id="mGo" target="_blank" rel="noopener noreferrer">카페에서 보기</a>
+        <button class="btn" id="mFav" type="button"></button>
+        <button class="btn" id="mAgain" type="button">다른 영상 고르기</button>
+      </div>
+    </div>
   </div>
 </div>
 
-<footer>시청은 카페 가입/로그인이 필요할 수 있어요<br>♡ 즐겨찾기는 이 브라우저에만 저장돼요 · 비공식 팬 목록 사이트</footer>
-
-<div id="toast"></div>
-<script src="config.js"></script>
-<script>
-const PAGE = 48;
-let all = [], shown = PAGE, onlyFav = false, cat = "";
-let favs = new Set();
-try { favs = new Set(JSON.parse(localStorage.getItem("favs") || "[]")); } catch(e) {}
-const key = v => (v.url || "") + "|" + (v.title || "");
-function saveFavs(){ try { localStorage.setItem("favs", JSON.stringify([...favs])); } catch(e) {} }
-const $ = id => document.getElementById(id);
-function esc(s){ return String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
-function safeUrl(u){ return /^https?:\/\//i.test(u) ? u : "#"; }
-function grad(t){ let h = 0; for (const c of String(t)) h = (h*31 + c.charCodeAt(0)) % 360;
-  return `linear-gradient(135deg,hsl(${h},62%,58%),hsl(${(h+45)%360},58%,36%))`; }
-
-function filtered(){
-  const q = $("q").value.trim().toLowerCase();
-  let list = all.filter(v => (!cat || v.category === cat) && (!onlyFav || favs.has(key(v))) && (!q || (v.title || "").toLowerCase().includes(q)));
-  const s = $("sort").value;
-  list.sort((a,b) => s === "title" ? (a.title||"").localeCompare(b.title||"","ko")
-                    : s === "old" ? (a.date||"").localeCompare(b.date||"")
-                    : (b.date||"").localeCompare(a.date||""));
-  return list;
-}
-function renderChips(){
-  const fixed = (window.SITE && window.SITE.categories) || [];
-  const extra = [...new Set(all.map(v => v.category).filter(Boolean))].filter(c => !fixed.includes(c)).sort();
-  $("chips").innerHTML = ["", ...fixed, ...extra].map(c => `<button class="chip ${c === cat ? "on" : ""}" data-c="${esc(c)}">${c ? esc(c) : "전체"}</button>`).join("");
-}
-function render(){
-  const list = filtered();
-  $("count").textContent = `${list.length}개`;
-  $("fav").textContent = (onlyFav ? "♥" : "♡") + " 즐겨찾기 " + favs.size;
-  $("fav").classList.toggle("on", onlyFav);
-  $("grid").innerHTML = list.slice(0, shown).map(v => `
-    <div class="card" data-k="${esc(key(v))}">
-      <button class="heart ${favs.has(key(v)) ? "on" : ""}" type="button" aria-label="즐겨찾기">${favs.has(key(v)) ? "♥" : "♡"}</button>
-      <a href="${esc(safeUrl(v.url))}" target="_blank" rel="noopener noreferrer">
-        <div class="thumb">
-          <div class="bg" style="background-image:${v.thumb ? `url('${esc(v.thumb)}')` : grad(v.title)}"></div>
-          ${v.thumb ? "" : `<div class="play"><b></b></div>`}
-          <span class="tag">${esc(v.category || "VOD")}</span>
-          ${v.duration ? `<span class="dur">${esc(v.duration)}</span>` : ""}
-        </div>
-        <div class="info">
-          <div class="title">${esc(v.title)}</div>
-          <div class="meta">${esc(v.date)}</div>
-        </div>
-      </a>
-      <button class="rep" type="button" aria-label="썸네일 제보" title="썸네일 제보"><svg viewBox="0 0 24 24"><path d="M4 8h3l2-2.5h6L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg></button>
-    </div>`).join("") || `<div class="empty">${onlyFav ? "즐겨찾기한 영상이 없어요" : "검색 결과가 없어요"}</div>`;
-  $("more").hidden = list.length <= shown;
-}
-function reset(){ shown = PAGE; render(); }
-
-fetch("videos.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).then(data => { all = data; renderChips(); render(); })
-  .catch(() => { $("grid").innerHTML = `<div class="empty">목록을 불러오지 못했어요</div>`; });
-
-function applyTheme(t){ document.documentElement.setAttribute("data-theme", t); $("theme").textContent = t === "dark" ? "☀" : "☾"; }
-applyTheme(document.documentElement.getAttribute("data-theme"));
-$("theme").addEventListener("click", () => {
-  const t = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
-  applyTheme(t); try { localStorage.setItem("theme", t); } catch(e) {}
-});
-function route(){
-  const g = location.hash === "#guide";
-  $("viewGuide").hidden = !g; $("viewList").hidden = g;
-  document.body.classList.toggle("guide", g);
-  $("tabGuide").classList.toggle("on", g); $("tabList").classList.toggle("on", !g);
-  window.scrollTo(0, 0);
-}
-$("tabGuide").addEventListener("click", () => { location.hash = "guide"; });
-$("tabList").addEventListener("click", () => { history.pushState("", document.title, location.pathname + location.search); route(); });
-$("gback").addEventListener("click", () => $("tabList").click());
-window.addEventListener("hashchange", route);
-route();
-(function(){
-  const box = $("notice");
-  fetch("notice.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).then(n => {
-    const text = (n && n.text || "").trim();
-    if (!n || !n.enabled || !text) return;
-    let h = 0; for (const c of text + (n.link || "")) h = (h * 31 + c.charCodeAt(0)) | 0;
-    const id = String(h);
-    const closable = n.closable === true;
-    if (closable) { try { if (localStorage.getItem("notice_closed") === id) return; } catch(e) {} }
-    const t = box.querySelector(".t"); t.textContent = text + " ";
-    if (n.link && /^https?:\/\//i.test(n.link)) { const a = document.createElement("a"); a.href = n.link; a.target = "_blank"; a.rel = "noopener noreferrer"; a.textContent = "자세히 보기"; t.appendChild(a); }
-    box.hidden = false;
-    const x = box.querySelector(".x");
-    if (closable) x.onclick = () => { box.hidden = true; try { localStorage.setItem("notice_closed", id); } catch(e) {} };
-    else x.remove();
-  }).catch(() => {});
-})();
-/* 드래그(선택)·오른쪽 클릭 막기 (검색창 입력은 그대로 가능) */
-(function(){
-  const inField = e => e.target && e.target.closest && e.target.closest("input, textarea");
-  document.addEventListener("contextmenu", e => { if (!inField(e)) e.preventDefault(); });
-  document.addEventListener("dragstart", e => e.preventDefault());
-  document.addEventListener("selectstart", e => { if (!inField(e)) e.preventDefault(); });
-})();
-function appUrl(href){
-  try {
-    const u = new URL(href);
-    if (u.protocol !== "https:" || !/(^|\.)cafe\.naver\.com$/.test(u.hostname)) return null;
-    return "intent://" + u.host + u.pathname + u.search + "#Intent;scheme=https;package=com.nhn.android.navercafe;S.browser_fallback_url=" + encodeURIComponent(href) + ";end";
-  } catch(e) { return null; }
-}
-function toast(t){ const el = $("toast"); el.textContent = t; el.classList.add("show"); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove("show"), 2600); }
-$("grid").addEventListener("click", e => {
-  // 안드로이드 휴대폰에서는 네이버 카페 앱으로 열기를 시도하고, 앱이 없으면 일반 새 탭으로 열려요.
-  // (아이폰은 카페 앱이 설치돼 있으면 링크를 누를 때 자동으로 앱이 열려요)
-  const link = e.target.closest(".card a");
-  if (link && !e.ctrlKey && !e.metaKey && !e.shiftKey && /Android/i.test(navigator.userAgent)) {
-    const u = appUrl(link.href);
-    if (u) { e.preventDefault(); window.location.href = u; return; }
-  }
-  const r = e.target.closest(".rep");
-  if (r) {
-    const v = all.find(x => key(x) === r.closest(".card").dataset.k);
-    const repo = (window.SITE && window.SITE.repo) || "";
-    if (!repo) return toast("썸네일 제보는 곧 열려요 (준비 중)");
-    const body = "**영상**: " + v.title + "\n**날짜**: " + (v.date || "") + "\n**카페 글**: " + (v.url || "") + "\n\n" +
-      "**썸네일 이미지** (아래에 이미지를 끌어다 놓거나 주소를 붙여넣어 주세요)\n\n";
-    window.open("https://github.com/" + repo + "/issues/new?labels=" + encodeURIComponent("thumbnail") +
-      "&title=" + encodeURIComponent("[썸네일] " + v.title) + "&body=" + encodeURIComponent(body), "_blank", "noopener");
-    return;
-  }
-  const b = e.target.closest(".heart"); if (!b) return;
-  const k = b.closest(".card").dataset.k;
-  favs.has(k) ? favs.delete(k) : favs.add(k);
-  saveFavs(); render();
-});
-$("chips").addEventListener("click", e => { const b = e.target.closest(".chip"); if (!b) return; cat = b.dataset.c; renderChips(); reset(); });
-$("fav").addEventListener("click", () => { onlyFav = !onlyFav; reset(); });
-$("q").addEventListener("input", reset);
-$("sort").addEventListener("change", reset);
-$("more").addEventListener("click", () => { shown += PAGE; render(); });
-</script>
+<div id="toast" role="status"></div>
+<script src="config.js?v=2"></script>
+<script src="app.js?v=2"></script>
 </body>
 </html>
