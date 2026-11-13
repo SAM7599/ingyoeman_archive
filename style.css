@@ -461,3 +461,22 @@ html[data-motion="off"] *, html[data-motion="off"] *::before, html[data-motion="
 .xfer textarea { display:block; width:100%; margin-bottom:10px; padding:11px 12px; border:1px solid var(--line); border-radius:12px; background:var(--bg); color:var(--ink); font:13px/1.5 ui-monospace,Consolas,monospace; resize:vertical; word-break:break-all; }
 .xfer textarea:focus { outline:0; border-color:var(--accent); }
 .xfer .x { background:var(--raise); color:var(--ink); }
+
+/* ── 잉여맨 유튜브 채널 배너 ── */
+.promo { position:relative; overflow:hidden; display:flex; align-items:center; gap:20px; margin-bottom:34px; padding:22px 26px; border-radius:20px; color:#fff; text-decoration:none; background:linear-gradient(110deg,#c2262e,#8f1d4f 55%,#3a1f66); isolation:isolate; }
+.promo::before { content:""; position:absolute; z-index:-1; right:-60px; top:50%; width:300px; height:300px; margin-top:-150px; border-radius:50%; border:44px solid rgba(255,255,255,.09); }
+.promo-ic { flex:none; width:56px; height:56px; border-radius:50%; background:rgba(255,255,255,.16); border:2px solid rgba(255,255,255,.7); display:grid; place-items:center; }
+.promo-ic::after { content:""; border-left:16px solid #fff; border-top:10px solid transparent; border-bottom:10px solid transparent; margin-left:5px; }
+.promo-t { flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
+.promo-t small { font-size:13px; font-weight:700; color:rgba(255,255,255,.85); }
+.promo-t b { font-size:clamp(18px,2.1vw,24px); font-weight:800; letter-spacing:-.6px; line-height:1.3; word-break:keep-all; }
+.promo-t i { font-style:normal; font-size:13.5px; color:rgba(255,255,255,.75); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.promo-go { flex:none; height:46px; padding:0 20px; background:#fff; border-color:#fff; color:#8f1d4f; font-weight:800; }
+.promo:hover .promo-go { background:#ffe9ee; }
+.promo:hover { box-shadow:0 0 0 2px var(--bg), 0 0 0 4px #e0566a; }
+@media (max-width:860px) {
+  .promo { flex-wrap:wrap; gap:12px 14px; padding:18px; margin-bottom:26px; border-radius:16px; }
+  .promo-ic { width:46px; height:46px; }
+  .promo-ic::after { border-left-width:13px; border-top-width:8px; border-bottom-width:8px; margin-left:4px; }
+  .promo-go { flex:1 1 100%; justify-content:center; height:44px; }
+}
