@@ -451,3 +451,13 @@ html[data-motion="off"] *, html[data-motion="off"] *::before, html[data-motion="
   .g-acts { transition:opacity .3s, transform .3s; }
   .g-title { transition:opacity .2s; }
 }
+
+/* ── 내 기록 옮기기 ── */
+.sheet.xfer { width:min(520px,100%); }
+.xfer .m-body { padding:26px 24px 24px; }
+.xfer h2 { margin:0 0 6px; padding-right:40px; }
+.xfer h3 { margin:22px 0 4px; font-size:16px; padding-top:18px; border-top:1px solid var(--line); }
+.x-sub { margin:0 0 12px; color:var(--sub); font-size:14px; line-height:1.7; word-break:keep-all; }
+.xfer textarea { display:block; width:100%; margin-bottom:10px; padding:11px 12px; border:1px solid var(--line); border-radius:12px; background:var(--bg); color:var(--ink); font:13px/1.5 ui-monospace,Consolas,monospace; resize:vertical; word-break:break-all; }
+.xfer textarea:focus { outline:0; border-color:var(--accent); }
+.xfer .x { background:var(--raise); color:var(--ink); }
