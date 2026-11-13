@@ -16,7 +16,7 @@
   if (m !== "on" && m !== "off") m = (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) ? "off" : "on";
   document.documentElement.setAttribute("data-motion", m); })();
 </script>
-<link rel="stylesheet" href="style.css?v=26">
+<link rel="stylesheet" href="style.css?v=27">
 </head>
 <body>
 
@@ -41,6 +41,7 @@
       <kbd>/</kbd>
     </label>
     <a class="btn cafe" data-cafe target="_blank" rel="noopener noreferrer">카페<span class="hm">가기</span><svg class="out" viewBox="0 0 24 24"><path d="M9 6h9v9M18 6L7 17"/></svg></a>
+    <a class="round ach-btn" id="achBtn" href="#ach" aria-label="도전과제" title="도전과제"><svg viewBox="0 0 24 24"><path d="M8 4h8v5a4 4 0 0 1-8 0zM8 6H5v1a3 3 0 0 0 3 3M16 6h3v1a3 3 0 0 1-3 3M12 13v4M8.5 20h7M10 17h4"/></svg><b id="achN"></b></a>
     <button class="round" id="set" type="button" aria-label="화면 설정" title="화면 설정" aria-haspopup="menu" aria-expanded="false"><svg viewBox="0 0 24 24"><path d="M5 7h9M18 7h1M5 12h2M11 12h8M5 17h7M16 17h3"/><circle cx="16" cy="7" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="14" cy="17" r="2"/></svg></button>
   </div>
 </header>
@@ -73,6 +74,13 @@
     <div id="grid" class="grid"></div>
     <div id="sentinel"></div>
   </div>
+</main>
+
+<main id="viewAch" class="guide ach" hidden>
+  <h1>도전과제</h1>
+  <p class="lead">사이트를 둘러보다 보면 하나씩 달성돼요. 이 기기에만 기록돼요.</p>
+  <div class="ach-sum"><b id="achSum"></b><div class="bar"><i id="achBar"></i></div></div>
+  <div class="ach-list" id="achList"></div>
 </main>
 
 <main id="viewAbout" class="guide about" hidden>
@@ -123,6 +131,8 @@
     <p>첫 화면 맨 위 큰 배너에 매일 다른 영상을 하나 골라 드려요.</p></div>
   <div class="g-item"><h3>랜덤 뽑기</h3>
     <p>뭘 볼지 모르겠으면 <b>랜덤 뽑기</b>를 눌러 보세요. 카드를 누르면 영상 하나가 뽑혀요. 분류나 시리즈를 고른 상태에서 누르면 그 안에서만 뽑아요. 카페 좋아요가 5개 이상이면 <b>희귀</b>, 10개 이상이면 <b>전설</b> 카드로 나와요. 뽑을 때 효과음이 나고, 뽑기 화면 왼쪽 위 버튼이나 설정에서 끌 수 있어요.</p></div>
+  <div class="g-item"><h3>도전과제</h3>
+    <p>영상을 열어 보거나, 즐겨찾기에 담거나, 랜덤 뽑기를 하다 보면 <b>도전과제</b>가 달성돼요. 달성하면 화면에 알림이 뜨고, 맨 위의 <b>트로피 버튼</b>에서 전체 목록과 진행 상황을 볼 수 있어요. 기록은 이 기기에만 저장돼요.</p></div>
   <div class="g-item"><h3>다른 기기로 옮기기</h3>
     <p>즐겨찾기와 열어본 영상 기록은 기기마다 따로 저장돼요. 맨 위 오른쪽 <b>설정 버튼</b>의 <b>다른 기기로 옮기기</b>를 누르면 QR코드와 링크가 나와요. 다른 기기의 카메라로 QR코드를 찍거나, 링크를 나에게 보내서 열면 기록이 합쳐져요.</p></div>
   <div class="g-item"><h3>화면 설정</h3>
@@ -166,6 +176,7 @@
   <button type="button" id="motion" role="menuitemcheckbox"><span>움직임 줄이기</span><i class="sw"></i></button>
   <button type="button" id="sound" role="menuitemcheckbox"><span>뽑기 소리</span><i class="sw"></i></button>
   <button type="button" id="popup" role="menuitemcheckbox"><span>카페 글 팝업 창으로</span><i class="sw"></i></button>
+  <a href="#ach" role="menuitem">도전과제</a>
   <button type="button" id="xferOpen" role="menuitem"><span>다른 기기로 옮기기</span></button>
   <a href="#about" role="menuitem">사이트 소개</a>
   <a href="#guide" role="menuitem">이용방법</a>
@@ -246,8 +257,9 @@
   </div>
 </div>
 
+<div class="ach-pop" id="achPop" role="status" hidden><span class="ach-ic"><svg viewBox="0 0 24 24"><path d="M8 4h8v5a4 4 0 0 1-8 0zM8 6H5v1a3 3 0 0 0 3 3M16 6h3v1a3 3 0 0 1-3 3M12 13v4M8.5 20h7M10 17h4"/></svg></span><span class="ach-tx"><small>도전과제 달성!</small><b id="achPopT"></b><i id="achPopD"></i></span></div>
 <div id="toast" role="status"></div>
-<script src="config.js?v=26"></script>
-<script src="app.js?v=26"></script>
+<script src="config.js?v=27"></script>
+<script src="app.js?v=27"></script>
 </body>
 </html>
