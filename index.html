@@ -16,7 +16,7 @@
   if (m !== "on" && m !== "off") m = (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) ? "off" : "on";
   document.documentElement.setAttribute("data-motion", m); })();
 </script>
-<link rel="stylesheet" href="style.css?v=17">
+<link rel="stylesheet" href="style.css?v=18">
 </head>
 <body>
 
@@ -60,7 +60,7 @@
       <a class="btn back" id="back" href="#series" hidden>시리즈 목록</a>
       <select id="sort" aria-label="정렬">
         <option value="new">최근 올라온 순</option>
-        <option value="likes">좋아요 많은 순</option>
+        <option value="likes">인기순</option>
         <option value="old">먼저 올라온 순</option>
         <option value="title">제목순</option>
       </select>
@@ -84,7 +84,7 @@
   <div class="g-item"><h3>영상 찾기</h3>
     <p>맨 위 <b>검색창</b>에 제목 일부나 분류 이름을 적어요. 여러 단어를 띄어 쓰면 모두 들어간 영상만 나와요. 첫 화면에는 분류별로 영상이 한 줄씩 나오고, 옆으로 넘겨 볼 수 있어요. <b>전체 보기</b>나 위쪽 <b>분류 버튼</b>을 누르면 그 분류만 모아 볼 수 있어요.</p></div>
   <div class="g-item"><h3>인기 랭킹</h3>
-    <p><b>인기 랭킹</b>에서는 네이버 카페에서 좋아요를 많이 받은 영상을 순서대로 볼 수 있어요. 분류 버튼을 누르면 그 분류 안에서의 순위가 나와요. 좋아요 수는 목록을 정리한 때의 숫자라 지금 카페와 조금 다를 수 있어요.</p></div>
+    <p><b>인기 랭킹</b>에서는 네이버 카페 조회수와 좋아요를 합친 점수로 순위를 볼 수 있어요. 좋아요 1개는 조회수 50회로 쳐요. 분류 버튼을 누르면 그 분류 안에서의 순위가 나와요. 조회수와 좋아요 수는 목록을 정리한 때의 숫자라 지금 카페와 조금 다를 수 있어요.</p></div>
   <div class="g-item"><h3>시리즈</h3>
     <p><b>시리즈</b>에서는 아오오니저택, 경찰과 도둑처럼 같은 콘텐츠를 한데 모아 볼 수 있어요. 영상 아래의 시리즈 이름을 눌러도 같은 시리즈가 모여요. 제목으로 자동 분류해서 빠지거나 잘못 들어간 영상이 있을 수 있어요.</p></div>
   <div class="g-item"><h3>오늘의 다시보기</h3>
@@ -179,7 +179,7 @@
 </div>
 
 <div id="toast" role="status"></div>
-<script src="config.js?v=17"></script>
-<script src="app.js?v=17"></script>
+<script src="config.js?v=18"></script>
+<script src="app.js?v=18"></script>
 </body>
 </html>
