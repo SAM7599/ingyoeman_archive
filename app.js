@@ -52,7 +52,10 @@
     if (tab === "series") return ser ? all.filter(v => v._s.includes(ser)) : [];
     return all;
   }
-  const ranked = list => list.filter(v => v.likes > 0).sort((a, b) => b.likes - a.likes || order(a) - order(b));   // 카페 좋아요 많은 순
+  const LIKE_W = 50;   // 인기 점수 = 조회수 + 좋아요 × 50
+  const pop = v => (v.views || 0) + LIKE_W * (v.likes || 0);
+  const nf = n => Number(n || 0).toLocaleString("ko-KR");
+  const ranked = list => list.filter(v => pop(v) > 0).sort((a, b) => pop(b) - pop(a) || order(a) - order(b));   // 카페 조회수와 좋아요를 합친 순
   const words = () => $("q").value.trim().toLowerCase().split(/\s+/).filter(Boolean);
   function filtered() {
     const w = words(), s = $("sort").value;
@@ -63,7 +66,7 @@
     });
     if (tab === "recent" && s === "new") return list;   // 본 순서 그대로
     if (tab === "rank") return list.slice(0, 100);        // 순위 그대로, 100위까지
-    if (s === "likes") return list.sort((a, b) => (b.likes || 0) - (a.likes || 0) || order(b) - order(a));
+    if (s === "likes") return list.sort((a, b) => pop(b) - pop(a) || order(b) - order(a));
     return list.sort((a, b) => s === "title" ? (a.title || "").localeCompare(b.title || "", "ko") : s === "old" ? order(a) - order(b) : order(b) - order(a));
   }
   const isHome = () => tab === "all" && !cat && !words().length;
@@ -78,8 +81,8 @@
   const picHtml = (v, hl) => v.thumb ? `<img src="${esc(v.thumb)}" alt="" loading="lazy">` : `<div class="ph"><b>${hl ? mark(v.title) : esc(v.title)}</b></div>`;   // 썸네일이 없으면 제목 카드
   function cardHtml(v, shelf, rank) {
     const k = key(v), on = favs.has(k), seen = recent.includes(k) && tab !== "recent" && !shelf, rows = (view === "rows" || tab === "rank") && !shelf;
-    const sn = v._s && v._s.find(n => n !== ser), showLikes = v.likes > 0 && (rank || $("sort").value === "likes" && !shelf);
-    const meta = `<div class="meta"><span class="cat-dot" style="--c:${dot(v.category)}">${esc(v.category || "기타")}</span>${showLikes ? `<span class="lk">♥ ${v.likes}</span>` : ""}${repCount(v) ? `<span class="rp">썸네일 제보 ${repCount(v)}건</span>` : ""}${sn ? `<span class="ser" role="link" tabindex="0" data-ser="${esc(sn)}">${esc(sn)}</span>` : ""}</div>`;
+    const sn = v._s && v._s.find(n => n !== ser), showLikes = pop(v) > 0 && (rank || $("sort").value === "likes" && !shelf);
+    const meta = `<div class="meta"><span class="cat-dot" style="--c:${dot(v.category)}">${esc(v.category || "기타")}</span>${showLikes ? `<span class="vw">조회 ${nf(v.views)}</span><span class="lk">♥ ${v.likes || 0}</span>` : ""}${repCount(v) ? `<span class="rp">썸네일 제보 ${repCount(v)}건</span>` : ""}${sn ? `<span class="ser" role="link" tabindex="0" data-ser="${esc(sn)}">${esc(sn)}</span>` : ""}</div>`;
     const info = `<div class="t"><h3>${shelf ? esc(v.title) : mark(v.title)}</h3>${meta}</div>`;
     const dots = `<button class="dots" type="button" aria-label="더 보기 메뉴" aria-haspopup="menu">${DOTS}</button>`;
     const heart = `<button class="heart ${on ? "on" : ""} ${k === popKey ? "pop" : ""}" type="button" aria-label="${on ? "즐겨찾기에서 빼기" : "즐겨찾기에 담기"}" title="즐겨찾기">${HEART}</button>`;
@@ -157,7 +160,7 @@
     $("back").hidden = !(tab === "series" && ser);
     $("sort").hidden = tiles || rank; document.querySelector(".seg").hidden = tiles || rank;
     const note = tiles ? "같은 콘텐츠끼리 묶었어요. 제목으로 자동 분류해서 빠지거나 잘못 들어간 영상이 있을 수 있어요."
-      : rank ? "네이버 카페에서 좋아요를 많이 받은 순서예요. 목록을 정리한 때의 숫자라 지금과 조금 다를 수 있어요." : "";
+      : rank ? "네이버 카페 조회수와 좋아요를 합친 점수 순서예요. 좋아요 1개를 조회수 " + LIKE_W + "회로 쳤어요. 목록을 정리한 때의 숫자라 지금과 조금 다를 수 있어요." : "";
     $("pageNote").hidden = !note; $("pageNote").textContent = note;
     $("grid").className = tiles ? "grid tiles" : "grid" + (view === "rows" || rank ? " rows" : "");
     $("vGrid").classList.toggle("on", view === "grid"); $("vList").classList.toggle("on", view === "rows");
