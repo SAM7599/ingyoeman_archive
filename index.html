@@ -16,7 +16,7 @@
   if (m !== "on" && m !== "off") m = (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) ? "off" : "on";
   document.documentElement.setAttribute("data-motion", m); })();
 </script>
-<link rel="stylesheet" href="style.css?v=18">
+<link rel="stylesheet" href="style.css?v=19">
 </head>
 <body>
 
@@ -33,7 +33,7 @@
       <a class="tab" href="#series" data-tab="series">시리즈</a>
       <a class="tab" href="#fav" data-tab="fav">즐겨찾기<b class="nFav"></b></a>
       <a class="tab" href="#recent" data-tab="recent">열어본 영상</a>
-      <a class="tab" href="#guide" data-tab="guide">이용방법</a>
+      <a class="tab" href="#about" data-tab="info">소개·이용방법</a>
     </nav>
     <label class="search">
       <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
@@ -75,7 +75,37 @@
   </div>
 </main>
 
+<main id="viewAbout" class="guide about" hidden>
+  <div class="pg-tabs"><a href="#about" class="on">사이트 소개</a><a href="#guide">이용방법</a></div>
+  <h1>그때 그 방송을 다시 찾는 곳</h1>
+  <p class="lead">잉여맨 추억자료실은 2012년 그 시절부터 이어진 잉여맨 방송 다시보기를 한곳에서 찾아볼 수 있게 정리한 팬 자료실이에요.</p>
+
+  <div class="stats">
+    <div><b id="abN">0</b><span>모아 둔 영상</span></div>
+    <div><b id="abC">0</b><span>분류</span></div>
+    <div><b id="abS">0</b><span>시리즈 묶음</span></div>
+  </div>
+
+  <h2>어떤 곳인가요</h2>
+  <p>네이버 카페 「잉여맨추억자료실」에는 탈출맵, 상황극, 콘텐츠특집 같은 영상이 오랫동안 쌓여 왔어요. 그런데 글이 많아질수록 보고 싶은 영상을 찾기가 어려워졌어요.</p>
+  <p>그래서 카페의 영상 글을 분류와 시리즈로 정리해, 누구나 쉽게 찾아보도록 이 사이트를 만들었어요. 가입이나 로그인 없이 목록을 볼 수 있고, 영상을 누르면 카페 글로 이동해서 지금처럼 카페에서 재생돼요.</p>
+
+  <h2>이런 걸 할 수 있어요</h2>
+  <div class="g-item"><h3>분류와 검색으로 찾기</h3><p>분류 버튼으로 골라 보거나, 제목 일부만 검색해도 바로 찾을 수 있어요.</p><p><a class="btn" href="#">다시보기 둘러보기</a></p></div>
+  <div class="g-item"><h3>시리즈 몰아보기</h3><p>마검탈출맵, 아오오니저택, 경찰과 도둑처럼 같은 콘텐츠를 한데 묶어 두었어요.</p><p><a class="btn" href="#series">시리즈 보기</a></p></div>
+  <div class="g-item"><h3>인기 랭킹</h3><p>카페 조회수와 좋아요를 합쳐 사랑받은 영상을 순위로 보여 줘요.</p><p><a class="btn" href="#rank">랭킹 보기</a></p></div>
+  <div class="g-item"><h3>랜덤 카드 뽑기</h3><p>뭘 볼지 모르겠다면 카드를 한 장 뽑아 보세요. 좋아요가 많은 영상은 희귀 카드, 전설 카드로 나와요.</p><p><button class="btn" type="button" data-draw-all>한 장 뽑아 보기</button></p></div>
+  <div class="g-item"><h3>내 목록</h3><p>마음에 드는 영상은 즐겨찾기에 담고, 열어본 영상은 기록으로 다시 찾을 수 있어요. 쓰는 기기에만 저장돼요.</p></div>
+
+  <h2>함께 만들어 가요</h2>
+  <p>영상 썸네일은 여러분의 제보로 채우고 있어요. 영상 제목 옆 점 세 개 메뉴에서 보내 주세요. 불편한 점이나 넣었으면 하는 기능은 채팅방으로 알려 주시면 계속 다듬을게요.</p>
+  <p><a class="btn primary" data-feedback target="_blank" rel="noopener noreferrer">피드백 / 버그 제보</a> <a class="btn" data-cafe target="_blank" rel="noopener noreferrer">네이버 카페 가기</a></p>
+
+  <p class="fine">비공식 팬 자료실이에요. 영상은 모두 네이버 카페에 있고, 이 사이트는 영상 파일을 담고 있지 않아요.</p>
+</main>
+
 <main id="viewGuide" class="guide" hidden>
+  <div class="pg-tabs"><a href="#about">사이트 소개</a><a href="#guide" class="on">이용방법</a></div>
   <h1>이용방법</h1>
   <p class="lead">처음 오셨어도 어렵지 않아요.</p>
 
@@ -112,7 +142,7 @@
   <a class="btn" href="#">다시보기 목록으로</a>
 </main>
 
-<footer><p>비공식 팬 자료실이에요. 영상은 네이버 카페 「잉여맨추억자료실」에 있어요.</p><p><a data-cafe target="_blank" rel="noopener noreferrer">네이버 카페로 가기</a> <a data-feedback target="_blank" rel="noopener noreferrer">피드백 / 버그 제보</a></p></footer>
+<footer><p>비공식 팬 자료실이에요. 영상은 네이버 카페 「잉여맨추억자료실」에 있어요.</p><p><a href="#about">사이트 소개</a> <a data-cafe target="_blank" rel="noopener noreferrer">네이버 카페로 가기</a> <a data-feedback target="_blank" rel="noopener noreferrer">피드백 / 버그 제보</a></p></footer>
 
 <nav class="bottom" aria-label="메뉴">
   <a class="tab" href="#" data-tab="all"><svg viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v9h-5v-6H9v6H4z"/></svg>다시보기</a>
@@ -130,6 +160,7 @@
   <button type="button" id="theme" role="menuitemcheckbox"><span>어두운 화면</span><i class="sw"></i></button>
   <button type="button" id="motion" role="menuitemcheckbox"><span>움직임 줄이기</span><i class="sw"></i></button>
   <button type="button" id="sound" role="menuitemcheckbox"><span>뽑기 소리</span><i class="sw"></i></button>
+  <a href="#about" role="menuitem">사이트 소개</a>
   <a href="#guide" role="menuitem">이용방법</a>
 </div>
 
@@ -179,7 +210,7 @@
 </div>
 
 <div id="toast" role="status"></div>
-<script src="config.js?v=18"></script>
-<script src="app.js?v=18"></script>
+<script src="config.js?v=19"></script>
+<script src="app.js?v=19"></script>
 </body>
 </html>

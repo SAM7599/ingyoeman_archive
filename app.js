@@ -69,6 +69,7 @@
     if (s === "likes") return list.sort((a, b) => pop(b) - pop(a) || order(b) - order(a));
     return list.sort((a, b) => s === "title" ? (a.title || "").localeCompare(b.title || "", "ko") : s === "old" ? order(a) - order(b) : order(b) - order(a));
   }
+  const isInfo = () => tab === "guide" || tab === "about";
   const isHome = () => tab === "all" && !cat && !words().length;
 
   /* ── 그리기 ── */
@@ -177,17 +178,17 @@
   /* ── 화면 바꾸기 ── */
   function route() {
     let h = location.hash.replace("#", ""); try { h = decodeURIComponent(h); } catch (e) {}
-    const next = ["fav", "recent", "guide", "rank", "series"].includes(h) ? h : h.startsWith("series=") ? "series" : "all";
+    const next = ["fav", "recent", "guide", "about", "rank", "series"].includes(h) ? h : h.startsWith("series=") ? "series" : "all";
     const nextSer = h.startsWith("series=") ? h.slice(7) : "";
     if (next !== tab || nextSer !== ser) cat = "";
     if (nextSer !== ser) $("q").value = "";
     tab = next; ser = nextSer;
-    $("viewGuide").hidden = tab !== "guide"; $("viewList").hidden = tab === "guide";
-    document.querySelectorAll(".tab").forEach(a => a.classList.toggle("on", a.dataset.tab === tab));
-    const pg = tab === "guide" ? $("viewGuide") : $("viewList"); pg.classList.remove("enter"); void pg.offsetWidth; pg.classList.add("enter");
+    $("viewGuide").hidden = tab !== "guide"; $("viewAbout").hidden = tab !== "about"; $("viewList").hidden = isInfo();
+    document.querySelectorAll(".tab").forEach(a => a.classList.toggle("on", a.dataset.tab === (isInfo() ? "info" : tab)));
+    const pg = tab === "guide" ? $("viewGuide") : tab === "about" ? $("viewAbout") : $("viewList"); pg.classList.remove("enter"); void pg.offsetWidth; pg.classList.add("enter");
     if (!$("gacha").hidden) closeGacha();
     closeMenu();
-    if (tab !== "guide") reset();
+    if (!isInfo()) reset();
     if (h.startsWith("v=")) { const v = all.find(x => vid(x) === h.slice(2)); if (v) openModal(v); else if (all.length) toast("영상을 찾지 못했어요"); }
     else { if (!$("modal").hidden) closeModal(true); window.scrollTo(0, 0); }
   }
@@ -291,7 +292,7 @@
   /* ── 랜덤 뽑기 (카드 뽑기 연출) ── */
   const calm = () => document.documentElement.getAttribute("data-motion") === "off";
   const tierOf = v => (v.likes || 0) >= 10 ? ["legend", "전설"] : (v.likes || 0) >= 5 ? ["rare", "희귀"] : ["normal", "일반"];
-  function drawPool() { const l = isHome() || tab === "guide" ? all : filtered(); return l.length > 1 ? l : all; }
+  function drawPool() { const l = isHome() || isInfo() ? all : filtered(); return l.length > 1 ? l : all; }
   function drawLabel() {
     if (drawPool() === all || isHome()) return "전체 영상";
     return tab === "series" && ser ? ser : tab === "rank" ? "인기 랭킹" : tab === "fav" ? "즐겨찾기" : tab === "recent" ? "열어본 영상" : words().length ? "검색 결과" : cat && cat !== "*" ? cat : "전체 영상";
@@ -347,6 +348,7 @@
       }, quick ? 0 : 620);
     }, shakeMs);
   }
+  $("viewAbout").addEventListener("click", e => { if (e.target.closest("[data-draw-all]")) openGacha(); });
   $("gCard").addEventListener("click", gachaGo);
   $("gCard").addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); gachaGo(); } });
   $("gAgain").addEventListener("click", () => { if (gBusy) return; ac(); gachaReady(); setTimeout(gachaGo, calm() ? 0 : 260); });
@@ -432,7 +434,7 @@
     if (e.target.closest("[data-draw]")) return openGacha();
   });
   $("chips").addEventListener("click", e => { if (e.target.closest("[data-draw]")) return openGacha(); const b = e.target.closest(".chip"); if (!b) return; cat = b.dataset.c; if (b.dataset.c === "" && tab === "all") $("q").value = ""; reset(); });
-  $("q").addEventListener("input", () => { if (tab === "guide") location.hash = ""; reset(); });
+  $("q").addEventListener("input", () => { if (isInfo()) location.hash = ""; reset(); });
   $("sort").addEventListener("change", () => { store.set("sort", $("sort").value); reset(); });
   $("vGrid").addEventListener("click", () => { view = "grid"; store.set("view2", view); render(); });
   $("vList").addEventListener("click", () => { view = "rows"; store.set("view2", view); render(); });
@@ -514,6 +516,7 @@
       all.forEach((v, i) => { v._i = i; v._s = defs.filter(x => x.re.test(v.title || "")).map(x => x.name); });
       SERIES = defs.map(x => ({ name: x.name, n: all.filter(v => v._s.includes(x.name)).length })).filter(x => x.n >= 3).sort((a, b) => b.n - a.n);
       const ok = new Set(SERIES.map(x => x.name)); all.forEach(v => { v._s = v._s.filter(n => ok.has(n)); });
+      $("abN").textContent = nf(all.length); $("abC").textContent = new Set(all.map(v => v.category).filter(Boolean)).size; $("abS").textContent = SERIES.length;
       route();
     })
     .catch(() => { route(); $("grid").innerHTML = `<div class="empty"><b>목록을 불러오지 못했어요</b>잠시 뒤 새로고침해 주세요.</div>`; });
