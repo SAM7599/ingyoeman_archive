@@ -213,10 +213,23 @@
     } catch (e) { return null; }
   }
   const isAndroid = /Android/i.test(navigator.userAgent);
+  const isPhone = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+  let cafeWin = null;
+  const isCafe = u => { try { const x = new URL(u); return x.protocol === "https:" && /(^|\.)cafe\.naver\.com$/.test(x.hostname); } catch (e) { return false; } };
+  const popupOn = () => !isPhone && store.get("popup", "on") !== "off";
   function follow(e, v, href) {   // 영상 링크를 눌렀을 때
     if (ytId(v) && $("modal").hidden) { e.preventDefault(); return openModal(v); }   // 유튜브 영상은 사이트 안에서 재생
     markSeen(v);
-    if (isAndroid && !e.ctrlKey && !e.metaKey && !e.shiftKey) { const u = appUrl(href); if (u) { e.preventDefault(); location.href = u; } }
+    const plain = !e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey;
+    if (isAndroid && plain) { const u = appUrl(href); if (u) { e.preventDefault(); location.href = u; } }
+    else if (popupOn() && plain && isCafe(href)) {   // 컴퓨터: 카페 글을 작은 창으로 (사이트는 그대로 남아요)
+      const w = Math.min(1180, screen.availWidth - 80), h = Math.min(900, screen.availHeight - 80);
+      const x = Math.max(0, (screen.availWidth - w) / 2), y = Math.max(0, (screen.availHeight - h) / 2);
+      let win = null;
+      if (cafeWin && !cafeWin.closed) { try { cafeWin.location.href = href; win = cafeWin; } catch (err) { win = null; } }   // 이미 열린 팝업 창이 있으면 그 창에서 바꿔 열기
+      if (!win) win = window.open(href, "_blank", "popup=yes,width=" + w + ",height=" + h + ",left=" + x + ",top=" + y);
+      if (win) { e.preventDefault(); cafeWin = win; try { win.focus(); } catch (err) {} }   // 팝업이 막혀 있으면 원래대로 새 탭으로 열려요
+    }
     setTimeout(render, 400);
   }
   function openModal(v) {
@@ -538,7 +551,9 @@
   function syncSet() {
     $("theme").setAttribute("aria-checked", root.getAttribute("data-theme") === "dark");
     $("motion").setAttribute("aria-checked", root.getAttribute("data-motion") === "off");
+    $("popup").setAttribute("aria-checked", popupOn()); $("popup").hidden = isPhone;
   }
+  $("popup").addEventListener("click", () => { store.set("popup", popupOn() ? "off" : "on"); syncSet(); toast(popupOn() ? "카페 글을 팝업 창으로 열어요" : "카페 글을 새 탭으로 열어요"); });
   syncSet();
   $("theme").addEventListener("click", () => {
     const t = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
