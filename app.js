@@ -42,6 +42,7 @@
   const HEART = `<svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>`;
   const OUT = `<svg class="out" viewBox="0 0 24 24"><path d="M9 6h9v9M18 6L7 17"/></svg>`;
   const CARD = `<svg class="ci" viewBox="0 0 24 24"><rect x="6.5" y="3.5" width="11" height="17" rx="2.2"/><path d="M12 9.2l1 2 2.2.3-1.6 1.5.4 2.2-2-1.1-2 1.1.4-2.2-1.6-1.5 2.2-.3z"/></svg>`;
+  const TROPHY = `<svg viewBox="0 0 24 24"><path d="M8 4h8v5a4 4 0 0 1-8 0zM8 6H5v1a3 3 0 0 0 3 3M16 6h3v1a3 3 0 0 1-3 3M12 13v4M8.5 20h7M10 17h4"/></svg>`;
   const DOTS = `<svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg>`;
 
   /* ── 목록 고르기 ── */
@@ -69,7 +70,7 @@
     if (s === "likes") return list.sort((a, b) => pop(b) - pop(a) || order(b) - order(a));
     return list.sort((a, b) => s === "title" ? (a.title || "").localeCompare(b.title || "", "ko") : s === "old" ? order(a) - order(b) : order(b) - order(a));
   }
-  const isInfo = () => tab === "guide" || tab === "about";
+  const isInfo = () => tab === "guide" || tab === "about" || tab === "ach";
   const isHome = () => tab === "all" && !cat && !words().length;
 
   /* ── 그리기 ── */
@@ -187,14 +188,14 @@
   /* ── 화면 바꾸기 ── */
   function route() {
     let h = location.hash.replace("#", ""); try { h = decodeURIComponent(h); } catch (e) {}
-    const next = ["fav", "recent", "guide", "about", "rank", "series"].includes(h) ? h : h.startsWith("series=") ? "series" : "all";
+    const next = ["fav", "recent", "guide", "about", "ach", "rank", "series"].includes(h) ? h : h.startsWith("series=") ? "series" : "all";
     const nextSer = h.startsWith("series=") ? h.slice(7) : "";
     if (next !== tab || nextSer !== ser) cat = "";
     if (nextSer !== ser) $("q").value = "";
     tab = next; ser = nextSer;
-    $("viewGuide").hidden = tab !== "guide"; $("viewAbout").hidden = tab !== "about"; $("viewList").hidden = isInfo();
-    document.querySelectorAll(".tab").forEach(a => a.classList.toggle("on", a.dataset.tab === (isInfo() ? "info" : tab)));
-    const pg = tab === "guide" ? $("viewGuide") : tab === "about" ? $("viewAbout") : $("viewList"); pg.classList.remove("enter"); void pg.offsetWidth; pg.classList.add("enter");
+    $("viewGuide").hidden = tab !== "guide"; $("viewAbout").hidden = tab !== "about"; $("viewAch").hidden = tab !== "ach"; if (tab === "ach") renderAch(); $("viewList").hidden = isInfo();
+    document.querySelectorAll(".tab").forEach(a => a.classList.toggle("on", a.dataset.tab === (tab === "ach" ? "ach" : isInfo() ? "info" : tab)));
+    const pg = tab === "guide" ? $("viewGuide") : tab === "about" ? $("viewAbout") : tab === "ach" ? $("viewAch") : $("viewList"); pg.classList.remove("enter"); void pg.offsetWidth; pg.classList.add("enter");
     if (!$("gacha").hidden) closeGacha();
     closeMenu();
     if (!isInfo()) reset();
@@ -204,7 +205,7 @@
   }
 
   /* ── 영상 열기 ── */
-  function markSeen(v) { const k = key(v); recent = [k, ...recent.filter(x => x !== k)].slice(0, RECENT_MAX); store.set("recent", recent); }
+  function markSeen(v) { const k = key(v); recent = [k, ...recent.filter(x => x !== k)].slice(0, RECENT_MAX); store.set("recent", recent); achOpen(v); }
   function appUrl(href) {   // 안드로이드: 네이버 카페 앱으로 열기 (앱이 없으면 브라우저로)
     try {
       const u = new URL(href);
@@ -252,15 +253,17 @@
   }
   function toggleFav(k) {
     if (favs.has(k)) { favs.delete(k); toast("즐겨찾기에서 뺐어요"); } else { favs.add(k); toast("즐겨찾기에 담았어요"); }
-    store.set("favs", [...favs]); popKey = favs.has(k) ? k : null; render(); popKey = null; syncModalFav(); syncGachaFav();
+    store.set("favs", [...favs]); popKey = favs.has(k) ? k : null; render(); popKey = null; syncModalFav(); syncGachaFav(); achCheck();
   }
   function share(v) {
+    achFlag("share");
     const url = location.origin + location.pathname + "#v=" + vid(v);
     const done = () => toast("링크를 복사했어요"), fail = () => toast("복사하지 못했어요");
     if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(done, fail);
     else { const t = document.createElement("textarea"); t.value = url; document.body.appendChild(t); t.select(); try { document.execCommand("copy") ? done() : fail(); } catch (e) { fail(); } t.remove(); }
   }
   function report(v) {
+    if (SITE.repo) achFlag("report");
     if (!SITE.repo) return toast("썸네일 제보는 준비 중이에요");
     const body = "**영상**: " + v.title + "\n**카페 글**: " + (v.url || "") + "\n\n**썸네일 이미지** (아래에 이미지를 끌어다 놓거나 주소를 붙여넣어 주세요)\n\n";
     window.open("https://github.com/" + SITE.repo + "/issues/new?labels=thumbnail&title=" + encodeURIComponent("[썸네일] " + v.title) + "&body=" + encodeURIComponent(body), "_blank", "noopener");
@@ -365,7 +368,7 @@
       card.classList.remove("shake"); card.classList.add("flip");
       if (!quick) burst(tier);
       setTimeout(() => {
-        card.classList.add("done");
+        card.classList.add("done"); achDraw(gv, tier);
         $("gTitle").textContent = tier === "legend" ? "전설 카드가 나왔어요!" : tier === "rare" ? "희귀 카드예요!" : "이 영상이 뽑혔어요";
         $("gActs").classList.add("show"); gBusy = false;
       }, quick ? 0 : 620);
@@ -379,6 +382,95 @@
   $("gGo").addEventListener("click", e => { if (gv) { const v = gv; if (ytId(v)) closeGacha(); follow(e, v, $("gGo").href); } });
   $("gClose").addEventListener("click", closeGacha);
   $("gacha").addEventListener("click", e => { if (e.target === $("gacha")) closeGacha(); });
+
+  /* ── 도전과제 (이 기기에만 기록돼요) ── */
+  const st = Object.assign({ opened: [], draws: 0, rare: 0, legends: [], days: [], flags: {} }, store.get("stat", {}));
+  let got = store.get("ach", {});
+  const saveSt = () => store.set("stat", st);
+  const openedCats = () => new Set(st.opened.map(id => (all.find(v => vid(v) === id) || {}).category).filter(Boolean)).size;
+  function seriesDone() {   // 다 열어 본 시리즈가 있는지 (가장 많이 진행한 시리즈의 진행도)
+    let best = [0, 1]; const op = new Set(st.opened);
+    SERIES.forEach(x => { const l = all.filter(v => v._s.includes(x.name)), n = l.filter(v => op.has(vid(v))).length; if (n / l.length > best[0] / best[1]) best = [n, l.length]; });
+    return best;
+  }
+  const ACH = [
+    { id: "open1", t: "첫 발걸음", d: "영상을 처음으로 열어 보기", p: () => [st.opened.length, 1] },
+    { id: "open10", t: "정주행 시작", d: "영상 10개 열어 보기", p: () => [st.opened.length, 10] },
+    { id: "open50", t: "추억 여행자", d: "영상 50개 열어 보기", p: () => [st.opened.length, 50] },
+    { id: "open100", t: "올드팬의 품격", d: "영상 100개 열어 보기", p: () => [st.opened.length, 100] },
+    { id: "cats", t: "골고루 맛보기", d: "서로 다른 분류 6곳의 영상 열어 보기", p: () => [openedCats(), 6] },
+    { id: "series", t: "시리즈 정복", d: "한 시리즈의 영상을 전부 열어 보기", p: () => seriesDone() },
+    { id: "rank1", t: "1위의 맛", d: "인기 랭킹 1위 영상 열어 보기", p: () => [st.flags.rank1 ? 1 : 0, 1] },
+    { id: "search", t: "명탐정", d: "검색으로 찾은 영상 열어 보기", p: () => [st.flags.search ? 1 : 0, 1] },
+    { id: "owl", t: "올빼미", d: "새벽 2시에서 5시 사이에 영상 열어 보기", p: () => [st.flags.owl ? 1 : 0, 1] },
+    { id: "fav1", t: "찜", d: "즐겨찾기에 처음으로 담기", p: () => [favs.size, 1] },
+    { id: "fav20", t: "수집가", d: "즐겨찾기에 20개 담기", p: () => [favs.size, 20] },
+    { id: "draw1", t: "첫 뽑기", d: "랜덤 뽑기 처음 해 보기", p: () => [st.draws, 1] },
+    { id: "draw30", t: "뽑기 중독", d: "랜덤 뽑기 30번 하기", p: () => [st.draws, 30] },
+    { id: "rare", t: "희귀한 인연", d: "희귀 카드 뽑기", p: () => [st.rare ? 1 : 0, 1] },
+    { id: "legend", t: "전설을 만나다", d: "전설 카드 뽑기", p: () => [st.legends.length, 1] },
+    { id: "legend5", t: "전설 수집가", d: "서로 다른 전설 카드 5장 뽑기", p: () => [st.legends.length, 5] },
+    { id: "share", t: "나눔의 기쁨", d: "영상 링크 복사하기", p: () => [st.flags.share ? 1 : 0, 1] },
+    { id: "report", t: "썸네일 도우미", d: "썸네일 제보 눌러 보기", p: () => [st.flags.report ? 1 : 0, 1] },
+    { id: "moved", t: "이사 완료", d: "다른 기기에서 보낸 기록 가져오기", p: () => [st.flags.moved ? 1 : 0, 1] },
+    { id: "days7", t: "단골손님", d: "서로 다른 날 7일 방문하기", p: () => [st.days.length, 7] },
+    { id: "all", t: "추억자료실 마스터", d: "다른 도전과제를 모두 달성하기", p: () => [ACH.filter(a => a.id !== "all" && got[a.id]).length, ACH.length - 1] }
+  ];
+  const popQ = []; let popBusy = false;
+  function achCheck() {
+    if (!all.length) return;
+    let hit = false;
+    ACH.forEach(a => { if (got[a.id]) return; const p = a.p(); if (p[0] >= p[1]) { got[a.id] = Date.now(); popQ.push(a); hit = true; } });
+    if (hit) { store.set("ach", got); if (!got.all) return achCheck(); }
+    syncAch(); nextPop();
+  }
+  function syncAch() {
+    const n = ACH.filter(a => got[a.id]).length;
+    $("achN").textContent = n || "";
+    if (tab === "ach") renderAch();
+  }
+  function nextPop() {
+    if (popBusy || !popQ.length) return;
+    popBusy = true;
+    const a = popQ.shift(), el = $("achPop");
+    $("achPopT").textContent = a.t; $("achPopD").textContent = a.d;
+    el.hidden = false; el.classList.remove("show"); void el.offsetWidth; el.classList.add("show");
+    tone(784, 0, 0.14, "triangle", 0.09); tone(1047, 0.11, 0.14, "triangle", 0.09); tone(1568, 0.22, 0.4, "sine", 0.1);
+    setTimeout(() => { el.classList.remove("show"); setTimeout(() => { el.hidden = true; popBusy = false; nextPop(); }, 350); }, 3600);
+  }
+  $("achPop").addEventListener("click", () => { location.hash = "ach"; });
+  function achFlag(name) { if (st.flags[name]) return; st.flags[name] = 1; saveSt(); achCheck(); }
+  function achOpen(v) {
+    const id = vid(v);
+    if (!st.opened.includes(id)) st.opened.push(id);
+    const top = ranked(all)[0]; if (top && key(top) === key(v)) st.flags.rank1 = 1;
+    if (words().length && !isHome()) st.flags.search = 1;
+    const h = new Date().getHours(); if (h >= 2 && h < 5) st.flags.owl = 1;
+    saveSt(); achCheck();
+  }
+  function achDraw(v, tier) {
+    if (!v) return;
+    st.draws++; if (tier === "rare") st.rare = 1;
+    if (tier === "legend" && !st.legends.includes(vid(v))) st.legends.push(vid(v));
+    saveSt(); achCheck();
+  }
+  function renderAch() {
+    const n = ACH.filter(a => got[a.id]).length;
+    $("achSum").textContent = ACH.length + "개 중 " + n + "개 달성";
+    $("achBar").style.width = Math.round(n / ACH.length * 100) + "%";
+    const fmt = t => { const d = new Date(t); return d.getFullYear() + "." + (d.getMonth() + 1) + "." + d.getDate() + " 달성"; };
+    $("achList").innerHTML = ACH.slice().sort((a, b) => (got[b.id] ? 1 : 0) - (got[a.id] ? 1 : 0)).map(a => {
+      const p = a.p(), cur = Math.min(p[0], p[1]), done = !!got[a.id];
+      return `<div class="ach-item ${done ? "done" : ""}"><span class="ach-ic">${TROPHY}</span><div class="ach-tx"><b>${esc(a.t)}</b><i>${esc(a.d)}</i>
+        ${done ? `<small>${fmt(got[a.id])}</small>` : p[1] > 1 ? `<div class="bar"><i style="width:${Math.round(cur / p[1] * 100)}%"></i></div><small>${cur} / ${p[1]}</small>` : `<small>아직 달성 전</small>`}</div></div>`;
+    }).join("");
+  }
+  function achStart() {   // 처음 불러왔을 때: 방문 날짜 기록, 예전 기록으로 달성된 것 확인
+    const today = new Date(); const dkey = today.getFullYear() + "-" + (today.getMonth() + 1) + "-" + today.getDate();
+    if (!st.days.includes(dkey)) { st.days.push(dkey); if (st.days.length > 40) st.days = st.days.slice(-40); }
+    recent.map(byKey).filter(Boolean).forEach(v => { if (!st.opened.includes(vid(v))) st.opened.push(vid(v)); });
+    saveSt(); achCheck();
+  }
 
   /* ── 다른 기기로 옮기기 (QR코드·링크에 즐겨찾기와 열어본 영상을 담아요) ── */
   const B64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
@@ -410,7 +502,7 @@
     const add = d.recent.filter(k => !recent.includes(k));
     recent = [...recent, ...add].slice(0, RECENT_MAX);
     store.set("favs", [...favs]); store.set("recent", recent);
-    closeImp(); render(); toast("즐겨찾기 " + nfv + "개, 열어본 영상 " + add.length + "개를 가져왔어요");
+    achFlag("moved"); closeImp(); render(); toast("즐겨찾기 " + nfv + "개, 열어본 영상 " + add.length + "개를 가져왔어요");
   });
   function loadQr() {
     if (window.qrcode) return Promise.resolve();
@@ -604,7 +696,7 @@
       SERIES = defs.map(x => ({ name: x.name, n: all.filter(v => v._s.includes(x.name)).length })).filter(x => x.n >= 3).sort((a, b) => b.n - a.n);
       const ok = new Set(SERIES.map(x => x.name)); all.forEach(v => { v._s = v._s.filter(n => ok.has(n)); });
       $("abN").textContent = nf(all.length); $("abC").textContent = new Set(all.map(v => v.category).filter(Boolean)).size; $("abS").textContent = SERIES.length;
-      route();
+      route(); achStart();
     })
     .catch(() => { route(); $("grid").innerHTML = `<div class="empty"><b>목록을 불러오지 못했어요</b>잠시 뒤 새로고침해 주세요.</div>`; });
 })();
