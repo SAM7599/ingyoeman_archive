@@ -16,7 +16,7 @@
   if (m !== "on" && m !== "off") m = (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) ? "off" : "on";
   document.documentElement.setAttribute("data-motion", m); })();
 </script>
-<link rel="stylesheet" href="style.css?v=25">
+<link rel="stylesheet" href="style.css?v=26">
 </head>
 <body>
 
@@ -112,7 +112,7 @@
   <p class="lead">처음 오셨어도 어렵지 않아요.</p>
 
   <div class="g-item"><h3>다시보기 열기</h3>
-    <p>여기는 다시보기 링크를 모아 둔 곳이에요. 영상 카드나 <b>다시보기</b> 버튼을 누르면 <b>네이버 카페 글</b>이 열려요. 컴퓨터는 새 탭으로, 휴대폰은 <b>네이버 카페 앱</b>으로 열려요. 영상을 보려면 <b>카페 가입과 올드팬 인증</b>이 필요해요. 방법은 카페의 <a href="https://cafe.naver.com/youtubecreateringyoe/2951" target="_blank" rel="noopener noreferrer">처음 오신 분을 위한 공지</a>와 <a href="https://cafe.naver.com/youtubecreateringyoe/2828" target="_blank" rel="noopener noreferrer">팬클럽 등업 가이드</a>에 있어요.</p></div>
+    <p>여기는 다시보기 링크를 모아 둔 곳이에요. 영상 카드나 <b>다시보기</b> 버튼을 누르면 <b>네이버 카페 글</b>이 열려요. 컴퓨터는 사이트 위에 뜨는 <b>팝업 창</b>으로, 휴대폰은 <b>네이버 카페 앱</b>으로 열려요. 팝업 창이 불편하면 설정 버튼에서 <b>카페 글 팝업 창으로</b>를 꺼서 새 탭으로 열 수 있어요. 영상을 보려면 <b>카페 가입과 올드팬 인증</b>이 필요해요. 방법은 카페의 <a href="https://cafe.naver.com/youtubecreateringyoe/2951" target="_blank" rel="noopener noreferrer">처음 오신 분을 위한 공지</a>와 <a href="https://cafe.naver.com/youtubecreateringyoe/2828" target="_blank" rel="noopener noreferrer">팬클럽 등업 가이드</a>에 있어요.</p></div>
   <div class="g-item"><h3>영상 찾기</h3>
     <p>맨 위 <b>검색창</b>에 제목 일부나 분류 이름을 적어요. 여러 단어를 띄어 쓰면 모두 들어간 영상만 나와요. 첫 화면에는 분류별로 영상이 한 줄씩 나오고, 옆으로 넘겨 볼 수 있어요. <b>전체 보기</b>나 위쪽 <b>분류 버튼</b>을 누르면 그 분류만 모아 볼 수 있어요.</p></div>
   <div class="g-item"><h3>인기 랭킹</h3>
@@ -126,7 +126,7 @@
   <div class="g-item"><h3>다른 기기로 옮기기</h3>
     <p>즐겨찾기와 열어본 영상 기록은 기기마다 따로 저장돼요. 맨 위 오른쪽 <b>설정 버튼</b>의 <b>다른 기기로 옮기기</b>를 누르면 QR코드와 링크가 나와요. 다른 기기의 카메라로 QR코드를 찍거나, 링크를 나에게 보내서 열면 기록이 합쳐져요.</p></div>
   <div class="g-item"><h3>화면 설정</h3>
-    <p>맨 위 오른쪽의 <b>설정 버튼</b>을 누르면 <b>어두운 화면</b>, <b>움직임 줄이기</b>, <b>뽑기 소리</b>를 켜고 끌 수 있어요. 움직임 줄이기를 켜면 화면이 움직이는 효과가 사라지고, 랜덤 뽑기도 바로 결과가 나와요. 고른 설정은 이 기기에 기억돼요.</p></div>
+    <p>맨 위 오른쪽의 <b>설정 버튼</b>을 누르면 <b>어두운 화면</b>, <b>움직임 줄이기</b>, <b>뽑기 소리</b>, <b>카페 글 팝업 창으로</b>를 켜고 끌 수 있어요. 움직임 줄이기를 켜면 화면이 움직이는 효과가 사라지고, 랜덤 뽑기도 바로 결과가 나와요. 고른 설정은 이 기기에 기억돼요.</p></div>
   <div class="g-item"><h3>즐겨찾기</h3>
     <p>영상의 하트를 누르면 <b>즐겨찾기</b>에 모여요. 지금 쓰는 기기와 브라우저에만 저장되고, 인터넷 사용 기록을 지우면 함께 사라질 수 있어요.</p></div>
   <div class="g-item"><h3>열어본 영상</h3>
@@ -165,6 +165,7 @@
   <button type="button" id="theme" role="menuitemcheckbox"><span>어두운 화면</span><i class="sw"></i></button>
   <button type="button" id="motion" role="menuitemcheckbox"><span>움직임 줄이기</span><i class="sw"></i></button>
   <button type="button" id="sound" role="menuitemcheckbox"><span>뽑기 소리</span><i class="sw"></i></button>
+  <button type="button" id="popup" role="menuitemcheckbox"><span>카페 글 팝업 창으로</span><i class="sw"></i></button>
   <button type="button" id="xferOpen" role="menuitem"><span>다른 기기로 옮기기</span></button>
   <a href="#about" role="menuitem">사이트 소개</a>
   <a href="#guide" role="menuitem">이용방법</a>
@@ -246,7 +247,7 @@
 </div>
 
 <div id="toast" role="status"></div>
-<script src="config.js?v=25"></script>
-<script src="app.js?v=25"></script>
+<script src="config.js?v=26"></script>
+<script src="app.js?v=26"></script>
 </body>
 </html>
