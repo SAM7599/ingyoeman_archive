@@ -357,6 +357,57 @@
   $("gClose").addEventListener("click", closeGacha);
   $("gacha").addEventListener("click", e => { if (e.target === $("gacha")) closeGacha(); });
 
+  /* ── 내 기록 옮기기 (즐겨찾기·열어본 영상을 코드나 파일로) ── */
+  const XTAG = "ING1:";
+  const idsOf = keys => keys.map(byKey).filter(Boolean).map(vid);
+  const packData = () => ({ app: "ingyoeman_archive", v: 1, favs: idsOf([...favs]), recent: idsOf(recent) });
+  const toCode = () => XTAG + btoa(unescape(encodeURIComponent(JSON.stringify(packData()))));
+  function readData(text) {
+    let t = String(text || "").trim(); if (!t) return null;
+    try {
+      if (t.startsWith("{")) return JSON.parse(t);
+      const i = t.indexOf(XTAG); if (i < 0) return null;
+      return JSON.parse(decodeURIComponent(escape(atob(t.slice(i + XTAG.length).replace(/\s+/g, "")))));
+    } catch (e) { return null; }
+  }
+  function importData(text) {
+    const d = readData(text);
+    if (!d || !Array.isArray(d.favs) && !Array.isArray(d.recent)) return toast("가져올 수 없는 코드예요. 처음부터 끝까지 복사했는지 확인해 주세요");
+    const map = new Map(all.map(v => [vid(v), key(v)]));
+    let nf2 = 0, nr = 0;
+    (d.favs || []).forEach(id => { const k = map.get(String(id)); if (k && !favs.has(k)) { favs.add(k); nf2++; } });
+    const add = (d.recent || []).map(id => map.get(String(id))).filter(k => k && !recent.includes(k)); nr = add.length;
+    recent = [...recent, ...add].slice(0, RECENT_MAX);
+    store.set("favs", [...favs]); store.set("recent", recent);
+    $("xCode").value = ""; syncXfer(); render();
+    toast(nf2 || nr ? "즐겨찾기 " + nf2 + "개, 열어본 영상 " + nr + "개를 더했어요" : "새로 더할 기록이 없어요. 이미 다 있어요");
+  }
+  function syncXfer() { $("xCount").textContent = "지금 이 기기에는 즐겨찾기 " + favs.size + "개, 열어본 영상 " + recent.map(byKey).filter(Boolean).length + "개가 있어요."; }
+  function openXfer() { closeSet(); closeMenu(); syncXfer(); $("xfer").hidden = false; document.body.style.overflow = "hidden"; $("xClose").focus(); }
+  function closeXfer() { $("xfer").hidden = true; document.body.style.overflow = ""; }
+  $("xferOpen").addEventListener("click", openXfer);
+  $("xClose").addEventListener("click", closeXfer);
+  $("xfer").addEventListener("click", e => { if (e.target === $("xfer")) closeXfer(); });
+  $("xCopy").addEventListener("click", () => {
+    if (!favs.size && !recent.length) return toast("아직 옮길 기록이 없어요");
+    const code = toCode(), done = () => toast("코드를 복사했어요. 다른 기기에서 붙여넣으세요"), fail = () => { $("xCode").value = code; $("xCode").select(); toast("아래 칸의 코드를 직접 복사해 주세요"); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(code).then(done, fail); else fail();
+  });
+  $("xSave").addEventListener("click", () => {
+    if (!favs.size && !recent.length) return toast("아직 옮길 기록이 없어요");
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(packData())], { type: "application/json" }));
+    a.download = "잉여맨추억자료실-내기록.json"; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 2000); toast("파일로 저장했어요");
+  });
+  $("xLoad").addEventListener("click", () => importData($("xCode").value));
+  $("xPick").addEventListener("click", () => $("xFile").click());
+  $("xFile").addEventListener("change", () => {
+    const f = $("xFile").files[0]; if (!f) return;
+    const r = new FileReader(); r.onload = () => importData(r.result); r.onerror = () => toast("파일을 읽지 못했어요"); r.readAsText(f);
+    $("xFile").value = "";
+  });
+
   /* ── 썸네일 제보 건수 (GitHub에 열려 있는 제보 글을 세요) ── */
   let reports = {};
   const repCount = v => reports["n" + num(v)] || reports["t" + (v.title || "")] || 0;
@@ -447,7 +498,7 @@
   document.addEventListener("click", e => { if (!$("menu").hidden && !e.target.closest(".menu")) closeMenu(); if (!$("setMenu").hidden && !e.target.closest(".menu")) closeSet(); });
   document.addEventListener("keydown", e => {
     if (e.key === "Escape") {
-      if (!$("setMenu").hidden) closeSet(); else if (!$("menu").hidden) closeMenu(); else if (!$("modal").hidden) closeModal(); else if (!$("gacha").hidden) closeGacha();
+      if (!$("setMenu").hidden) closeSet(); else if (!$("menu").hidden) closeMenu(); else if (!$("modal").hidden) closeModal(); else if (!$("gacha").hidden) closeGacha(); else if (!$("xfer").hidden) closeXfer();
       else if (document.activeElement === $("q")) { $("q").value = ""; $("q").blur(); reset(); }
     }
     if (e.key === "Enter" && e.target.matches && e.target.matches("[data-ser]")) { e.preventDefault(); location.hash = "series=" + encodeURIComponent(e.target.dataset.ser); }

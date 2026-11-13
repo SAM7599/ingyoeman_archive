@@ -16,7 +16,7 @@
   if (m !== "on" && m !== "off") m = (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) ? "off" : "on";
   document.documentElement.setAttribute("data-motion", m); })();
 </script>
-<link rel="stylesheet" href="style.css?v=21">
+<link rel="stylesheet" href="style.css?v=22">
 </head>
 <body>
 
@@ -123,6 +123,8 @@
     <p>첫 화면 맨 위 큰 배너에 매일 다른 영상을 하나 골라 드려요.</p></div>
   <div class="g-item"><h3>랜덤 뽑기</h3>
     <p>뭘 볼지 모르겠으면 <b>랜덤 뽑기</b>를 눌러 보세요. 카드를 누르면 영상 하나가 뽑혀요. 분류나 시리즈를 고른 상태에서 누르면 그 안에서만 뽑아요. 카페 좋아요가 5개 이상이면 <b>희귀</b>, 10개 이상이면 <b>전설</b> 카드로 나와요. 뽑을 때 효과음이 나고, 뽑기 화면 왼쪽 위 버튼이나 설정에서 끌 수 있어요.</p></div>
+  <div class="g-item"><h3>내 기록 옮기기</h3>
+    <p>즐겨찾기와 열어본 영상 기록은 기기마다 따로 저장돼요. 맨 위 오른쪽 <b>설정 버튼</b>의 <b>내 기록 옮기기</b>에서 코드를 복사하거나 파일로 저장한 뒤, 다른 기기에서 같은 곳에 붙여넣거나 파일을 고르면 기록이 합쳐져요.</p></div>
   <div class="g-item"><h3>화면 설정</h3>
     <p>맨 위 오른쪽의 <b>설정 버튼</b>을 누르면 <b>어두운 화면</b>, <b>움직임 줄이기</b>, <b>뽑기 소리</b>를 켜고 끌 수 있어요. 움직임 줄이기를 켜면 화면이 움직이는 효과가 사라지고, 랜덤 뽑기도 바로 결과가 나와요. 고른 설정은 이 기기에 기억돼요.</p></div>
   <div class="g-item"><h3>즐겨찾기</h3>
@@ -141,7 +143,7 @@
   <details><summary>올드팬 인증은 어떻게 받나요?</summary><p>네이버 카페 「잉여맨추억자료실」에 가입한 뒤, 카페 안내에 따라 인증을 받으시면 돼요. 자세한 방법은 카페의 안내 글 두 개를 확인해 주세요.</p><p><a class="btn" href="https://cafe.naver.com/youtubecreateringyoe/2951" target="_blank" rel="noopener noreferrer">처음 오신 분을 위한 공지</a> <a class="btn" href="https://cafe.naver.com/youtubecreateringyoe/2828" target="_blank" rel="noopener noreferrer">팬클럽 등업 가이드</a></p></details>
   <details><summary>영상이 이 사이트에 직접 들어 있나요?</summary><p>아니요. 여기는 카페 영상을 쉽게 찾도록 모아 둔 목록이에요. 영상은 네이버 카페에 있고, 누르면 카페 글로 이동해요.</p></details>
   <details><summary>영상 날짜는 왜 안 보이나요?</summary><p>오래된 영상이라 방송한 날짜를 정확히 알 수 없어서 표시하지 않아요.</p></details>
-  <details><summary>즐겨찾기나 열어봄 표시가 사라졌어요</summary><p>브라우저 기록을 지웠거나 다른 기기로 접속하면 보이지 않아요. 기기마다 따로 저장돼요.</p></details>
+  <details><summary>즐겨찾기나 열어봄 표시가 사라졌어요</summary><p>브라우저 기록을 지웠거나 다른 기기로 접속하면 보이지 않아요. 기기마다 따로 저장돼요. 설정 버튼의 <b>내 기록 옮기기</b>로 미리 저장해 두거나 다른 기기로 옮길 수 있어요.</p></details>
   <a class="btn" href="#">다시보기 목록으로</a>
 </main>
 
@@ -163,6 +165,7 @@
   <button type="button" id="theme" role="menuitemcheckbox"><span>어두운 화면</span><i class="sw"></i></button>
   <button type="button" id="motion" role="menuitemcheckbox"><span>움직임 줄이기</span><i class="sw"></i></button>
   <button type="button" id="sound" role="menuitemcheckbox"><span>뽑기 소리</span><i class="sw"></i></button>
+  <button type="button" id="xferOpen" role="menuitem"><span>내 기록 옮기기</span></button>
   <a href="#about" role="menuitem">사이트 소개</a>
   <a href="#guide" role="menuitem">이용방법</a>
 </div>
@@ -190,6 +193,26 @@
   </div>
 </div>
 
+<div class="modal" id="xfer" hidden>
+  <div class="sheet xfer" role="dialog" aria-modal="true" aria-labelledby="xTitle">
+    <button class="x" id="xClose" type="button" aria-label="닫기">✕</button>
+    <div class="m-body">
+      <h2 id="xTitle">내 기록 옮기기</h2>
+      <p class="x-sub">즐겨찾기와 열어본 영상 기록을 다른 기기나 브라우저로 옮길 수 있어요. <span id="xCount"></span></p>
+
+      <h3>이 기기에서 내보내기</h3>
+      <p class="x-sub">코드를 복사해서 카톡이나 메모로 나에게 보내거나, 파일로 저장하세요.</p>
+      <div class="m-acts"><button class="btn primary" id="xCopy" type="button">코드 복사</button><button class="btn" id="xSave" type="button">파일로 저장</button></div>
+
+      <h3>다른 기기에서 가져오기</h3>
+      <p class="x-sub">복사해 둔 코드를 아래에 붙여넣거나, 저장한 파일을 고르세요. 지금 있는 기록은 지워지지 않고 합쳐져요.</p>
+      <textarea id="xCode" rows="3" placeholder="여기에 코드를 붙여넣으세요" aria-label="가져올 코드"></textarea>
+      <div class="m-acts"><button class="btn primary" id="xLoad" type="button">코드로 가져오기</button><button class="btn" id="xPick" type="button">파일 고르기</button></div>
+      <input id="xFile" type="file" accept=".json,.txt,application/json,text/plain" hidden>
+    </div>
+  </div>
+</div>
+
 <div class="gacha" id="gacha" hidden>
   <div class="g-stage" role="dialog" aria-modal="true" aria-labelledby="gTitle">
     <button class="g-snd" id="gSound" type="button"></button>
@@ -213,7 +236,7 @@
 </div>
 
 <div id="toast" role="status"></div>
-<script src="config.js?v=21"></script>
-<script src="app.js?v=21"></script>
+<script src="config.js?v=22"></script>
+<script src="app.js?v=22"></script>
 </body>
 </html>
