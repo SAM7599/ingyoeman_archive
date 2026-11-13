@@ -229,6 +229,7 @@ details p { margin:10px 0 0; color:var(--sub); line-height:1.8; word-break:keep-
 .about h1 { font-size:clamp(28px,4vw,38px); line-height:1.25; margin-bottom:12px; word-break:keep-all; }
 .about .lead { font-size:17px; line-height:1.75; color:var(--ink); word-break:keep-all; margin-bottom:28px; }
 .about > p { margin:0 0 12px; color:var(--sub); line-height:1.8; word-break:keep-all; }
+.about > p b { color:var(--ink); }
 .about .g-item p + p { margin-top:10px; }
 .about .g-item .btn { height:36px; padding:0 13px; font-size:13.5px; border-radius:10px; }
 .about p .btn + .btn { margin-left:6px; }
