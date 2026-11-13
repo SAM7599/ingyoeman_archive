@@ -230,9 +230,12 @@ details p { margin:10px 0 0; color:var(--sub); line-height:1.8; word-break:keep-
 .about .lead { font-size:17px; line-height:1.75; color:var(--ink); word-break:keep-all; margin-bottom:28px; }
 .about > p { margin:0 0 12px; color:var(--sub); line-height:1.8; word-break:keep-all; }
 .about > p b { color:var(--ink); }
+.g-item p a:not(.btn) { color:var(--tint); text-underline-offset:3px; }
+details p + p { margin-top:12px; }
+details .btn, .about > p .btn { height:38px; padding:0 13px; font-size:14px; border-radius:10px; margin:0 4px 6px 0; }
+.about > p .btn.primary { height:42px; }
 .about .g-item p + p { margin-top:10px; }
 .about .g-item .btn { height:36px; padding:0 13px; font-size:13.5px; border-radius:10px; }
-.about p .btn + .btn { margin-left:6px; }
 .stats { display:grid; grid-template-columns:repeat(3,1fr); border:1px solid var(--line); border-radius:18px; background:var(--surface); overflow:hidden; }
 .stats div { padding:20px 12px; text-align:center; border-left:1px solid var(--line); }
 .stats div:first-child { border-left:0; }
