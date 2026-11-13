@@ -4,6 +4,7 @@
 window.SITE = {
   repo: "SAM7599/ingyoeman_archive",
   cafe: "https://cafe.naver.com/youtubecreateringyoe",   // 네이버 카페 주소
+  youtube: "https://www.youtube.com/@잉여맨유튜브",   // 잉여맨 유튜브 채널 (첫 화면 배너)
   feedback: "https://talk.cafe.naver.com/channels/3001014569445",   // 피드백 / 버그 제보 (카페 공개 채팅방)
   categories: [
     "탈출맵", "상황극", "게임", "하이라이트", "콘텐츠특집", "잉여맨뒷담화",
