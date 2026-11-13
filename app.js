@@ -38,6 +38,7 @@
     return m ? m[1] : null;
   }
   const byKey = k => all.find(v => key(v) === k);
+  window.__toast = t => toast(t);
   function toast(t) { const el = $("toast"); el.textContent = t; el.classList.add("show"); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove("show"), 2200); }
   const HEART = `<svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>`;
   const OUT = `<svg class="out" viewBox="0 0 24 24"><path d="M9 6h9v9M18 6L7 17"/></svg>`;
@@ -245,9 +246,11 @@
     syncModalFav();
     $("modal").hidden = false; document.body.style.overflow = "hidden"; $("mClose").focus();
     if (id) { markSeen(v); render(); }
+    if (window.Comments) Comments.mount($("cmt"), vid(v));
   }
   function syncModalFav() { if (!current) return; $("mFav").textContent = favs.has(key(current)) ? "♥ 담았어요" : "♡ 즐겨찾기"; }
   function closeModal(keepHash) {
+    if (window.Comments) Comments.unmount();
     $("modal").hidden = true; $("mScreen").innerHTML = ""; document.body.style.overflow = ""; current = null;
     if (!keepHash && location.hash.startsWith("#v=")) history.replaceState(null, "", location.pathname + location.search);
   }
@@ -565,6 +568,7 @@
     const m = $("menu"), k = key(v);
     menuFor = v; openMenu.y = window.scrollY;
     m.querySelector('[data-act="fav"]').textContent = favs.has(k) ? "즐겨찾기에서 빼기" : "즐겨찾기에 담기";
+    m.querySelector('[data-act="cmt"]').hidden = !(window.Comments && Comments.on);
     m.querySelector('[data-act="seen"]').hidden = !recent.includes(k);
     m.querySelector('[data-act="report"]').textContent = "썸네일 제보" + (repCount(v) ? " (지금 " + repCount(v) + "건)" : "");
     m.hidden = false;
@@ -579,6 +583,7 @@
     closeMenu();
     const k = key(v), a = b.dataset.act;
     if (a === "share") share(v);
+    else if (a === "cmt") { openModal(v); setTimeout(() => { const c = $("cmt"); c.scrollIntoView({ block: "start", behavior: calm() ? "auto" : "smooth" }); }, 60); }
     else if (a === "fav") toggleFav(k);
     else if (a === "report") report(v);
     else if (a === "seen") {
