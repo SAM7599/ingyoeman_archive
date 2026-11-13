@@ -8,3 +8,4 @@
 - `notice.json` : 맨 위 공지
 - `config.js` : 분류 이름과 순서
 - `index.html`, `style.css`, `app.js` : 화면과 동작
+- `vendor/qrcode.js` : QR코드 만드는 도구 (QR Code Generator for JavaScript, © 2009 Kazuhiko Arase, MIT License)
