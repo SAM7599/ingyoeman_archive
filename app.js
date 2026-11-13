@@ -118,7 +118,7 @@
     todayKey = key(v); box.dataset.k = todayKey;
     box.innerHTML = `<div class="hero-bg" style="--g:${grad(v.category)}">${v.thumb ? `<img src="${esc(v.thumb)}" alt="">` : ""}</div>
       <div class="hero-in"><span class="label">오늘의 다시보기</span><h2>${esc(v.title)}</h2>
-      <p class="hero-meta"><span class="cat-dot" style="--c:${dot(v.category)}">${esc(v.category || "기타")}</span><span>${ytId(v) ? "바로 재생돼요" : "네이버 카페에서 재생돼요"}</span></p>
+      <p class="hero-meta"><span class="cat-dot" style="--c:${dot(v.category)}">${esc(v.category || "기타")}</span><span>${ytId(v) ? "바로 재생돼요" : "카페 가입·올드팬 인증 후 시청"}</span></p>
       <div class="acts"><a class="btn primary" data-go href="${esc(safeUrl(v.url))}" target="_blank" rel="noopener noreferrer">${ytId(v) ? "바로 보기" : "다시보기" + OUT}</a>
       <button class="btn glass" type="button" data-fav>${favs.has(todayKey) ? "♥ 담았어요" : "♡ 즐겨찾기"}</button>
       ${all.length > 1 ? `<button class="btn glass" type="button" data-draw>${CARD}랜덤 뽑기</button>` : ""}</div></div>`;
