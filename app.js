@@ -852,7 +852,7 @@
 
   const FB = /^https?:\/\//i.test(SITE.discord || "") ? SITE.discord : SITE.feedback;   // 디스코드 주소가 있으면 디스코드로, 없으면 카페 채팅방으로
   document.querySelectorAll("[data-feedback]").forEach(a => { if (/^https?:\/\//i.test(FB || "")) a.href = FB; else a.hidden = true; });
-  if (FB === SITE.discord) { const g = $("fbHelp"); if (g) g.innerHTML = "고쳤으면 하는 점이나 잘못된 링크를 발견하면 화면 오른쪽 아래 <b>피드백 / 버그 제보</b> 버튼을 눌러 주세요. 디스코드 서버로 연결돼요. 입장한 뒤 피드백·버그 제보 채널에 남겨 주시면 돼요."; }
+  if (FB === SITE.discord) { const g = $("fbHelp"); if (g) g.innerHTML = "고쳤으면 하는 점이나 잘못된 시리즈 분류·영상 정보를 발견하면 화면 오른쪽 아래 <b>피드백 / 버그 제보</b> 버튼을 눌러 주세요. 디스코드 서버로 연결돼요. 입장한 뒤 피드백·버그 제보 채널에 남겨 주시면 돼요."; }
   document.querySelectorAll("[data-cafe]").forEach(a => { if (/^https?:\/\//i.test(SITE.cafe || "")) a.href = SITE.cafe; else a.hidden = true; });
 
   /* ── 화면 설정 (어두운 화면 / 움직임 줄이기) ── */
