@@ -53,6 +53,8 @@ function checkText(t) {   // 문제가 있으면 이유 코드를, 괜찮으면 
   return null;
 }
 const mask = n => { const c = Array.from(String(n || "").trim()); if (!c.length) return "****"; return c.slice(0, c.length <= 2 ? 1 : 2).join("") + "****"; };   // 앞 2글자만 보이고 나머지는 ****
+// 고치기 전 / 지우기 전 모습을 보관함에 남겨요 (why: edit=고침, del=본인이 지움, mod=운영진이 지움, ban=차단으로 지워짐)
+const archive = (env, vid, uid, r, why) => env.DB.prepare("INSERT INTO rating_history (vid, uid, stars, text, ts, name, why) VALUES (?, ?, ?, ?, ?, ?, ?)").bind(vid, uid, r.stars, r.text, r.ts, r.name || "", why).run();
 const clean = t => String(t || "").replace(/\s+/g, " ").trim();
 const rid = (env, vid, uid) => hmac(env.SESSION_SECRET, "rid:" + vid + ":" + uid).then(h => h.slice(0, 16));
 const cut = (t, n) => { t = String(t || ""); return t.length > n ? t.slice(0, n - 1) + "…" : t; };
@@ -114,10 +116,13 @@ async function handle(req, env, ctx) {
     if (!/^[A-Za-z0-9_-]{1,40}$/.test(vid) || !Number.isInteger(stars) || stars < 0 || stars > 5) return json(env, { error: "bad" }, 400);
     if (stars > 0) { const bad = checkText(text); if (bad) return json(env, { error: "text", code: bad }, 400); }   // 후기는 꼭 필요해요
     if (await isBanned(env, s.uid)) return json(env, { error: "banned" }, 403);   // 차단된 계정은 막아요
-    if (stars === 0) await env.DB.prepare("DELETE FROM ratings WHERE vid = ? AND uid = ?").bind(vid, s.uid).run();
-    else {
-      const old = await env.DB.prepare("SELECT stars, text, ts FROM ratings WHERE vid = ? AND uid = ?").bind(vid, s.uid).first();
-      if (old && (old.text !== text || old.stars !== stars)) await env.DB.prepare("INSERT INTO rating_history (vid, uid, stars, text, ts) VALUES (?, ?, ?, ?, ?)").bind(vid, s.uid, old.stars, old.text, old.ts).run();   // 고치기 전 모습 보관
+    if (stars === 0) {
+      const old = await env.DB.prepare("SELECT stars, text, name, ts FROM ratings WHERE vid = ? AND uid = ?").bind(vid, s.uid).first();
+      if (old) await archive(env, vid, s.uid, old, "del");   // 지우기 전 모습 보관
+      await env.DB.prepare("DELETE FROM ratings WHERE vid = ? AND uid = ?").bind(vid, s.uid).run();
+    } else {
+      const old = await env.DB.prepare("SELECT stars, text, name, ts FROM ratings WHERE vid = ? AND uid = ?").bind(vid, s.uid).first();
+      if (old && (old.text !== text || old.stars !== stars)) await archive(env, vid, s.uid, old, "edit");   // 고치기 전 모습 보관
       await env.DB.prepare("INSERT INTO ratings (vid, uid, stars, text, name, ts) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(vid, uid) DO UPDATE SET stars = excluded.stars, text = excluded.text, name = excluded.name, ts = excluded.ts").bind(vid, s.uid, stars, text, s.name || "", Date.now()).run();
     }
     const a = await env.DB.prepare("SELECT ROUND(AVG(stars), 2) AS avg, COUNT(*) AS n FROM ratings WHERE vid = ?").bind(vid).first();
@@ -158,13 +163,33 @@ async function handle(req, env, ctx) {
     return json(env, out, 200, { "Cache-Control": "no-store" });
   }
 
+  if (p === "/admin/history" && req.method === "GET") {   // 운영진: 보관함 (고치기 전·지우기 전 후기)
+    const s = await getAuth(env, req); if (!isAdmin(env, s)) return json(env, { error: "forbidden" }, 403);
+    const before = Number(url.searchParams.get("before")) || 9e15;
+    const rs = await env.DB.prepare("SELECT id, vid, uid, stars, text, ts, name, why FROM rating_history WHERE id < ? ORDER BY id DESC LIMIT 60").bind(before).all();
+    const out = [];
+    for (const h of rs.results) {
+      const cur = await env.DB.prepare("SELECT stars, text, ts FROM ratings WHERE vid = ? AND uid = ?").bind(h.vid, h.uid).first();
+      out.push({ id: h.id, vid: h.vid, uid: h.uid, name: h.name, stars: h.stars, text: h.text, ts: h.ts, why: h.why, cur: cur || null, banned: await isBanned(env, h.uid) });
+    }
+    return json(env, out, 200, { "Cache-Control": "no-store" });
+  }
+
   if (p === "/admin/act" && req.method === "POST") {   // 운영진: 후기 삭제 / 작성자 차단
     const s = await getAuth(env, req); if (!isAdmin(env, s)) return json(env, { error: "forbidden" }, 403);
     let b; try { b = await req.json(); } catch (e) { return json(env, { error: "bad" }, 400); }
     const row = await env.DB.prepare("SELECT vid, uid FROM reports WHERE id = ?").bind(Number(b.id)).first();
     if (!row) return json(env, { error: "gone" }, 404);
-    if (b.act === "ban") { await env.DB.prepare("INSERT OR IGNORE INTO banned (uid, ts) VALUES (?, ?)").bind(row.uid, Date.now()).run(); await env.DB.prepare("DELETE FROM ratings WHERE uid = ?").bind(row.uid).run(); }
-    else if (b.act === "del") await env.DB.prepare("DELETE FROM ratings WHERE vid = ? AND uid = ?").bind(row.vid, row.uid).run();
+    if (b.act === "ban") {
+      await env.DB.prepare("INSERT OR IGNORE INTO banned (uid, ts) VALUES (?, ?)").bind(row.uid, Date.now()).run();
+      const all = await env.DB.prepare("SELECT vid, stars, text, name, ts FROM ratings WHERE uid = ?").bind(row.uid).all();
+      for (const r of all.results) await archive(env, r.vid, row.uid, r, "ban");
+      await env.DB.prepare("DELETE FROM ratings WHERE uid = ?").bind(row.uid).run();
+    } else if (b.act === "del") {
+      const old = await env.DB.prepare("SELECT stars, text, name, ts FROM ratings WHERE vid = ? AND uid = ?").bind(row.vid, row.uid).first();
+      if (old) await archive(env, row.vid, row.uid, old, "mod");
+      await env.DB.prepare("DELETE FROM ratings WHERE vid = ? AND uid = ?").bind(row.vid, row.uid).run();
+    }
     else return json(env, { error: "bad" }, 400);
     return json(env, { ok: true });
   }

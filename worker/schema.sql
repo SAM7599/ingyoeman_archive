@@ -10,14 +10,16 @@ CREATE TABLE IF NOT EXISTS ratings (
 );
 CREATE INDEX IF NOT EXISTS ratings_uid ON ratings (uid);
 
--- 후기를 고치기 전 모습 (신고할 때 현재와 과거를 비교하려고 남겨요)
+-- 보관함: 후기를 고치기 전·지우기 전 모습 (edit=고침, del=본인이 지움, mod=운영진이 지움, ban=차단)
 CREATE TABLE IF NOT EXISTS rating_history (
   id    INTEGER PRIMARY KEY AUTOINCREMENT,
   vid   TEXT    NOT NULL,
   uid   TEXT    NOT NULL,
   stars INTEGER NOT NULL,
   text  TEXT    NOT NULL,
-  ts    INTEGER NOT NULL
+  ts    INTEGER NOT NULL,
+  name  TEXT    NOT NULL DEFAULT '',
+  why   TEXT    NOT NULL DEFAULT 'edit'
 );
 CREATE INDEX IF NOT EXISTS history_key ON rating_history (vid, uid);
 
