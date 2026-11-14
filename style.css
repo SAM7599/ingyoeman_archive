@@ -638,3 +638,6 @@ html[data-motion="off"] .r-stars button { transition:none; }
 .adm-b { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
 .adm-b .btn { height:36px; padding:0 14px; }
 .adm-ban { background:#7a1f23; color:#fff; border-color:#7a1f23; }
+.adm-tabs { display:flex; gap:8px; margin:0 0 12px; }
+.adm-tabs button { height:36px; padding:0 16px; border-radius:99px; border:1px solid var(--line); background:transparent; color:inherit; font:inherit; cursor:pointer; }
+.adm-tabs button.on { background:var(--accent); color:var(--on-accent); border-color:var(--accent); }

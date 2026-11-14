@@ -136,6 +136,21 @@
 
   /* ── 운영진 신고함 (지정한 구글 계정만) ── */
   const aAgo = ms => new Date(ms).toLocaleString("ko-KR");
+  let admTab = "rep", arcRows = [];
+  const WHY = { edit: "고침", del: "본인이 지움", mod: "운영진이 지움", ban: "차단으로 지워짐" };
+  function admSetTab(t) { admTab = t; document.querySelectorAll(".adm-tabs button").forEach(b => b.classList.toggle("on", b.dataset.tab === t)); $("admQ").hidden = t !== "arc"; $("admQ").value = ""; t === "arc" ? openArchive() : openAdmin(); }
+  async function openArchive() {
+    $("admList").textContent = "불러오는 중…";
+    try {
+      const r = await rApi("/admin/history"); if (!r.ok) { $("admList").textContent = "운영진만 볼 수 있어요"; return; }
+      arcRows = await r.json(); drawArchive();
+    } catch (e) { $("admList").textContent = "불러오지 못했어요"; }
+  }
+  function drawArchive() {
+    const q = $("admQ").value.trim().toLowerCase();
+    const l = arcRows.filter(x => !q || (x.name + " " + x.text + " " + x.uid).toLowerCase().includes(q));
+    $("admList").innerHTML = l.length ? l.map(x => `<section class="adm-it"><b>${esc(x.name || "이름 없음")}</b> (${esc(x.uid)})${x.banned ? " · <b>차단됨</b>" : ""}<br>영상 <a href="#v=${esc(x.vid)}">${esc(x.vid)}</a> · <b>${WHY[x.why] || esc(x.why)}</b> · 이 내용을 올린 때 ${aAgo(x.ts)}<blockquote>${"★".repeat(x.stars)} ${esc(x.text)}</blockquote>${x.cur ? `<div class="adm-h">지금 후기: ★${x.cur.stars} ${esc(x.cur.text)}</div>` : `<div class="adm-h">지금은 없는 후기예요</div>`}</section>`).join("") : "보관된 후기가 없어요";
+  }
   async function openAdmin() {
     $("admModal").hidden = false; $("admList").textContent = "불러오는 중…";
     try {
@@ -146,7 +161,7 @@
   }
   async function admAct(id, act) {
     if (!confirm(act === "ban" ? "작성자를 차단하고 그 사람의 모든 후기를 지울까요? 되돌릴 수 없어요." : "이 후기를 삭제할까요? 되돌릴 수 없어요.")) return;
-    try { const r = await rApi("/admin/act", { method: "POST", body: JSON.stringify({ id: +id, act }) }); if (!r.ok) return toast("처리하지 못했어요"); toast("처리했어요"); openAdmin(); loadRatings(); loadReviews(); } catch (e) { toast("처리하지 못했어요"); }
+    try { const r = await rApi("/admin/act", { method: "POST", body: JSON.stringify({ id: +id, act }) }); if (!r.ok) return toast("처리하지 못했어요"); toast("처리했어요"); admSetTab("rep"); loadRatings(); loadReviews(); } catch (e) { toast("처리하지 못했어요"); }
   }
   /* ── 후기 신고 ── */
   function openReport(rid) {
@@ -795,7 +810,7 @@
     if (b.dataset.rout !== undefined) return rLogout();
     if (b.dataset.del !== undefined) return doDelete();
     if (b.dataset.rep) return openReport(b.dataset.rep);
-    if (b.dataset.adm !== undefined) return openAdmin();
+    if (b.dataset.adm !== undefined) { admTab = "rep"; document.querySelectorAll(".adm-tabs button").forEach(x => x.classList.toggle("on", x.dataset.tab === "rep")); $("admQ").hidden = true; return openAdmin(); }
     if (b.dataset.star) { draft.stars = +b.dataset.star; const t = $("rtext"); if (t) draft.text = t.value; drawRate(); const t2 = $("rtext"); if (t2) t2.focus(); return; }
     if (b.id === "rsend") doSubmit();
   });
@@ -803,6 +818,8 @@
   $("repGo").addEventListener("click", sendReport);
   $("repCopy").addEventListener("click", () => { const t = $("repText"); t.select(); try { navigator.clipboard.writeText(t.value).then(() => toast("복사했어요"), () => { document.execCommand("copy"); toast("복사했어요"); }); } catch (e) { document.execCommand("copy"); toast("복사했어요"); } });
   $("admList").addEventListener("click", e => { const b = e.target.closest("button[data-a]"); if (b) admAct(b.dataset.id, b.dataset.a); });
+  document.querySelector(".adm-tabs").addEventListener("click", e => { const b = e.target.closest("button[data-tab]"); if (b) admSetTab(b.dataset.tab); });
+  $("admQ").addEventListener("input", drawArchive);
   $("admClose").addEventListener("click", () => { $("admModal").hidden = true; });
   $("admModal").addEventListener("click", e => { if (e.target === $("admModal")) $("admModal").hidden = true; });
   $("repSave").addEventListener("click", saveShot);
