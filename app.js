@@ -791,7 +791,6 @@
   function openMenu(btn, v) {
     const m = $("menu"), k = key(v);
     menuFor = v; openMenu.y = window.scrollY;
-    m.querySelector('[data-act="fav"]').textContent = favs.has(k) ? "즐겨찾기에서 빼기" : "즐겨찾기에 담기";
     m.querySelector('[data-act="seen"]').hidden = !recent.includes(k);
     m.querySelector('[data-act="report"]').textContent = "썸네일 제보" + (repCount(v) ? " (지금 " + repCount(v) + "건)" : "");
     m.hidden = false;
@@ -805,9 +804,7 @@
     const b = e.target.closest("button"), v = menuFor; if (!b || !v) return;
     closeMenu();
     const k = key(v), a = b.dataset.act;
-    if (a === "share") share(v);
-    else if (a === "fav") toggleFav(k);
-    else if (a === "report") report(v);
+    if (a === "report") report(v);
     else if (a === "seen") {
       recent = recent.filter(x => x !== k); store.set("recent", recent); toast("열어본 기록에서 지웠어요"); render();
     }
