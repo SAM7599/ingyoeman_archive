@@ -16,7 +16,7 @@
   if (m !== "on" && m !== "off") m = (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) ? "off" : "on";
   document.documentElement.setAttribute("data-motion", m); })();
 </script>
-<link rel="stylesheet" href="style.css?v=42">
+<link rel="stylesheet" href="style.css?v=43">
 </head>
 <body>
 
@@ -191,6 +191,12 @@
   <a href="#notes" role="menuitem" id="notesLink">패치노트</a>
 </div>
 
+<div class="modal" id="admModal" hidden>
+  <div class="sheet rep adm" role="dialog" aria-modal="true" aria-labelledby="admT">
+    <div class="m-body"><h2 id="admT">운영진 신고함</h2><div id="admList"></div><div class="m-acts"><button class="btn" type="button" id="admClose">닫기</button></div></div>
+  </div>
+</div>
+
 <div class="modal" id="repModal" hidden>
   <div class="sheet rep" role="dialog" aria-modal="true" aria-labelledby="repT">
     <div class="m-body">
@@ -300,7 +306,7 @@
 
 <div class="ach-pop" id="achPop" role="status" hidden><span class="ach-ic"><svg viewBox="0 0 24 24"><path d="M8 4h8v5a4 4 0 0 1-8 0zM8 6H5v1a3 3 0 0 0 3 3M16 6h3v1a3 3 0 0 1-3 3M12 13v4M8.5 20h7M10 17h4"/></svg></span><span class="ach-tx"><small>도전과제 달성!</small><b id="achPopT"></b><i id="achPopD"></i></span></div>
 <div id="toast" role="status"></div>
-<script src="config.js?v=42"></script>
-<script src="app.js?v=42"></script>
+<script src="config.js?v=43"></script>
+<script src="app.js?v=43"></script>
 </body>
 </html>

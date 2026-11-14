@@ -630,3 +630,11 @@ html[data-motion="off"] .r-stars button { transition:none; }
 #repModal { z-index:42; }
 .r-g { min-height:44px; margin-top:6px; }
 .rep-shot-img { display:block; width:100%; max-height:220px; object-fit:contain; margin:0 0 12px; border:1px solid var(--line); border-radius:12px; background:#fff; }
+#admModal { z-index:43; }
+.sheet.adm { width:min(640px,100%); max-height:88vh; overflow:auto; }
+.adm-it { border:1px solid var(--line); border-radius:12px; padding:12px 14px; margin:12px 0; font-size:14px; line-height:1.6; }
+.adm-it blockquote { margin:8px 0; padding:4px 12px; border-left:4px solid var(--line); white-space:pre-wrap; overflow-wrap:anywhere; }
+.adm-h { color:var(--sub); font-size:13px; overflow-wrap:anywhere; }
+.adm-b { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+.adm-b .btn { height:36px; padding:0 14px; }
+.adm-ban { background:#7a1f23; color:#fff; border-color:#7a1f23; }
