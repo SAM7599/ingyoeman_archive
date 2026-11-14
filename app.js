@@ -462,6 +462,7 @@
     const pg = tab === "guide" ? $("viewGuide") : tab === "about" ? $("viewAbout") : tab === "notes" ? $("viewNotes") : tab === "ach" ? $("viewAch") : $("viewList"); pg.classList.remove("enter"); void pg.offsetWidth; pg.classList.add("enter");
     if (!$("gacha").hidden) closeGacha();
     closeMenu();
+    document.documentElement.classList.remove("pre-guide", "pre-about", "pre-notes", "pre-ach");
     if (!isInfo()) reset();
     if (h.startsWith("import=")) { askImport(h.slice(7)); }
     else if (h.startsWith("v=")) { const v = all.find(x => vid(x) === h.slice(2)); if (v) openModal(v); else if (all.length) toast("영상을 찾지 못했어요"); }
