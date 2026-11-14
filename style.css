@@ -810,3 +810,6 @@ details.gi[open] > summary::after { content:"－"; }
 .dc-ic { width:24px; height:18px; flex:none; background:var(--accent); -webkit-mask:url("discord-icon.png") center/contain no-repeat; mask:url("discord-icon.png") center/contain no-repeat; }
 .dc-btn { display:inline-flex; align-items:center; gap:9px; }
 .dc-btn .dc-ic { background:currentColor; width:22px; height:16px; }
+.r-t { font-style:normal; font-size:11px; font-weight:700; padding:1px 7px; border-radius:99px; border:1px solid currentColor; color:var(--muted); }
+.r-t.lv2 { color:#2e8b57; } .r-t.lv3 { color:#2a7fd4; } .r-t.lv4 { color:#8a4fd8; } .r-t.lv5 { color:#d9822b; background:rgba(217,130,43,.12); }
+[data-theme="dark"] .r-t.lv2 { color:#5fd08d; } [data-theme="dark"] .r-t.lv3 { color:#6fb2ff; } [data-theme="dark"] .r-t.lv4 { color:#b894ff; } [data-theme="dark"] .r-t.lv5 { color:#ffb15c; }

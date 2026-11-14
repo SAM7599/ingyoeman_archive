@@ -64,6 +64,8 @@ const keep = n => { const c = Array.from(String(n || "").trim()); return c.slice
 const mask = n => { const c = Array.from(String(n || "").trim()); return c.length ? c.slice(0, 2).join("") + "****" : "****"; };   // 화면에는 저장된 글자 뒤에 ****
 // 고치기 전 / 지우기 전 모습을 보관함에 남겨요 (why: edit=고침, del=본인이 지움, mod=운영진이 지움, ban=차단으로 지워짐)
 // 보관함 자동 비우기: 보관한 지 RETENTION_DAYS(기본 180일 ≈ 6개월)가 지난 기록을 지워요. 별도 설정 없이 후기가 오갈 때·보관함을 열 때 알아서 정리돼요
+const TITLES = [[100, "추억 지킴이"], [30, "다시보기 평론가"], [10, "열혈 팬"], [3, "단골 시청자"], [1, "새내기"]];   // 후기 글을 쓴 영상 수 → 칭호 (위에서부터 먼저 맞는 것)
+const titleOf = (n) => { const i = TITLES.findIndex(t => n >= t[0]); return i < 0 ? null : { lv: TITLES.length - i, title: TITLES[i][1] }; };
 const sweep = (env) => env.DB.prepare("DELETE FROM rating_history WHERE (CASE WHEN at > 0 THEN at ELSE ts END) < ?").bind(Date.now() - (Number(env.RETENTION_DAYS) || 180) * 864e5).run().then(() => env.DB.batch([env.DB.prepare("DELETE FROM ip_seen WHERE ts < ?").bind(Date.now() - IPDAYS(env)), env.DB.prepare("DELETE FROM banned_ip WHERE ts < ?").bind(Date.now() - IPDAYS(env)), env.DB.prepare("UPDATE ratings SET name = substr(name, 1, 2) WHERE length(name) > 2"), env.DB.prepare("UPDATE rating_history SET name = substr(name, 1, 2) WHERE length(name) > 2")]));
 const archive = async (env, vid, uid, r, why) => { await env.DB.prepare("INSERT INTO rating_history (vid, uid, stars, text, ts, name, why, at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)").bind(vid, uid, r.stars, r.text, r.ts, keep(r.name), why, Date.now()).run(); if (Math.random() < 0.05) await sweep(env).catch(() => {}); };
 const clean = t => String(t || "").replace(/\s+/g, " ").trim();
@@ -127,7 +129,8 @@ async function handle(req, env, ctx) {
     if (!/^[A-Za-z0-9_-]{1,40}$/.test(vid)) return json(env, { error: "bad" }, 400);
     const me = await getAuth(env, req);
     const rs = await env.DB.prepare("SELECT uid, name, stars, text, ts FROM ratings WHERE vid = ? ORDER BY ts DESC LIMIT 40").bind(vid).all();
-    const list = []; for (const r of rs.results) list.push({ id: await rid(env, vid, r.uid), name: mask(r.name), stars: r.stars, text: r.text, ts: r.ts, me: !!me && me.uid === r.uid });
+    const cnt = {}; if (rs.results.length) { const q = await env.DB.prepare(`SELECT uid, COUNT(*) AS c FROM ratings WHERE text != '' AND uid IN (${rs.results.map(() => "?").join(",")}) GROUP BY uid`).bind(...rs.results.map(r => r.uid)).all(); for (const x of q.results) cnt[x.uid] = x.c; }
+    const list = []; for (const r of rs.results) list.push({ id: await rid(env, vid, r.uid), name: mask(r.name), stars: r.stars, text: r.text, ts: r.ts, me: !!me && me.uid === r.uid, ...(titleOf(cnt[r.uid] || 0) || {}) });
     return json(env, list, 200, { "Cache-Control": "no-store" });
   }
 
