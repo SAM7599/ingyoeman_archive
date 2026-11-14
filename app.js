@@ -41,7 +41,10 @@
       try { localStorage.setItem("consent1", JSON.stringify({ v: 2, t: Date.now(), adult: true })); } catch (e) {}
       root.classList.remove("consent-on"); lock(false);
     });
-    no.addEventListener("click", () => { deny.hidden = false; deny.scrollIntoView({ block: "nearest" }); try { window.close(); } catch (e) {} setTimeout(() => { try { location.replace("about:blank"); } catch (e) {} }, 1200); });
+    no.addEventListener("click", () => { deny.hidden = false; deny.scrollIntoView({ block: "nearest" }); try { window.close(); } catch (e) {} setTimeout(() => {   // 창이 안 닫히면 처음 오던 곳(없으면 네이버)으로 보내요
+      let to = "https://www.naver.com/"; try { const r = document.referrer; if (r && new URL(r).origin !== location.origin) to = r; } catch (e) {}
+      try { location.replace(to); } catch (e) {}
+    }, 1200); });
     if (root.classList.contains("consent-on")) { lock(true); setTimeout(() => { if (!document.getElementById("intro")) age.focus({ preventScroll: true }); }, 4300); }
   })();
   const CATS = SITE.categories || [];
