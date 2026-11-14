@@ -78,7 +78,7 @@
   }
   function drawGoogleBtn() {
     const box = $("gbtn"); if (!box || !GID) return;
-    const go = () => { try { if (!gsiReady) { google.accounts.id.initialize({ client_id: GID, callback: onGoogle, ux_mode: "popup" }); gsiReady = true; } google.accounts.id.renderButton(box, { theme: "outline", size: "large", text: "signin_with", locale: "ko", width: 260 }); } catch (e) {} };
+    const go = () => { try { if (!gsiReady) { google.accounts.id.initialize({ client_id: GID, callback: onGoogle, ux_mode: "popup" }); gsiReady = true; } google.accounts.id.renderButton(box, { theme: document.documentElement.getAttribute("data-theme") === "light" ? "outline" : "filled_black", size: "large", text: "signin_with", locale: "ko", width: 260 }); } catch (e) {} };
     if (window.google && google.accounts) return go();
     if (document.getElementById("gsi")) return setTimeout(drawGoogleBtn, 300);
     const sc = document.createElement("script"); sc.id = "gsi"; sc.src = "https://accounts.google.com/gsi/client"; sc.async = true; sc.onload = go; document.head.appendChild(sc);
@@ -958,7 +958,7 @@
   syncSet();
   $("theme").addEventListener("click", () => {
     const t = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
-    root.setAttribute("data-theme", t); try { localStorage.setItem("theme", t); } catch (e) {} syncSet();
+    root.setAttribute("data-theme", t); try { localStorage.setItem("theme", t); } catch (e) {} syncSet(); if ($("gbtn") && $("gbtn").firstChild) drawGoogleBtn();
   });
   $("motion").addEventListener("click", () => {
     const m = root.getAttribute("data-motion") === "off" ? "on" : "off";
