@@ -748,3 +748,9 @@ html.intro-on body { overflow:hidden; }
 .logo-story p b { color:var(--ink); }
 .logo-story p:last-child { margin:0; }
 @media (max-width:640px) { .logo-story { flex-direction:column; gap:14px; } .logo-story .logo-mark { width:100px; height:70px; } }
+
+.r-ban { margin:10px 0 4px; padding:16px 18px; border-radius:14px; border:1px solid #ffc9c9; background:#fff5f5; color:#a61e1e; }
+.r-ban > b { display:block; font-size:15px; margin-bottom:6px; }
+.r-ban p { margin:0 0 10px; font-size:13.5px; line-height:1.7; }
+.r-ban p:last-child { margin:0; display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+[data-theme="dark"] .r-ban { background:#2a1517; border-color:#7a2f35; color:#ffa8a8; }
