@@ -38,7 +38,7 @@
     age.addEventListener("change", sync); ok.addEventListener("change", sync);
     go.addEventListener("click", () => {
       if (go.disabled) return;
-      try { localStorage.setItem("consent1", JSON.stringify({ v: 2, t: Date.now(), adult: true })); } catch (e) {}
+      try { localStorage.setItem("consent1", JSON.stringify({ v: 3, t: Date.now(), adult: true })); } catch (e) {}
       root.classList.remove("consent-on"); lock(false);
     });
     const bye = document.getElementById("csBye"), sec = document.getElementById("csSec"), main = box.querySelector(".cs-box:not(.cs-bye)"); let byeT = 0;
@@ -462,7 +462,7 @@
     const pg = tab === "guide" ? $("viewGuide") : tab === "about" ? $("viewAbout") : tab === "notes" ? $("viewNotes") : tab === "ach" ? $("viewAch") : $("viewList"); pg.classList.remove("enter"); void pg.offsetWidth; pg.classList.add("enter");
     if (!$("gacha").hidden) closeGacha();
     closeMenu();
-    document.documentElement.classList.remove("pre-guide", "pre-about", "pre-notes", "pre-ach");
+    document.documentElement.classList.remove("pre-guide", "pre-about", "pre-notes", "pre-ach", "pre-rank", "pre-series", "pre-fav", "pre-recent");
     if (!isInfo()) reset();
     if (h.startsWith("import=")) { askImport(h.slice(7)); }
     else if (h.startsWith("v=")) { const v = all.find(x => vid(x) === h.slice(2)); if (v) openModal(v); else if (all.length) toast("영상을 찾지 못했어요"); }
