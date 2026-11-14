@@ -145,7 +145,7 @@
     <p>영상 제목 옆 <b>점 세 개</b>를 누르면 메뉴가 나와요. <b>링크 복사</b>로 그 영상 주소를 복사해 보낼 수 있고, <b>썸네일 제보</b>로 영상 그림을 보내 줄 수 있어요. 제보는 GitHub 로그인이 필요해요. 제보가 들어온 영상에는 <b>썸네일 제보 몇 건</b>인지 표시되고, 썸네일이 반영되면 표시가 사라져요.</p></div>
 
   <div class="g-item"><h3>피드백 / 버그 제보</h3>
-    <p>고쳤으면 하는 점이나 잘못된 링크를 발견하면 화면 오른쪽 아래 <b>피드백 / 버그 제보</b> 버튼을 눌러 주세요. 네이버 카페 채팅방이 열려요. 네이버 로그인과 카페 가입이 필요할 수 있어요. 바로 열리지 않으면 카페의 <b>채팅</b>에서 <b>잉여맨추억자료실 (VOD 사이트)</b> 채팅방을 찾아 들어오시면 돼요.</p>
+    <p id="fbHelp">고쳤으면 하는 점이나 잘못된 링크를 발견하면 화면 오른쪽 아래 <b>피드백 / 버그 제보</b> 버튼을 눌러 주세요. 네이버 카페 채팅방이 열려요. 네이버 로그인과 카페 가입이 필요할 수 있어요. 바로 열리지 않으면 카페의 <b>채팅</b>에서 <b>잉여맨추억자료실 (VOD 사이트)</b> 채팅방을 찾아 들어오시면 돼요.</p>
     <p><a class="btn" data-feedback target="_blank" rel="noopener noreferrer">채팅방 열기</a></p></div>
 
   <h2>자주 묻는 질문</h2>
@@ -183,7 +183,6 @@
 </div>
 
 <div class="menu" id="menu" hidden role="menu">
-  <button type="button" data-act="cmt" role="menuitem">댓글 보기·쓰기</button>
   <button type="button" data-act="share" role="menuitem">링크 복사</button>
   <button type="button" data-act="fav" role="menuitem"></button>
   <button type="button" data-act="seen" role="menuitem">열어본 기록에서 지우기</button>
@@ -202,7 +201,6 @@
         <button class="btn" id="mFav" type="button"></button>
         <button class="btn" id="mShare" type="button">링크 복사</button>
       </div>
-      <section class="cmt" id="cmt" hidden aria-label="댓글"></section>
     </div>
   </div>
 </div>
@@ -261,8 +259,7 @@
 
 <div class="ach-pop" id="achPop" role="status" hidden><span class="ach-ic"><svg viewBox="0 0 24 24"><path d="M8 4h8v5a4 4 0 0 1-8 0zM8 6H5v1a3 3 0 0 0 3 3M16 6h3v1a3 3 0 0 1-3 3M12 13v4M8.5 20h7M10 17h4"/></svg></span><span class="ach-tx"><small>도전과제 달성!</small><b id="achPopT"></b><i id="achPopD"></i></span></div>
 <div id="toast" role="status"></div>
-<script src="config.js?v=28"></script>
-<script src="comments.js?v=28"></script>
-<script src="app.js?v=28"></script>
+<script src="config.js?v=29"></script>
+<script src="app.js?v=29"></script>
 </body>
 </html>
