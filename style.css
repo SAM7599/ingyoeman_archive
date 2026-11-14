@@ -807,4 +807,6 @@ details.gi[open] > summary::after { content:"－"; }
 .m-need b { color:var(--ink); }
 @media (max-width:640px) { .need { padding:11px 12px; gap:9px; } .need p { font-size:13.5px; } }
 
-.fb .dc-ic { width:24px; height:18px; flex:none; background:var(--accent); -webkit-mask:url("discord-icon.png") center/contain no-repeat; mask:url("discord-icon.png") center/contain no-repeat; }
+.dc-ic { width:24px; height:18px; flex:none; background:var(--accent); -webkit-mask:url("discord-icon.png") center/contain no-repeat; mask:url("discord-icon.png") center/contain no-repeat; }
+.dc-btn { display:inline-flex; align-items:center; gap:9px; }
+.dc-btn .dc-ic { background:currentColor; width:22px; height:16px; }

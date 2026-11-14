@@ -896,7 +896,8 @@
 
   const FB = /^https?:\/\//i.test(SITE.discord || "") ? SITE.discord : SITE.feedback;   // 디스코드 주소가 있으면 디스코드로, 없으면 카페 채팅방으로
   document.querySelectorAll("[data-feedback]").forEach(a => { if (/^https?:\/\//i.test(FB || "")) a.href = FB; else a.hidden = true; });
-  if (FB === SITE.discord) { const g = $("fbHelp"); if (g) g.innerHTML = "화면 오른쪽 아래 <b>디스코드 참여하기</b> 버튼을 누르면 안내 채팅창이 열려요. 디스코드에서는 사이트 버그·시리즈 분류 오류 제보, 건의, 별점·후기 문의, 부적절한 후기 신고를 할 수 있어요."; }
+  if (FB === SITE.discord) { const g = $("fbHelp"); if (g) g.innerHTML = "아래 버튼이나 화면 오른쪽 아래 <b>디스코드 참여하기</b> 버튼을 누르면 안내 채팅창이 열려요. 디스코드는 무료로 가입할 수 있고, 이런 일을 할 수 있어요.<ul><li>🐞 사이트 <b>버그</b> 제보</li><li>📚 시리즈 <b>분류 오류</b> 제보</li><li>💡 기능 <b>건의</b></li><li>⭐ <b>별점·후기</b> 문의 (후기 삭제 요청 포함)</li><li>🚨 부적절한 <b>후기 신고</b></li></ul>"; }
+  else { const t = $("fbBtnT"); if (t) t.textContent = "채팅방 열기"; }
   /* ── 디스코드 참여하기 (채팅창 안내) ── */
   const DC = [
     "안녕하세요! 👋 잉여맨추억자료실 디스코드를 소개하는 <b>자동 안내</b>예요. 실시간으로 대화하는 곳은 아니니 편하게 읽어 주세요.",
