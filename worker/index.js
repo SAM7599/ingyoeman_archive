@@ -59,11 +59,13 @@ function checkText(t) {   // 문제가 있으면 이유 코드를, 괜찮으면 
   if (/(https?:\/\/|www\.|discord\.gg|\.(com|net|kr|io|me|gg|xyz)\b)/i.test(s)) return "link";   // 광고 링크
   return null;
 }
-const mask = n => { const c = Array.from(String(n || "").trim()); if (!c.length) return "****"; return c.slice(0, c.length <= 2 ? 1 : 2).join("") + "****"; };   // 앞 2글자만 보이고 나머지는 ****
+// 이름은 저장할 때부터 앞 2글자(2글자 이하 이름은 1글자)만 남겨요. 전체 이름은 서버에 저장하지 않아요
+const keep = n => { const c = Array.from(String(n || "").trim()); return c.slice(0, c.length <= 2 ? 1 : 2).join(""); };
+const mask = n => { const c = Array.from(String(n || "").trim()); return c.length ? c.slice(0, 2).join("") + "****" : "****"; };   // 화면에는 저장된 글자 뒤에 ****
 // 고치기 전 / 지우기 전 모습을 보관함에 남겨요 (why: edit=고침, del=본인이 지움, mod=운영진이 지움, ban=차단으로 지워짐)
 // 보관함 자동 비우기: 보관한 지 RETENTION_DAYS(기본 180일 ≈ 6개월)가 지난 기록을 지워요. 별도 설정 없이 후기가 오갈 때·보관함을 열 때 알아서 정리돼요
-const sweep = (env) => env.DB.prepare("DELETE FROM rating_history WHERE (CASE WHEN at > 0 THEN at ELSE ts END) < ?").bind(Date.now() - (Number(env.RETENTION_DAYS) || 180) * 864e5).run().then(() => env.DB.batch([env.DB.prepare("DELETE FROM ip_seen WHERE ts < ?").bind(Date.now() - IPDAYS(env)), env.DB.prepare("DELETE FROM banned_ip WHERE ts < ?").bind(Date.now() - IPDAYS(env))]));
-const archive = async (env, vid, uid, r, why) => { await env.DB.prepare("INSERT INTO rating_history (vid, uid, stars, text, ts, name, why, at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)").bind(vid, uid, r.stars, r.text, r.ts, r.name || "", why, Date.now()).run(); if (Math.random() < 0.05) await sweep(env).catch(() => {}); };
+const sweep = (env) => env.DB.prepare("DELETE FROM rating_history WHERE (CASE WHEN at > 0 THEN at ELSE ts END) < ?").bind(Date.now() - (Number(env.RETENTION_DAYS) || 180) * 864e5).run().then(() => env.DB.batch([env.DB.prepare("DELETE FROM ip_seen WHERE ts < ?").bind(Date.now() - IPDAYS(env)), env.DB.prepare("DELETE FROM banned_ip WHERE ts < ?").bind(Date.now() - IPDAYS(env)), env.DB.prepare("UPDATE ratings SET name = substr(name, 1, 2) WHERE length(name) > 2"), env.DB.prepare("UPDATE rating_history SET name = substr(name, 1, 2) WHERE length(name) > 2")]));
+const archive = async (env, vid, uid, r, why) => { await env.DB.prepare("INSERT INTO rating_history (vid, uid, stars, text, ts, name, why, at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)").bind(vid, uid, r.stars, r.text, r.ts, keep(r.name), why, Date.now()).run(); if (Math.random() < 0.05) await sweep(env).catch(() => {}); };
 const clean = t => String(t || "").replace(/\s+/g, " ").trim();
 const rid = (env, vid, uid) => hmac(env.SESSION_SECRET, "rid:" + vid + ":" + uid).then(h => h.slice(0, 16));
 const cut = (t, n) => { t = String(t || ""); return t.length > n ? t.slice(0, n - 1) + "…" : t; };
@@ -71,7 +73,11 @@ const esc = t => String(t).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;"
 const html = body => new Response(`<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>운영진</title><body style="font-family:system-ui,sans-serif;max-width:520px;margin:40px auto;padding:0 18px;line-height:1.6">${body}`, { headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" } });
 const ago = ms => new Date(ms + 9 * 3600e3).toISOString().slice(0, 16).replace("T", " ");   // 한국 시간
 
-async function getAuth(env, req) { return verify(env, (req.headers.get("Authorization") || "").replace(/^Bearer /, "")); }
+const newUid = async (env, sub) => "u" + (await hmac(env.SESSION_SECRET, "uid:" + sub)).slice(0, 24);
+const UID_RE = /^(g\d{5,30}|u[\w-]{24})$/;
+// 예전 기록(uid = "g"+구글번호)을 새 코드로 바꿔요. 새 코드에 이미 같은 항목이 있으면 건드리지 않아요
+const migrateUid = async (env, old, nu) => env.DB.batch(["ratings", "rating_history", "banned", "ban_info", "ip_seen"].map(t => env.DB.prepare(`UPDATE OR IGNORE ${t} SET uid = ? WHERE uid = ?`).bind(nu, old)).concat([env.DB.prepare("UPDATE OR IGNORE reports SET uid = ? WHERE uid = ?").bind(nu, old), env.DB.prepare("UPDATE OR IGNORE reports SET reporter = ? WHERE reporter = ?").bind(nu, old)]));
+async function getAuth(env, req) { const s = await verify(env, (req.headers.get("Authorization") || "").replace(/^Bearer /, "")); return s && /^u[\w-]{24}$/.test(String(s.uid)) ? s : null; }   // 예전 방식 로그인은 한 번 다시 로그인하게 해요
 
 async function handle(req, env, ctx) {
   const url = new URL(req.url), p = url.pathname;
@@ -86,8 +92,9 @@ async function handle(req, env, ctx) {
     if (!r.ok) return json(env, { error: "login" }, 401);
     const g = await r.json();
     if (g.aud !== env.GOOGLE_CLIENT_ID || !/^\d{5,30}$/.test(String(g.sub || "")) || !(g.exp > Date.now() / 1000)) return json(env, { error: "login" }, 401);
-    const uid = "g" + g.sub;
+    const uid = await newUid(env, g.sub);   // 구글 고유 번호는 저장하지 않고, 되돌릴 수 없는 코드만 써요
     const em0 = g.email_verified === "true" || g.email_verified === true ? String(g.email || "").toLowerCase() : "";
+    await migrateUid(env, "g" + g.sub, uid).catch(() => {});   // 예전 방식(g+번호)으로 저장된 기록을 새 코드로 옮겨요 (이전 이용자 전용)
     if (await isBanned(env, uid)) return json(env, await banBody(env, uid), 403);
     if (!isAdmin(env, { em: em0 }) && await ipBanned(env, req)) return json(env, await banBody(env, uid, true), 403);   // 차단된 사람이 다른 계정으로 들어오는 것도 막아요
     await ipSeen(env, req, uid).catch(() => {});
@@ -107,7 +114,7 @@ async function handle(req, env, ctx) {
   }
 
   if (p === "/me" && req.method === "GET") {   // 내가 준 별점 + 아직 멤버인지
-    const s = await verify(env, (req.headers.get("Authorization") || "").replace(/^Bearer /, ""));
+    const s = await getAuth(env, req);
     if (!s) return json(env, { error: "login" }, 401);
     const banned = await isBanned(env, s.uid);
     const rs = await env.DB.prepare("SELECT vid, stars, text FROM ratings WHERE uid = ?").bind(s.uid).all();
@@ -139,7 +146,7 @@ async function handle(req, env, ctx) {
     } else {
       const old = await env.DB.prepare("SELECT stars, text, name, ts FROM ratings WHERE vid = ? AND uid = ?").bind(vid, s.uid).first();
       if (old && (old.text !== text || old.stars !== stars)) await archive(env, vid, s.uid, old, "edit");   // 고치기 전 모습 보관
-      await env.DB.prepare("INSERT INTO ratings (vid, uid, stars, text, name, ts) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(vid, uid) DO UPDATE SET stars = excluded.stars, text = excluded.text, name = excluded.name, ts = excluded.ts").bind(vid, s.uid, stars, text, s.name || "", Date.now()).run();
+      await env.DB.prepare("INSERT INTO ratings (vid, uid, stars, text, name, ts) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(vid, uid) DO UPDATE SET stars = excluded.stars, text = excluded.text, name = excluded.name, ts = excluded.ts").bind(vid, s.uid, stars, text, keep(s.name), Date.now()).run();
     }
     const a = await env.DB.prepare("SELECT ROUND(AVG(stars), 2) AS avg, COUNT(*) AS n FROM ratings WHERE vid = ?").bind(vid).first();
     return json(env, { ok: true, avg: a.avg || 0, n: a.n || 0 });
@@ -207,7 +214,7 @@ async function handle(req, env, ctx) {
   if (p === "/admin/unban" && req.method === "POST") {   // 운영진: 차단 해제 (계정 + 접속 주소)
     const s = await getAuth(env, req); if (!isAdmin(env, s)) return json(env, { error: "forbidden" }, 403);
     let b; try { b = await req.json(); } catch (e) { return json(env, { error: "bad" }, 400); }
-    const uid = String(b.uid || ""); if (!/^g\d+$/.test(uid)) return json(env, { error: "bad" }, 400);
+    const uid = String(b.uid || ""); if (!UID_RE.test(uid)) return json(env, { error: "bad" }, 400);
     const ip = await env.DB.prepare("SELECT h FROM ip_seen WHERE uid = ?").bind(uid).first();
     await env.DB.prepare("DELETE FROM banned WHERE uid = ?").bind(uid).run();
     await env.DB.prepare("DELETE FROM ban_info WHERE uid = ?").bind(uid).run().catch(() => {});
@@ -218,7 +225,7 @@ async function handle(req, env, ctx) {
   if (p === "/admin/purge" && req.method === "POST") {   // 운영진: 보관함 기록 영구 삭제 (본인이 보관을 원치 않을 때)
     const s = await getAuth(env, req); if (!isAdmin(env, s)) return json(env, { error: "forbidden" }, 403);
     let b; try { b = await req.json(); } catch (e) { return json(env, { error: "bad" }, 400); }
-    if (b.uid) { if (!/^g\d+$/.test(String(b.uid))) return json(env, { error: "bad" }, 400); await env.DB.prepare("DELETE FROM rating_history WHERE uid = ?").bind(String(b.uid)).run(); }
+    if (b.uid) { if (!UID_RE.test(String(b.uid))) return json(env, { error: "bad" }, 400); await env.DB.prepare("DELETE FROM rating_history WHERE uid = ?").bind(String(b.uid)).run(); }
     else if (Number.isInteger(b.id)) await env.DB.prepare("DELETE FROM rating_history WHERE id = ?").bind(b.id).run();
     else return json(env, { error: "bad" }, 400);
     return json(env, { ok: true });
