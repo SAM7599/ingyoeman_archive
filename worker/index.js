@@ -59,14 +59,16 @@ function checkText(t) {   // 문제가 있으면 이유 코드를, 괜찮으면 
   if (/(https?:\/\/|www\.|discord\.gg|\.(com|net|kr|io|me|gg|xyz)\b)/i.test(s)) return "link";   // 광고 링크
   return null;
 }
-// 이름은 저장할 때부터 앞 2글자(2글자 이하 이름은 1글자)만 남겨요. 전체 이름은 서버에 저장하지 않아요
-const keep = n => { const c = Array.from(String(n || "").trim()); return c.slice(0, c.length <= 2 ? 1 : 2).join(""); };
-const mask = n => { const c = Array.from(String(n || "").trim()); return c.length ? c.slice(0, 2).join("") + "****" : "****"; };   // 화면에는 저장된 글자 뒤에 ****
+// 구글 이름은 서버에 저장하지도, 화면에 보여주지도 않아요. 대신 계정마다 정해진 무작위 별명을 보여줘요 (같은 사람은 늘 같은 별명)
+const keep = () => "";
+const ADJ = ["졸린", "배고픈", "수줍은", "용감한", "느긋한", "엉뚱한", "씩씩한", "다정한", "시끄러운", "조용한", "빠른", "느린", "행복한", "심심한", "든든한", "반짝이는", "푸른", "붉은", "노란", "새하얀", "까만", "작은", "커다란", "웃는", "춤추는", "달리는", "꿈꾸는", "비밀스러운", "의젓한", "장난꾸러기"];
+const NOUN = ["너구리", "고양이", "강아지", "다람쥐", "토끼", "펭귄", "수달", "부엉이", "판다", "여우", "하마", "고래", "거북이", "오리", "햄스터", "참새", "곰돌이", "사슴", "두더지", "카피바라", "미어캣", "알파카", "병아리", "청설모", "돌고래", "코알라", "앵무새", "해달", "치타", "기린"];
+const nick = async (env, uid) => { const h = await hmac(env.SESSION_SECRET, "nick:" + uid), A = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_", v = i => A.indexOf(h[i]) + 1; return ADJ[(v(0) * 7 + v(1)) % ADJ.length] + NOUN[(v(2) * 7 + v(3)) % NOUN.length] + String((v(4) * 11 + v(5)) % 100).padStart(2, "0"); };
 // 고치기 전 / 지우기 전 모습을 보관함에 남겨요 (why: edit=고침, del=본인이 지움, mod=운영진이 지움, ban=차단으로 지워짐)
 // 보관함 자동 비우기: 보관한 지 RETENTION_DAYS(기본 180일 ≈ 6개월)가 지난 기록을 지워요. 별도 설정 없이 후기가 오갈 때·보관함을 열 때 알아서 정리돼요
 const TITLES = [[100, "추억 지킴이"], [30, "다시보기 평론가"], [10, "열혈 팬"], [3, "단골 시청자"], [1, "새내기"]];   // 후기 글을 쓴 영상 수 → 칭호 (위에서부터 먼저 맞는 것)
 const titleOf = (n) => { const i = TITLES.findIndex(t => n >= t[0]); return i < 0 ? null : { lv: TITLES.length - i, title: TITLES[i][1] }; };
-const sweep = (env) => env.DB.prepare("DELETE FROM rating_history WHERE (CASE WHEN at > 0 THEN at ELSE ts END) < ?").bind(Date.now() - (Number(env.RETENTION_DAYS) || 180) * 864e5).run().then(() => env.DB.batch([env.DB.prepare("DELETE FROM ip_seen WHERE ts < ?").bind(Date.now() - IPDAYS(env)), env.DB.prepare("DELETE FROM banned_ip WHERE ts < ?").bind(Date.now() - IPDAYS(env)), env.DB.prepare("UPDATE ratings SET name = substr(name, 1, 2) WHERE length(name) > 2"), env.DB.prepare("UPDATE rating_history SET name = substr(name, 1, 2) WHERE length(name) > 2")]));
+const sweep = (env) => env.DB.prepare("DELETE FROM rating_history WHERE (CASE WHEN at > 0 THEN at ELSE ts END) < ?").bind(Date.now() - (Number(env.RETENTION_DAYS) || 180) * 864e5).run().then(() => env.DB.batch([env.DB.prepare("DELETE FROM ip_seen WHERE ts < ?").bind(Date.now() - IPDAYS(env)), env.DB.prepare("DELETE FROM banned_ip WHERE ts < ?").bind(Date.now() - IPDAYS(env)), env.DB.prepare("UPDATE ratings SET name = '' WHERE name != ''"), env.DB.prepare("UPDATE rating_history SET name = '' WHERE name != ''")]));
 const archive = async (env, vid, uid, r, why) => { await env.DB.prepare("INSERT INTO rating_history (vid, uid, stars, text, ts, name, why, at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)").bind(vid, uid, r.stars, r.text, r.ts, keep(r.name), why, Date.now()).run(); if (Math.random() < 0.05) await sweep(env).catch(() => {}); };
 const clean = t => String(t || "").replace(/\s+/g, " ").trim();
 const rid = (env, vid, uid) => hmac(env.SESSION_SECRET, "rid:" + vid + ":" + uid).then(h => h.slice(0, 16));
@@ -100,7 +102,7 @@ async function handle(req, env, ctx) {
     if (await isBanned(env, uid)) return json(env, await banBody(env, uid), 403);
     if (!isAdmin(env, { em: em0 }) && await ipBanned(env, req)) return json(env, await banBody(env, uid, true), 403);   // 차단된 사람이 다른 계정으로 들어오는 것도 막아요
     await ipSeen(env, req, uid).catch(() => {});
-    const name = String(g.name || (g.email || "").split("@")[0] || "").slice(0, 32);
+    const name = await nick(env, uid);
     const em = g.email_verified === "true" || g.email_verified === true ? String(g.email || "").toLowerCase() : "";
     return json(env, { token: await sign(env, { uid, name, em }, 30 * DAY), name, admin: isAdmin(env, { em }) });
   }
@@ -121,7 +123,7 @@ async function handle(req, env, ctx) {
     const banned = await isBanned(env, s.uid);
     const rs = await env.DB.prepare("SELECT vid, stars, text FROM ratings WHERE uid = ?").bind(s.uid).all();
     const mine = {}; for (const r of rs.results) mine[r.vid] = [r.stars, r.text];
-    return json(env, { name: s.name, member: !banned, mine, admin: isAdmin(env, s), ban: banned ? await banInfo(env, s.uid) : null });
+    return json(env, { name: await nick(env, s.uid), member: !banned, mine, admin: isAdmin(env, s), ban: banned ? await banInfo(env, s.uid) : null });
   }
 
   if (p === "/reviews" && req.method === "GET") {   // 한 영상의 후기 목록 (누구나)
@@ -130,7 +132,7 @@ async function handle(req, env, ctx) {
     const me = await getAuth(env, req);
     const rs = await env.DB.prepare("SELECT uid, name, stars, text, ts FROM ratings WHERE vid = ? ORDER BY ts DESC LIMIT 40").bind(vid).all();
     const cnt = {}; if (rs.results.length) { const q = await env.DB.prepare(`SELECT uid, COUNT(*) AS c FROM ratings WHERE text != '' AND uid IN (${rs.results.map(() => "?").join(",")}) GROUP BY uid`).bind(...rs.results.map(r => r.uid)).all(); for (const x of q.results) cnt[x.uid] = x.c; }
-    const list = []; for (const r of rs.results) list.push({ id: await rid(env, vid, r.uid), name: mask(r.name), stars: r.stars, text: r.text, ts: r.ts, me: !!me && me.uid === r.uid, ...(titleOf(cnt[r.uid] || 0) || {}) });
+    const list = []; for (const r of rs.results) list.push({ id: await rid(env, vid, r.uid), name: await nick(env, r.uid), stars: r.stars, text: r.text, ts: r.ts, me: !!me && me.uid === r.uid, ...(titleOf(cnt[r.uid] || 0) || {}) });
     return json(env, list, 200, { "Cache-Control": "no-store" });
   }
 
@@ -184,7 +186,7 @@ async function handle(req, env, ctx) {
       const cur = await env.DB.prepare("SELECT name, stars, text, ts FROM ratings WHERE vid = ? AND uid = ?").bind(r.vid, r.uid).first();
       const cnt = (await env.DB.prepare("SELECT COUNT(*) AS n FROM reports WHERE vid = ? AND uid = ?").bind(r.vid, r.uid).first()).n;
       const hist = await env.DB.prepare("SELECT stars, text, ts FROM rating_history WHERE vid = ? AND uid = ? ORDER BY id DESC LIMIT 3").bind(r.vid, r.uid).all();
-      out.push({ id: r.id, vid: r.vid, uid: r.uid, reason: REASONS[r.reason] || r.reason, note: r.note, ts: r.ts, cnt, cur: cur || null, hist: hist.results, banned: await isBanned(env, r.uid) });
+      out.push({ id: r.id, vid: r.vid, uid: r.uid, reason: REASONS[r.reason] || r.reason, note: r.note, ts: r.ts, cnt, cur: cur ? { ...cur, name: await nick(env, r.uid) } : null, hist: hist.results, banned: await isBanned(env, r.uid) });
     }
     return json(env, out, 200, { "Cache-Control": "no-store" });
   }
@@ -197,7 +199,7 @@ async function handle(req, env, ctx) {
     const out = [];
     for (const h of rs.results) {
       const cur = await env.DB.prepare("SELECT stars, text, ts FROM ratings WHERE vid = ? AND uid = ?").bind(h.vid, h.uid).first();
-      out.push({ id: h.id, vid: h.vid, uid: h.uid, name: h.name, stars: h.stars, text: h.text, ts: h.ts, why: h.why, cur: cur || null, banned: await isBanned(env, h.uid) });
+      out.push({ id: h.id, vid: h.vid, uid: h.uid, name: await nick(env, h.uid), stars: h.stars, text: h.text, ts: h.ts, why: h.why, cur: cur || null, banned: await isBanned(env, h.uid) });
     }
     return json(env, out, 200, { "Cache-Control": "no-store" });
   }
@@ -209,7 +211,7 @@ async function handle(req, env, ctx) {
     for (const r of rows) {
       const i = await banInfo(env, r.uid);
       const n = await env.DB.prepare("SELECT name FROM rating_history WHERE uid = ? AND name != '' ORDER BY id DESC LIMIT 1").bind(r.uid).first().catch(() => null);
-      out.push({ uid: r.uid, ts: r.ts, name: n ? n.name : "", reason: i.reason || "", vid: i.vid || "", txt: i.txt || "" });
+      out.push({ uid: r.uid, ts: r.ts, name: await nick(env, r.uid), reason: i.reason || "", vid: i.vid || "", txt: i.txt || "" });
     }
     return json(env, out, 200, { "Cache-Control": "no-store" });
   }
