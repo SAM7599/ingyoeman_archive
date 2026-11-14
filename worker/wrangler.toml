@@ -1,0 +1,18 @@
+name = "ingyoeman-rating"
+main = "index.js"
+compatibility_date = "2025-01-01"
+
+[vars]
+CLIENT_ID = ""            # 디스코드 앱의 Application ID
+GUILD_ID = ""             # 디스코드 서버 ID
+SITE_ORIGIN = "https://sam7599.github.io"
+SITE_PATH = "/ingyoeman_archive/"
+# ROLE_ID = ""            # (선택) 이 역할이 있는 멤버만 별점 허용
+
+[[d1_databases]]
+binding = "DB"
+database_name = "ingyoeman-rating"
+database_id = ""
+
+[triggers]
+crons = ["17 19 * * *"]   # 매일 한국 시간 새벽 4시 17분 (서버 나간 사람 별점 정리)

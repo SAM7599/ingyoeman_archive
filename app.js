@@ -19,7 +19,7 @@
   let recent = store.get("recent", []);   // 열어본 영상 (자동)
   let view = store.get("view2", "grid") === "rows" ? "rows" : "grid";
   const savedSort = store.get("sort", "new");
-  $("sort").value = ["new", "old", "title", "likes"].includes(savedSort) ? savedSort : "new";
+  $("sort").value = ["new", "old", "title", "likes", "rating"].includes(savedSort) ? savedSort : "new";
 
   const key = v => (v.url || "") + "|" + (v.title || "");
   const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -39,6 +39,49 @@
   }
   const byKey = k => all.find(v => key(v) === k);
   function toast(t) { const el = $("toast"); el.textContent = t; el.classList.add("show"); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove("show"), 2200); }
+
+  /* ── 별점 (디스코드 서버 멤버만) — 서버 주소는 config.js 의 rating ── */
+  const RATE = /^(https:\/\/|http:\/\/localhost)/i.test(SITE.rating || "") ? SITE.rating.replace(/\/+$/, "") : "";
+  let ravg = {}, mine = {}, rtok = store.get("dtok", null);
+  const rScore = v => { const a = ravg[vid(v)]; return a ? (a[0] * a[1] + 3 * 2) / (a[1] + 2) : 0; };   // 표가 적을 때 흔들리지 않게 보정
+  const rStars = n => "★".repeat(Math.round(n)) + "☆".repeat(5 - Math.round(n));
+  function authBack() {   // 디스코드 로그인 후 돌아왔을 때
+    const m = /^#auth=(.+)$/.exec(location.hash); if (!m) return;
+    history.replaceState(null, "", location.pathname + location.search);
+    const v = m[1];
+    if (v === "nomember") return setTimeout(() => toast("디스코드 서버에 가입한 분만 별점을 줄 수 있어요"), 400);
+    if (v === "cancel" || v === "fail") return setTimeout(() => toast(v === "cancel" ? "로그인을 취소했어요" : "로그인하지 못했어요. 잠시 후 다시 해 주세요"), 400);
+    try { const b = JSON.parse(atob(v.split(".")[0].replace(/-/g, "+").replace(/_/g, "/"))); rtok = { t: v, name: "" }; store.set("dtok", rtok); setTimeout(() => toast("디스코드로 로그인했어요"), 400); } catch (e) {}
+  }
+  authBack();
+  const rApi = (path, opt) => fetch(RATE + path, { ...(opt || {}), headers: { ...(rtok ? { Authorization: "Bearer " + rtok.t } : {}), "Content-Type": "application/json" } });
+  function rLogout() { rtok = null; mine = {}; store.set("dtok", null); drawRate(); }
+  function loadRatings() {
+    if (!RATE) return;
+    fetch(RATE + "/ratings").then(r => r.json()).then(d => { ravg = d || {}; render(); if (current) drawRate(); }).catch(() => {});
+    if (rtok) rApi("/me").then(r => r.status === 401 ? Promise.reject("login") : r.json()).then(d => { mine = d.mine || {}; rtok.name = d.name || ""; if (d.member === false) toast("서버 멤버가 아니어서 별점을 줄 수 없어요"); if (current) drawRate(); }).catch(e => { if (e === "login") rLogout(); });
+  }
+  function drawRate() {
+    const el = $("rate"); if (!el) return; el.hidden = !RATE; if (!RATE || !current) return;
+    const id = vid(current), a = ravg[id], my = mine[id] || 0;
+    const head = a ? `<b class="r-avg">★ ${a[0].toFixed(1)}</b><span>${a[1]}명이 줬어요</span>` : `<span>아직 별점이 없어요</span>`;
+    let body;
+    if (!rtok) body = `<a class="btn" href="${esc(RATE)}/login">디스코드로 로그인하고 별점 주기</a><p class="r-note">디스코드 서버에 가입한 분만 별점을 줄 수 있어요. 한 계정당 영상마다 한 번만 줄 수 있어요.</p>`;
+    else body = `<div class="r-stars" role="group" aria-label="내 별점">${[1, 2, 3, 4, 5].map(n => `<button type="button" class="${n <= my ? "on" : ""}" data-star="${n}" aria-label="별 ${n}개" aria-pressed="${n === my}">★</button>`).join("")}</div><p class="r-note">${my ? "내 별점 " + my + "점 · 다시 누르면 바꿀 수 있어요 " : "별을 눌러 점수를 남겨 보세요. "}<button type="button" class="r-link" data-star="0" ${my ? "" : "hidden"}>지우기</button> <button type="button" class="r-link" data-rout>로그아웃</button></p>`;
+    el.innerHTML = `<div class="r-head">${head}</div>${body}`;
+  }
+  async function doRate(n) {
+    if (!current || !rtok) return; const id = vid(current);
+    try {
+      const r = await rApi("/rate", { method: "POST", body: JSON.stringify({ vid: id, stars: n }) });
+      if (r.status === 401) { rLogout(); return toast("다시 로그인해 주세요"); }
+      if (r.status === 403) { mine = {}; drawRate(); return toast("서버 멤버가 아니어서 별점을 줄 수 없어요"); }
+      if (!r.ok) return toast("지금은 별점을 줄 수 없어요. 잠시 후 다시 해 주세요");
+      const d = await r.json(); if (n) mine[id] = n; else delete mine[id];
+      if (d.n) ravg[id] = [d.avg, d.n]; else delete ravg[id];
+      drawRate(); render(); toast(n ? "별점을 남겼어요" : "별점을 지웠어요");
+    } catch (e) { toast("지금은 별점을 줄 수 없어요. 잠시 후 다시 해 주세요"); }
+  }
   const HEART = `<svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>`;
   const OUT = `<svg class="out" viewBox="0 0 24 24"><path d="M9 6h9v9M18 6L7 17"/></svg>`;
   const CARD = `<svg class="ci" viewBox="0 0 24 24"><rect x="6.5" y="3.5" width="11" height="17" rx="2.2"/><path d="M12 9.2l1 2 2.2.3-1.6 1.5.4 2.2-2-1.1-2 1.1.4-2.2-1.6-1.5 2.2-.3z"/></svg>`;
@@ -67,6 +110,7 @@
     });
     if (tab === "recent" && s === "new") return list;   // 본 순서 그대로
     if (tab === "rank") return list.slice(0, 100);        // 순위 그대로, 100위까지
+    if (s === "rating") return list.sort((a, b) => rScore(b) - rScore(a) || pop(b) - pop(a));
     if (s === "likes") return list.sort((a, b) => pop(b) - pop(a) || order(b) - order(a));
     return list.sort((a, b) => s === "title" ? (a.title || "").localeCompare(b.title || "", "ko") : s === "old" ? order(a) - order(b) : order(b) - order(a));
   }
@@ -84,7 +128,7 @@
   function cardHtml(v, shelf, rank) {
     const k = key(v), on = favs.has(k), seen = recent.includes(k) && tab !== "recent" && !shelf, rows = (view === "rows" || tab === "rank") && !shelf;
     const sn = v._s && v._s.find(n => n !== ser), showLikes = pop(v) > 0 && (rank || $("sort").value === "likes" && !shelf);
-    const meta = `<div class="meta"><span class="cat-dot" style="--c:${dot(v.category)}">${esc(v.category || "기타")}</span>${showLikes ? `<span class="vw">조회 ${nf(v.views)}</span><span class="lk">♥ ${v.likes || 0}</span>` : ""}${repCount(v) ? `<span class="rp">썸네일 제보 ${repCount(v)}건</span>` : ""}${sn ? `<span class="ser" role="link" tabindex="0" data-ser="${esc(sn)}">${esc(sn)}</span>` : ""}</div>`;
+    const meta = `<div class="meta"><span class="cat-dot" style="--c:${dot(v.category)}">${esc(v.category || "기타")}</span>${ravg[vid(v)] ? `<span class="rt" title="별점 ${ravg[vid(v)][0].toFixed(1)} (${ravg[vid(v)][1]}명)">★ ${ravg[vid(v)][0].toFixed(1)}</span>` : ""}${showLikes ? `<span class="vw">조회 ${nf(v.views)}</span><span class="lk">♥ ${v.likes || 0}</span>` : ""}${repCount(v) ? `<span class="rp">썸네일 제보 ${repCount(v)}건</span>` : ""}${sn ? `<span class="ser" role="link" tabindex="0" data-ser="${esc(sn)}">${esc(sn)}</span>` : ""}</div>`;
     const info = `<div class="t"><h3>${shelf ? esc(v.title) : mark(v.title)}</h3>${meta}</div>`;
     const dots = `<button class="dots" type="button" aria-label="더 보기 메뉴" aria-haspopup="menu">${DOTS}</button>`;
     const heart = `<button class="heart ${on ? "on" : ""} ${k === popKey ? "pop" : ""}" type="button" aria-label="${on ? "즐겨찾기에서 빼기" : "즐겨찾기에 담기"}" title="즐겨찾기">${HEART}</button>`;
@@ -242,7 +286,7 @@
     $("mCat").textContent = v.category || "기타"; $("mCat").style.setProperty("--c", dot(v.category));
     $("mTitle").textContent = v.title || "";
     $("mGo").href = safeUrl(v.url); $("mGo").innerHTML = (id ? "원본 글 열기" : "다시보기") + OUT; $("mGo").hidden = safeUrl(v.url) === "#";
-    syncModalFav();
+    syncModalFav(); drawRate();
     $("modal").hidden = false; document.body.style.overflow = "hidden"; $("mClose").focus();
     if (id) { markSeen(v); render(); }
   }
@@ -559,12 +603,14 @@
       }).catch(() => {});
   }
   loadReports();
+  loadRatings();
 
   /* ── 점 세 개 메뉴 ── */
   function openMenu(btn, v) {
     const m = $("menu"), k = key(v);
     menuFor = v; openMenu.y = window.scrollY;
     m.querySelector('[data-act="fav"]').textContent = favs.has(k) ? "즐겨찾기에서 빼기" : "즐겨찾기에 담기";
+    m.querySelector('[data-act="rate"]').hidden = !RATE;
     m.querySelector('[data-act="seen"]').hidden = !recent.includes(k);
     m.querySelector('[data-act="report"]').textContent = "썸네일 제보" + (repCount(v) ? " (지금 " + repCount(v) + "건)" : "");
     m.hidden = false;
@@ -579,6 +625,7 @@
     closeMenu();
     const k = key(v), a = b.dataset.act;
     if (a === "share") share(v);
+    else if (a === "rate") openModal(v);
     else if (a === "fav") toggleFav(k);
     else if (a === "report") report(v);
     else if (a === "seen") {
@@ -618,6 +665,7 @@
   $("mFav").addEventListener("click", () => current && toggleFav(key(current)));
   $("mShare").addEventListener("click", () => current && share(current));
   $("mGo").addEventListener("click", e => current && follow(e, current, $("mGo").href));
+  $("rate").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; if (b.dataset.rout !== undefined) return rLogout(); if (b.dataset.star !== undefined) doRate(+b.dataset.star); });
   $("mClose").addEventListener("click", () => closeModal());
   $("modal").addEventListener("click", e => { if (e.target === $("modal")) closeModal(); });
   $("totop").addEventListener("click", () => window.scrollTo({ top: 0, behavior: calm() ? "auto" : "smooth" }));
