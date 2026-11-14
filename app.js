@@ -71,7 +71,7 @@
     fetch(RATE + "/ratings").then(r => r.json()).then(d => { ravg = d || {}; render(); if (current) drawRate(); }).catch(() => {});
     if (rtok) rApi("/me").then(r => r.status === 401 ? Promise.reject("login") : r.json()).then(d => { mine = d.mine || {}; rtok.name = d.name || ""; if (d.member === false) toast("차단된 계정이라 별점을 줄 수 없어요"); if (current) { resetDraft(); drawRate(); loadReviews(); } }).catch(e => { if (e === "login") rLogout(); });
   }
-  /* 후기(평점)는 꼭 써야 해요. 신고는 운영진 디스코드 채널로 가요. */
+  /* 후기(평점)는 꼭 써야 해요. 신고 번호는 디스코드 채널에 직접 올려요. */
   let draft = { stars: 0, text: "" }, reviews = [], repTarget = null;
   const TEXT_MSG = { short: "후기는 5자 이상 써 주세요", long: "후기는 300자까지 쓸 수 있어요", empty: "점이나 같은 글자만 반복한 후기는 올릴 수 없어요", link: "링크나 주소는 넣을 수 없어요" };
   function textProblem(t) {   // 서버와 같은 검사 (미리 알려 주려고)
@@ -154,7 +154,8 @@
       const d = await r.json().catch(() => ({}));
       if (r.status === 401) { closeReport(); rLogout(); return toast("다시 로그인해 주세요"); }
       if (!r.ok) { $("repGo").disabled = false; $("repErr").textContent = r.status === 403 ? "차단된 계정은 신고할 수 없어요" : r.status === 404 ? "이미 지워진 후기예요" : r.status === 429 ? "하루에 10건까지 신고할 수 있어요" : r.status === 400 ? "내 후기는 신고할 수 없어요" : "지금은 신고할 수 없어요. 잠시 후 다시 해 주세요"; return; }
-      $("repNo").textContent = "#" + d.no; $("repForm").hidden = true; $("repDone").hidden = false;
+      $("repNo").textContent = "#" + d.no;
+      $("repText").value = `[후기 신고 #${d.no}]\n영상: ${location.origin}${location.pathname}#v=${vid(current)}\n작성자: ${repTarget.name}\n사유: ${({ ad: "광고·홍보", spam: "스팸·도배", abuse: "욕설·비방", empty: "무의미한 내용", other: "기타" })[reason]}`; $("repForm").hidden = true; $("repDone").hidden = false;
       const dc = $("repDiscord"); if (dc) { dc.hidden = !/^https?:\/\//i.test(SITE.discord || ""); dc.href = SITE.discord || "#"; }
       $("repClose2").focus();
     } catch (e) { $("repGo").disabled = false; $("repErr").textContent = "지금은 신고할 수 없어요. 잠시 후 다시 해 주세요"; }
@@ -759,6 +760,7 @@
   });
   $("rate").addEventListener("input", e => { if (e.target.id === "rtext") { draft.text = e.target.value; formState(); } });
   $("repGo").addEventListener("click", sendReport);
+  $("repCopy").addEventListener("click", () => { const t = $("repText"); t.select(); try { navigator.clipboard.writeText(t.value).then(() => toast("복사했어요"), () => { document.execCommand("copy"); toast("복사했어요"); }); } catch (e) { document.execCommand("copy"); toast("복사했어요"); } });
   $("repCancel").addEventListener("click", closeReport); $("repClose2").addEventListener("click", closeReport);
   $("repModal").addEventListener("click", e => { if (e.target === $("repModal")) closeReport(); });
   $("mClose").addEventListener("click", () => closeModal());
