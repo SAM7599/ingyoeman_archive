@@ -796,3 +796,4 @@ details.gi[open] > summary::after { content:"－"; }
 :root[data-theme="light"] .nt.up { background:#4347d9; color:#fff; }
 :root[data-theme="light"] .nt.fix { background:#d6264f; color:#fff; }
 :root[data-theme="light"] .nt.new { background:#4347d9; color:#fff; }
+.gi-b .gnote { padding:10px 14px; border-radius:10px; background:var(--raise); color:var(--ink); border-left:4px solid var(--accent); }
