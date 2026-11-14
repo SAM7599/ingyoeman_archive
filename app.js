@@ -863,7 +863,7 @@
   if (FB === SITE.discord) { const g = $("fbHelp"); if (g) g.innerHTML = "화면 오른쪽 아래 <b>디스코드 참여하기</b> 버튼을 누르면 안내 채팅창이 열려요. 디스코드에서는 사이트 버그·시리즈 분류 오류 제보, 건의, 별점·후기 문의, 부적절한 후기 신고를 할 수 있어요."; }
   /* ── 디스코드 참여하기 (채팅창 안내) ── */
   const DC = [
-    "안녕하세요! 👋 잉여맨추억자료실 디스코드에 오신 걸 환영해요.",
+    "안녕하세요! 👋 잉여맨추억자료실 디스코드를 소개하는 <b>자동 안내</b>예요. 실시간으로 대화하는 곳은 아니니 편하게 읽어 주세요.",
     "여기에서는 사이트에 대한 <b>제보와 문의</b>를 받아요. <b>🛠-사이트-제보</b> 채널에 글을 올릴 때 아래 종류 중 하나를 골라 주세요.",
     "<ul><li>🐞 <b>버그</b> : 버튼이 안 눌리거나 화면이 깨지는 등 사이트가 제대로 작동하지 않을 때</li><li>📚 <b>시리즈 분류</b> : 시리즈 몰아보기에 다른 시리즈 영상이 섞여 있거나, 들어가야 할 영상이 빠져 있을 때</li><li>💡 <b>건의</b> : 이런 기능이 있으면 좋겠다는 아이디어</li><li>⭐ <b>별점·후기</b> : 후기 등록·로그인 문제, 내 후기 삭제·보관 삭제 요청</li></ul>",
     "그리고 🚨 <b>부적절한 후기 신고</b>는 따로 받아요. 사이트에서 후기의 <b>신고</b> 버튼을 누르면 신고 번호가 나오고 후기 사진이 저장돼요. 그 번호와 사진을 <b>🚨-후기-신고</b> 채널에 올려 주세요.",
@@ -886,8 +886,8 @@
     const row = document.createElement("div"); row.className = "dc-r" + (dcFirst ? "" : " sp");
     row.innerHTML = AVSVG + '<div class="dc-typing"><i></i><i></i><i></i></div>';
     $("dcBody").appendChild(row); dcScroll();
-    const st = $("dcSt"); st.classList.add("typing"); st.lastChild.textContent = "입력 중…";
-    await SLEEP(ms); row.remove(); st.classList.remove("typing"); st.lastChild.textContent = "운영진이 안내해 드려요";
+    const st = $("dcSt"); st.classList.add("typing"); st.lastChild.textContent = "안내문을 불러오는 중…";
+    await SLEEP(ms); row.remove(); st.classList.remove("typing"); st.lastChild.textContent = "자동 안내예요 · 실제 채팅이 아니에요";
   }
   const dcMs = html => Math.min(2300, 650 + html.replace(/<[^>]+>/g, "").length * 24);   // 글이 길수록 오래 입력해요
   async function dcSay(run, m) {
