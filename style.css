@@ -793,3 +793,6 @@ details.gi[open] > summary::after { content:"－"; }
 .fav-xfer { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin:0 0 14px; }
 .fav-xfer .btn { height:38px; padding:0 14px; font-size:14px; border-radius:10px; }
 .fav-xfer span { font-size:13px; color:var(--sub); }
+:root[data-theme="light"] .nt.up { background:#4347d9; color:#fff; }
+:root[data-theme="light"] .nt.fix { background:#d6264f; color:#fff; }
+:root[data-theme="light"] .nt.new { background:#4347d9; color:#fff; }
