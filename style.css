@@ -628,3 +628,4 @@ html[data-motion="off"] .r-stars button { transition:none; }
 .rep-err { margin:0 0 8px; color:var(--heart); font-size:13.5px; min-height:1em; }
 .rep-ok { font-size:16px; margin:0 0 12px; }
 #repModal { z-index:42; }
+.r-g { min-height:44px; margin-top:6px; }
