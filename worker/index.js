@@ -1,11 +1,12 @@
 // 잉여맨추억자료실 별점 서버 (Cloudflare Worker)
 // - 구글로 로그인 → 별점 + 후기 저장 (한 계정당 영상 하나에 한 번, 후기는 꼭 써야 해요)
-// - 후기 신고 → 운영진 디스코드 채널로 전달 (웹훅, 현재 후기 + 고치기 전 기록, 삭제·차단 링크 포함)
+// - 후기 신고 → 신고 번호를 받고, 신고자가 디스코드 신고 채널에 번호와 캡처를 직접 올려요 (웹훅 없음)
+// - 운영진은 /admin?k=비밀키 에서 신고 목록(현재 후기 + 고치기 전 기록)을 보고 삭제·차단해요
 // - 차단된 구글 계정은 별점·후기·신고를 할 수 없고, 그 사람의 후기는 사라져요
 //
 // 필요한 설정(wrangler.toml / 대시보드):
 //   변수  : GOOGLE_CLIENT_ID, SITE_ORIGIN (예: https://sam7599.github.io), SITE_PATH (예: /ingyoeman_archive/)
-//   비밀값: SESSION_SECRET, REPORT_WEBHOOK (운영진 채널의 웹훅 주소)
+//   비밀값: SESSION_SECRET, ADMIN_KEY (운영진 페이지 비밀키, 긴 글자)
 //   D1    : DB (schema.sql 로 표 만들기)
 
 const DAY = 86400;
@@ -138,54 +139,36 @@ async function handle(req, env, ctx) {
     await env.DB.prepare("INSERT INTO reports (vid, uid, reporter, reason, note, ts) VALUES (?, ?, ?, ?, ?, ?)").bind(vid, target.uid, s.uid, reason, note, Date.now()).run();
     const row = await env.DB.prepare("SELECT id FROM reports WHERE vid = ? AND uid = ? AND reporter = ?").bind(vid, target.uid, s.uid).first();
     const total = (await env.DB.prepare("SELECT COUNT(*) AS n FROM reports WHERE vid = ? AND uid = ?").bind(vid, target.uid).first()).n;
-    const hist = await env.DB.prepare("SELECT stars, text, ts FROM rating_history WHERE vid = ? AND uid = ? ORDER BY id DESC LIMIT 3").bind(vid, target.uid).all();
-    const modTok = await sign(env, { a: "mod", vid, uid: target.uid }, 30 * DAY);
-    const sent = await notify(env, {
-      title: "🚨 후기 신고 #" + row.id,
-      color: 0xe5484d,
-      fields: [
-        { name: "영상", value: `[${vid}](${env.SITE_ORIGIN}${env.SITE_PATH || "/"}#v=${vid})`, inline: true },
-        { name: "신고 사유", value: REASONS[reason], inline: true },
-        { name: "누적 신고", value: total + "건", inline: true },
-        { name: "현재 후기 — " + cut(target.name, 30) + " · " + "★".repeat(target.stars) + " · " + ago(target.ts), value: cut(target.text, 900) || "(없음)" },
-        { name: "이전 후기 (고치기 전)", value: hist.results.length ? hist.results.map(h => `• ${ago(h.ts)} · ★${h.stars} · ${cut(h.text, 160)}`).join("\n") : "고친 기록 없음" },
-        { name: "작성자", value: `${cut(target.name, 30)} (${target.uid})`, inline: true },
-        { name: "신고자", value: `${cut(s.name, 30)} (${s.uid})`, inline: true },
-        ...(note ? [{ name: "신고자 메모", value: cut(note, 200) }] : []),
-        { name: "처리", value: `[후기 삭제 / 작성자 차단](${url.origin}/mod?t=${modTok})\n신고자가 캡처를 올리면 #${row.id} 번호와 함께 올라와요.` }
-      ],
-      footer: { text: "삭제 링크는 이 채널 운영진만 보세요" }, timestamp: new Date().toISOString()
-    });
-    return json(env, { ok: true, no: row.id, sent });
+    return json(env, { ok: true, no: row.id });
   }
 
-  if (p === "/mod") {   // 운영진용: 신고된 후기 삭제 / 작성자 차단 (디스코드 링크 → 확인 화면 → 버튼)
+  if (p === "/admin") {   // 운영진용: 신고 목록 / 후기 삭제 / 작성자 차단 (비밀키 필요)
     let form = null; if (req.method === "POST") form = new URLSearchParams(await req.text());
-    const tok = form ? form.get("t") : url.searchParams.get("t");
-    const m = await verify(env, tok);
-    if (!m || m.a !== "mod") return html("<h2>링크가 올바르지 않거나 만료됐어요</h2>");
-    const r = await env.DB.prepare("SELECT name, stars, text, ts FROM ratings WHERE vid = ? AND uid = ?").bind(m.vid, m.uid).first();
+    const k = form ? form.get("k") : url.searchParams.get("k");
+    if (!env.ADMIN_KEY || !k || k.length !== env.ADMIN_KEY.length || await hmac("x", k) !== await hmac("x", env.ADMIN_KEY)) return html("<h2>접근할 수 없어요</h2>");
+    let msg = "";
     if (form) {
-      const act = form.get("act");
-      if (act === "ban") { await env.DB.prepare("INSERT OR IGNORE INTO banned (uid, ts) VALUES (?, ?)").bind(m.uid, Date.now()).run(); await env.DB.prepare("DELETE FROM ratings WHERE uid = ?").bind(m.uid).run(); return html("<h2>✅ 작성자를 차단하고 그 사람의 모든 후기를 지웠어요</h2><p>이 계정은 앞으로 별점·후기·신고를 할 수 없어요.</p>"); }
-      await env.DB.prepare("DELETE FROM ratings WHERE vid = ? AND uid = ?").bind(m.vid, m.uid).run();
-      return html("<h2>✅ 후기를 삭제했어요</h2><p>이 영상의 별점 평균에서도 빠졌어요. 사이트에는 몇 분 안에 반영돼요.</p>");
+      const row = await env.DB.prepare("SELECT vid, uid FROM reports WHERE id = ?").bind(Number(form.get("id"))).first();
+      if (row) {
+        if (form.get("act") === "ban") { await env.DB.prepare("INSERT OR IGNORE INTO banned (uid, ts) VALUES (?, ?)").bind(row.uid, Date.now()).run(); await env.DB.prepare("DELETE FROM ratings WHERE uid = ?").bind(row.uid).run(); msg = "✅ 작성자를 차단하고 그 사람의 모든 후기를 지웠어요"; }
+        else if (form.get("act") === "del") { await env.DB.prepare("DELETE FROM ratings WHERE vid = ? AND uid = ?").bind(row.vid, row.uid).run(); msg = "✅ 후기를 삭제했어요"; }
+      }
     }
-    if (!r) return html("<h2>이미 삭제됐거나 없는 후기예요</h2>");
-    const btn = (act, label, bg) => `<button name="act" value="${act}" style="margin:14px 8px 0 0;padding:10px 18px;font-size:16px;background:${bg};color:#fff;border:0;border-radius:8px;cursor:pointer">${label}</button>`;
-    return html(`<h2>이 후기를 어떻게 할까요?</h2><p><b>${esc(r.name)}</b> · ${"★".repeat(r.stars)} · ${ago(r.ts)}</p><blockquote style="border-left:4px solid #ccc;margin:0;padding:6px 12px;white-space:pre-wrap">${esc(r.text)}</blockquote><form method="post"><input type="hidden" name="t" value="${esc(tok)}">${btn("del", "이 후기만 삭제", "#e5484d")}${btn("ban", "삭제 + 작성자 차단", "#7a1f23")}</form><p style="color:#666;font-size:14px">되돌릴 수 없어요. 차단하면 그 사람의 모든 후기가 지워지고 다시 남길 수 없어요.</p>`);
+    const reps = await env.DB.prepare("SELECT id, vid, uid, reason, note, ts FROM reports ORDER BY id DESC LIMIT 30").all();
+    const seen = new Set(), items = [];
+    for (const r of reps.results) {
+      const key = r.vid + "|" + r.uid;
+      const cur = await env.DB.prepare("SELECT name, stars, text, ts FROM ratings WHERE vid = ? AND uid = ?").bind(r.vid, r.uid).first();
+      const cnt = (await env.DB.prepare("SELECT COUNT(*) AS n FROM reports WHERE vid = ? AND uid = ?").bind(r.vid, r.uid).first()).n;
+      const hist = await env.DB.prepare("SELECT stars, text, ts FROM rating_history WHERE vid = ? AND uid = ? ORDER BY id DESC LIMIT 3").bind(r.vid, r.uid).all();
+      const banned = await isBanned(env, r.uid);
+      const btn = (act, label, bg) => `<button name="act" value="${act}" style="margin:8px 8px 0 0;padding:8px 14px;background:${bg};color:#fff;border:0;border-radius:8px;cursor:pointer">${label}</button>`;
+      items.push(`<section style="border:1px solid #ccc;border-radius:12px;padding:12px 14px;margin:14px 0"><b>#${r.id}</b> · ${esc(REASONS[r.reason] || r.reason)} · 누적 ${cnt}건 · ${ago(r.ts)}${r.note ? `<br>신고자 메모: ${esc(r.note)}` : ""}<br>영상 <a href="${esc(env.SITE_ORIGIN + (env.SITE_PATH || "/") + "#v=" + r.vid)}">${esc(r.vid)}</a> · 작성자 ${esc(cur ? cur.name : "(이미 삭제됨)")} (${esc(r.uid)})${banned ? " · <b>차단됨</b>" : ""}${cur ? `<blockquote style="border-left:4px solid #ccc;margin:8px 0;padding:4px 12px;white-space:pre-wrap">${"★".repeat(cur.stars)} ${esc(cur.text)}</blockquote>` : ""}${hist.results.length ? `<div style="color:#666;font-size:14px">이전 후기(고치기 전)<br>${hist.results.map(h => `• ${ago(h.ts)} ★${h.stars} ${esc(cut(h.text, 160))}`).join("<br>")}</div>` : ""}<form method="post"><input type="hidden" name="k" value="${esc(k)}"><input type="hidden" name="id" value="${r.id}">${cur ? btn("del", "이 후기만 삭제", "#e5484d") : ""}${banned ? "" : btn("ban", "삭제 + 작성자 차단", "#7a1f23")}</form></section>`);
+    }
+    return html(`<h2>후기 신고 목록</h2>${msg ? `<p style="background:#e7f6ec;padding:10px 12px;border-radius:8px">${msg}</p>` : ""}<p style="color:#666;font-size:14px">신고자가 디스코드 채널에 올린 번호(#숫자)를 찾아 처리하세요. 되돌릴 수 없어요.</p>${items.join("") || "<p>아직 신고가 없어요</p>"}`);
   }
 
   return json(env, { error: "not found" }, 404);
-}
-
-// 운영진 채널에 신고 알림 (웹훅)
-async function notify(env, embed) {
-  if (!env.REPORT_WEBHOOK) return false;
-  try {
-    const r = await fetch(env.REPORT_WEBHOOK, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username: "후기 신고", embeds: [embed], allowed_mentions: { parse: [] } }) });
-    return r.ok;
-  } catch (e) { return false; }
 }
 
 export default {

@@ -16,7 +16,7 @@
   if (m !== "on" && m !== "off") m = (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) ? "off" : "on";
   document.documentElement.setAttribute("data-motion", m); })();
 </script>
-<link rel="stylesheet" href="style.css?v=40">
+<link rel="stylesheet" href="style.css?v=41">
 </head>
 <body>
 
@@ -197,7 +197,7 @@
       <h2 id="repT">후기 신고</h2>
       <div class="rep-who" id="repWho"></div>
       <form id="repForm" onsubmit="return false">
-        <p class="rep-guide"><b>이런 후기는 신고할 수 있어요</b><br>광고·홍보, 스팸·도배, 욕설·비방, 점(.)이나 기호만 올린 의미 없는 후기. 신고하면 운영진이 있는 디스코드 채널로 전달되고, 작성자가 후기를 고치기 전 기록도 함께 확인해요.</p>
+        <p class="rep-guide"><b>이런 후기는 신고할 수 있어요</b><br>광고·홍보, 스팸·도배, 욕설·비방, 점(.)이나 기호만 올린 의미 없는 후기. 신고를 접수하면 신고 번호가 나와요. 그 번호를 디스코드 채널에 올려 주시면 운영진이 현재 후기와 고치기 전 기록을 함께 확인해요.</p>
         <fieldset class="rep-reasons"><legend>신고 이유</legend>
           <label><input type="radio" name="reason" value="ad"> 광고·홍보</label>
           <label><input type="radio" name="reason" value="spam"> 스팸·도배</label>
@@ -206,14 +206,15 @@
           <label><input type="radio" name="reason" value="other"> 기타</label>
         </fieldset>
         <input id="repNote" class="rep-note" type="text" maxlength="200" placeholder="덧붙일 말이 있으면 적어 주세요 (선택)">
-        <p class="rep-shot"><b>되도록 화면 캡처(스크린샷)를 함께 올려 주세요.</b> 신고하면 신고 번호가 나와요. 그 번호와 캡처를 디스코드 피드백·버그 제보 채널에 올려 주시면 운영진이 더 빨리 확인할 수 있어요.</p>
+        <p class="rep-shot"><b>되도록 화면 캡처(스크린샷)를 함께 올려 주세요.</b> 신고 번호와 캡처를 디스코드 신고 채널에 직접 올려 주세요.</p>
         <p class="rep-err" id="repErr" role="alert"></p>
         <div class="m-acts"><button class="btn" type="button" id="repCancel">취소</button><button class="btn primary" type="button" id="repGo">신고하기</button></div>
       </form>
       <div id="repDone" hidden>
         <p class="rep-ok">✅ 신고가 접수됐어요. 신고 번호 <b id="repNo"></b></p>
-        <p class="rep-shot">가능하면 후기가 보이는 <b>화면 캡처</b>와 이 번호를 디스코드 피드백·버그 제보 채널에 올려 주세요.</p>
-        <div class="m-acts"><a class="btn primary" id="repDiscord" target="_blank" rel="noopener noreferrer" hidden>디스코드 채널 열기</a><button class="btn" type="button" id="repClose2">닫기</button></div>
+        <p class="rep-shot"><b>마지막 단계예요.</b> 아래 문구를 복사해서 디스코드 채널에 직접 올려 주세요. 가능하면 후기가 보이는 <b>화면 캡처</b>를 함께 올려 주세요.</p>
+        <textarea id="repText" class="r-text" rows="4" readonly></textarea>
+        <div class="m-acts"><button class="btn" type="button" id="repCopy">문구 복사</button><a class="btn primary" id="repDiscord" target="_blank" rel="noopener noreferrer" hidden>디스코드 채널 열기</a><button class="btn" type="button" id="repClose2">닫기</button></div>
       </div>
     </div>
   </div>
@@ -298,7 +299,7 @@
 
 <div class="ach-pop" id="achPop" role="status" hidden><span class="ach-ic"><svg viewBox="0 0 24 24"><path d="M8 4h8v5a4 4 0 0 1-8 0zM8 6H5v1a3 3 0 0 0 3 3M16 6h3v1a3 3 0 0 1-3 3M12 13v4M8.5 20h7M10 17h4"/></svg></span><span class="ach-tx"><small>도전과제 달성!</small><b id="achPopT"></b><i id="achPopD"></i></span></div>
 <div id="toast" role="status"></div>
-<script src="config.js?v=40"></script>
-<script src="app.js?v=40"></script>
+<script src="config.js?v=41"></script>
+<script src="app.js?v=41"></script>
 </body>
 </html>
