@@ -59,28 +59,95 @@
   function loadRatings() {
     if (!RATE) return;
     fetch(RATE + "/ratings").then(r => r.json()).then(d => { ravg = d || {}; render(); if (current) drawRate(); }).catch(() => {});
-    if (rtok) rApi("/me").then(r => r.status === 401 ? Promise.reject("login") : r.json()).then(d => { mine = d.mine || {}; rtok.name = d.name || ""; if (d.member === false) toast("서버 멤버가 아니어서 별점을 줄 수 없어요"); if (current) drawRate(); }).catch(e => { if (e === "login") rLogout(); });
+    if (rtok) rApi("/me").then(r => r.status === 401 ? Promise.reject("login") : r.json()).then(d => { mine = d.mine || {}; rtok.name = d.name || ""; if (d.member === false) toast("서버 멤버가 아니어서 별점을 줄 수 없어요"); if (current) { resetDraft(); drawRate(); loadReviews(); } }).catch(e => { if (e === "login") rLogout(); });
+  }
+  /* 후기(평점)는 꼭 써야 해요. 신고는 운영진 디스코드 채널로 가요. */
+  let draft = { stars: 0, text: "" }, reviews = [], repTarget = null;
+  const TEXT_MSG = { short: "후기는 5자 이상 써 주세요", long: "후기는 300자까지 쓸 수 있어요", empty: "점이나 같은 글자만 반복한 후기는 올릴 수 없어요", link: "링크나 주소는 넣을 수 없어요" };
+  function textProblem(t) {   // 서버와 같은 검사 (미리 알려 주려고)
+    const s = String(t || "").replace(/\s+/g, " ").trim();
+    if (s.length < 5) return "short"; if (s.length > 300) return "long";
+    const core = s.replace(/[^\p{L}\p{N}]/gu, ""); if (core.length < 4 || new Set(core).size < 3) return "empty";
+    if (/(https?:\/\/|www\.|discord\.gg|\.(com|net|kr|io|me|gg|xyz)\b)/i.test(s)) return "link";
+    return null;
+  }
+  const rAgo = ms => { const d = (Date.now() - ms) / 1000; return d < 60 ? "방금" : d < 3600 ? Math.floor(d / 60) + "분 전" : d < 86400 ? Math.floor(d / 3600) + "시간 전" : d < 86400 * 30 ? Math.floor(d / 86400) + "일 전" : new Date(ms).toLocaleDateString("ko-KR"); };
+  function resetDraft() { const m = current && mine[vid(current)]; draft = m ? { stars: m[0], text: m[1] } : { stars: 0, text: "" }; }
+  function loadReviews() {
+    if (!RATE || !current) return; const id = vid(current);
+    rApi("/reviews?vid=" + encodeURIComponent(id)).then(r => r.json()).then(l => { if (current && vid(current) === id) { reviews = Array.isArray(l) ? l : []; drawRate(); } }).catch(() => {});
+  }
+  function formState() {   // 입력할 때마다 버튼/안내만 바꿔요 (글 쓰는 중에 화면을 다시 그리지 않아요)
+    const t = $("rtext"), btn = $("rsend"); if (!t || !btn) return;
+    const bad = textProblem(draft.text);
+    $("rlen").textContent = draft.text.length + "/300";
+    $("rhint").textContent = !draft.stars ? "별을 먼저 눌러 주세요" : bad && draft.text.trim() ? TEXT_MSG[bad] : bad ? "후기를 5자 이상 써 주세요 (후기는 꼭 필요해요)" : "";
+    btn.disabled = !draft.stars || !!bad;
   }
   function drawRate() {
     const el = $("rate"); if (!el) return; el.hidden = !RATE; if (!RATE || !current) return;
-    const id = vid(current), a = ravg[id], my = mine[id] || 0;
-    const head = a ? `<b class="r-avg">★ ${a[0].toFixed(1)}</b><span>${a[1]}명이 줬어요</span>` : `<span>아직 별점이 없어요</span>`;
+    const id = vid(current), a = ravg[id], my = mine[id];
+    const head = a ? `<b class="r-avg">★ ${a[0].toFixed(1)}</b><span>${a[1]}명이 남겼어요</span>` : `<span>아직 별점과 후기가 없어요</span>`;
     let body;
-    if (!rtok) body = `<a class="btn" href="${esc(RATE)}/login">디스코드로 로그인하고 별점 주기</a><p class="r-note">디스코드 서버에 가입한 분만 별점을 줄 수 있어요. 한 계정당 영상마다 한 번만 줄 수 있어요.</p>`;
-    else body = `<div class="r-stars" role="group" aria-label="내 별점">${[1, 2, 3, 4, 5].map(n => `<button type="button" class="${n <= my ? "on" : ""}" data-star="${n}" aria-label="별 ${n}개" aria-pressed="${n === my}">★</button>`).join("")}</div><p class="r-note">${my ? "내 별점 " + my + "점 · 다시 누르면 바꿀 수 있어요 " : "별을 눌러 점수를 남겨 보세요. "}<button type="button" class="r-link" data-star="0" ${my ? "" : "hidden"}>지우기</button> <button type="button" class="r-link" data-rout>로그아웃</button></p>`;
-    el.innerHTML = `<div class="r-head">${head}</div>${body}`;
+    if (!rtok) body = `<a class="btn" href="${esc(RATE)}/login">디스코드로 로그인하고 별점·후기 남기기</a><p class="r-note">디스코드 서버에 가입한 분만 남길 수 있어요. 한 계정당 영상마다 하나만 남길 수 있고, <b>별점과 후기를 모두</b> 써야 해요.</p>`;
+    else body = `<div class="r-stars" role="group" aria-label="내 별점">${[1, 2, 3, 4, 5].map(n => `<button type="button" class="${n <= draft.stars ? "on" : ""}" data-star="${n}" aria-label="별 ${n}개" aria-pressed="${n === draft.stars}">★</button>`).join("")}</div>
+      <textarea id="rtext" class="r-text" rows="3" maxlength="300" placeholder="후기를 남겨 주세요. 어떤 점이 좋았나요? (5자 이상)">${esc(draft.text)}</textarea>
+      <div class="r-row"><span id="rhint" class="r-hint"></span><span id="rlen" class="r-len">0/300</span></div>
+      <div class="r-row"><button type="button" class="btn primary" id="rsend" disabled>${my ? "수정하기" : "등록하기"}</button><span class="r-note">${my ? `<button type="button" class="r-link" data-del>내 별점·후기 지우기</button> ` : ""}<button type="button" class="r-link" data-rout>로그아웃</button></span></div>
+      <p class="r-note">광고, 스팸, 욕설, 링크, 점(.)만 올린 후기는 신고되거나 지워질 수 있어요.</p>`;
+    const list = reviews.length ? `<ul class="r-list">${reviews.map(r => `<li class="${r.me ? "mine" : ""}"><div class="r-h"><b>${esc(r.name)}</b>${r.me ? `<i class="r-me">내 후기</i>` : ""}<span class="r-s" aria-label="별 ${r.stars}개">${"★".repeat(r.stars)}${"☆".repeat(5 - r.stars)}</span><time>${rAgo(r.ts)}</time>${r.me ? "" : `<button type="button" class="r-link r-rep" data-rep="${esc(r.id)}">신고</button>`}</div><p>${esc(r.text)}</p></li>`).join("")}</ul>` : "";
+    el.innerHTML = `<div class="r-head">${head}</div>${body}${list}`;
+    formState();
   }
-  async function doRate(n) {
-    if (!current || !rtok) return; const id = vid(current);
+  async function doSubmit() {
+    if (!current || !rtok) return; const id = vid(current), n = draft.stars, text = draft.text.trim();
+    const bad = textProblem(text); if (!n || bad) return formState();
+    $("rsend").disabled = true;
     try {
-      const r = await rApi("/rate", { method: "POST", body: JSON.stringify({ vid: id, stars: n }) });
+      const r = await rApi("/rate", { method: "POST", body: JSON.stringify({ vid: id, stars: n, text }) });
       if (r.status === 401) { rLogout(); return toast("다시 로그인해 주세요"); }
-      if (r.status === 403) { mine = {}; drawRate(); return toast("서버 멤버가 아니어서 별점을 줄 수 없어요"); }
-      if (!r.ok) return toast("지금은 별점을 줄 수 없어요. 잠시 후 다시 해 주세요");
-      const d = await r.json(); if (n) mine[id] = n; else delete mine[id];
-      if (d.n) ravg[id] = [d.avg, d.n]; else delete ravg[id];
-      drawRate(); render(); toast(n ? "별점을 남겼어요" : "별점을 지웠어요");
-    } catch (e) { toast("지금은 별점을 줄 수 없어요. 잠시 후 다시 해 주세요"); }
+      if (r.status === 403) { mine = {}; drawRate(); return toast("서버 멤버가 아니어서 남길 수 없어요"); }
+      if (r.status === 400) { const d = await r.json().catch(() => ({})); formState(); return toast(TEXT_MSG[d.code] || "내용을 확인해 주세요"); }
+      if (!r.ok) { formState(); return toast("지금은 남길 수 없어요. 잠시 후 다시 해 주세요"); }
+      const d = await r.json(); mine[id] = [n, text]; ravg[id] = [d.avg, d.n];
+      toast(my0(id) ? "후기를 남겼어요" : "후기를 남겼어요"); loadReviews(); drawRate(); render();
+    } catch (e) { formState(); toast("지금은 남길 수 없어요. 잠시 후 다시 해 주세요"); }
+  }
+  const my0 = () => true;
+  async function doDelete() {
+    if (!current || !rtok || !confirm("내 별점과 후기를 지울까요?")) return; const id = vid(current);
+    try {
+      const r = await rApi("/rate", { method: "POST", body: JSON.stringify({ vid: id, stars: 0 }) });
+      if (!r.ok) return toast("지금은 지울 수 없어요. 잠시 후 다시 해 주세요");
+      const d = await r.json(); delete mine[id]; if (d.n) ravg[id] = [d.avg, d.n]; else delete ravg[id];
+      draft = { stars: 0, text: "" }; toast("지웠어요"); loadReviews(); drawRate(); render();
+    } catch (e) { toast("지금은 지울 수 없어요. 잠시 후 다시 해 주세요"); }
+  }
+
+  /* ── 후기 신고 ── */
+  function openReport(rid) {
+    if (!rtok) return toast("신고하려면 먼저 디스코드로 로그인해 주세요");
+    const r = reviews.find(x => x.id === rid); if (!r) return;
+    repTarget = r;
+    $("repWho").innerHTML = `<b>${esc(r.name)}</b> · ${"★".repeat(r.stars)}${"☆".repeat(5 - r.stars)}<p>${esc(r.text)}</p>`;
+    $("repForm").hidden = false; $("repDone").hidden = true; $("repNote").value = ""; $("repErr").textContent = "";
+    const first = $("repForm").querySelector('input[name="reason"]'); if (first) first.checked = true;
+    $("repGo").disabled = false; $("repModal").hidden = false; $("repGo").focus();
+  }
+  function closeReport() { $("repModal").hidden = true; repTarget = null; }
+  async function sendReport() {
+    if (!repTarget || !current) return;
+    const reason = ($("repForm").querySelector('input[name="reason"]:checked') || {}).value; if (!reason) return;
+    $("repGo").disabled = true; $("repErr").textContent = "";
+    try {
+      const r = await rApi("/report", { method: "POST", body: JSON.stringify({ vid: vid(current), id: repTarget.id, reason, note: $("repNote").value.trim() }) });
+      const d = await r.json().catch(() => ({}));
+      if (r.status === 401) { closeReport(); rLogout(); return toast("다시 로그인해 주세요"); }
+      if (!r.ok) { $("repGo").disabled = false; $("repErr").textContent = r.status === 403 ? "서버 멤버만 신고할 수 있어요" : r.status === 404 ? "이미 지워진 후기예요" : r.status === 429 ? "하루에 10건까지 신고할 수 있어요" : r.status === 400 ? "내 후기는 신고할 수 없어요" : "지금은 신고할 수 없어요. 잠시 후 다시 해 주세요"; return; }
+      $("repNo").textContent = "#" + d.no; $("repForm").hidden = true; $("repDone").hidden = false;
+      const dc = $("repDiscord"); if (dc) { dc.hidden = !/^https?:\/\//i.test(SITE.discord || ""); dc.href = SITE.discord || "#"; }
+      $("repClose2").focus();
+    } catch (e) { $("repGo").disabled = false; $("repErr").textContent = "지금은 신고할 수 없어요. 잠시 후 다시 해 주세요"; }
   }
   const HEART = `<svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>`;
   const OUT = `<svg class="out" viewBox="0 0 24 24"><path d="M9 6h9v9M18 6L7 17"/></svg>`;
@@ -293,7 +360,7 @@
     $("mCat").textContent = v.category || "기타"; $("mCat").style.setProperty("--c", dot(v.category));
     $("mTitle").textContent = v.title || "";
     $("mGo").href = safeUrl(v.url); $("mGo").innerHTML = (id ? "원본 글 열기" : "다시보기") + OUT; $("mGo").hidden = safeUrl(v.url) === "#";
-    syncModalFav(); drawRate();
+    syncModalFav(); reviews = []; resetDraft(); drawRate(); loadReviews();
     $("modal").hidden = false; document.body.style.overflow = "hidden"; $("mClose").focus();
     if (id) { markSeen(v); render(); }
   }
@@ -672,12 +739,24 @@
   $("mFav").addEventListener("click", () => current && toggleFav(key(current)));
   $("mShare").addEventListener("click", () => current && share(current));
   $("mGo").addEventListener("click", e => current && follow(e, current, $("mGo").href));
-  $("rate").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; if (b.dataset.rout !== undefined) return rLogout(); if (b.dataset.star !== undefined) doRate(+b.dataset.star); });
+  $("rate").addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    if (b.dataset.rout !== undefined) return rLogout();
+    if (b.dataset.del !== undefined) return doDelete();
+    if (b.dataset.rep) return openReport(b.dataset.rep);
+    if (b.dataset.star) { draft.stars = +b.dataset.star; const t = $("rtext"); if (t) draft.text = t.value; drawRate(); const t2 = $("rtext"); if (t2) t2.focus(); return; }
+    if (b.id === "rsend") doSubmit();
+  });
+  $("rate").addEventListener("input", e => { if (e.target.id === "rtext") { draft.text = e.target.value; formState(); } });
+  $("repGo").addEventListener("click", sendReport);
+  $("repCancel").addEventListener("click", closeReport); $("repClose2").addEventListener("click", closeReport);
+  $("repModal").addEventListener("click", e => { if (e.target === $("repModal")) closeReport(); });
   $("mClose").addEventListener("click", () => closeModal());
   $("modal").addEventListener("click", e => { if (e.target === $("modal")) closeModal(); });
   $("totop").addEventListener("click", () => window.scrollTo({ top: 0, behavior: calm() ? "auto" : "smooth" }));
   document.addEventListener("click", e => { if (!$("menu").hidden && !e.target.closest(".menu")) closeMenu(); if (!$("setMenu").hidden && !e.target.closest(".menu")) closeSet(); });
   document.addEventListener("keydown", e => {
+    if (e.key === "Escape" && !$("repModal").hidden) { closeReport(); return; }
     if (e.key === "Escape") {
       if (!$("setMenu").hidden) closeSet(); else if (!$("menu").hidden) closeMenu(); else if (!$("modal").hidden) closeModal(); else if (!$("gacha").hidden) closeGacha(); else if (!$("xfer").hidden) closeXfer(); else if (!$("imp").hidden) closeImp();
       else if (document.activeElement === $("q")) { $("q").value = ""; $("q").blur(); reset(); }
