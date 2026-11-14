@@ -179,6 +179,15 @@ async function handle(req, env, ctx) {
     return json(env, out, 200, { "Cache-Control": "no-store" });
   }
 
+  if (p === "/admin/purge" && req.method === "POST") {   // 운영진: 보관함 기록 영구 삭제 (본인이 보관을 원치 않을 때)
+    const s = await getAuth(env, req); if (!isAdmin(env, s)) return json(env, { error: "forbidden" }, 403);
+    let b; try { b = await req.json(); } catch (e) { return json(env, { error: "bad" }, 400); }
+    if (b.uid) { if (!/^g\d+$/.test(String(b.uid))) return json(env, { error: "bad" }, 400); await env.DB.prepare("DELETE FROM rating_history WHERE uid = ?").bind(String(b.uid)).run(); }
+    else if (Number.isInteger(b.id)) await env.DB.prepare("DELETE FROM rating_history WHERE id = ?").bind(b.id).run();
+    else return json(env, { error: "bad" }, 400);
+    return json(env, { ok: true });
+  }
+
   if (p === "/admin/act" && req.method === "POST") {   // 운영진: 후기 삭제 / 작성자 차단
     const s = await getAuth(env, req); if (!isAdmin(env, s)) return json(env, { error: "forbidden" }, 403);
     let b; try { b = await req.json(); } catch (e) { return json(env, { error: "bad" }, 400); }
