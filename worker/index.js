@@ -49,7 +49,7 @@ const banBody = async (env, uid, byIp) => ({ error: "banned", ban: byIp ? { ip: 
 async function isBanned(env, uid) { return !!await env.DB.prepare("SELECT 1 AS x FROM banned WHERE uid = ?").bind(uid).first(); }
 
 // ── 후기 검사 ──
-const REASONS = { ad: "광고·홍보", spam: "스팸·도배", abuse: "욕설·비방", empty: "무의미한 내용 (점·기호만 올림 등)", other: "기타" };
+const REASONS = { ad: "광고·홍보", spam: "스팸·도배", abuse: "욕설·비방", empty: "무의미한 내용 (점·기호만 올림 등)", off: "정치·영상과 무관한 내용", other: "기타" };
 function checkText(t) {   // 문제가 있으면 이유 코드를, 괜찮으면 null
   const s = String(t || "").replace(/\s+/g, " ").trim();
   if (s.length < 5) return "short";
@@ -123,7 +123,8 @@ async function handle(req, env, ctx) {
     const banned = await isBanned(env, s.uid);
     const rs = await env.DB.prepare("SELECT vid, stars, text FROM ratings WHERE uid = ?").bind(s.uid).all();
     const mine = {}; for (const r of rs.results) mine[r.vid] = [r.stars, r.text];
-    return json(env, { name: await nick(env, s.uid), member: !banned, mine, admin: isAdmin(env, s), ban: banned ? await banInfo(env, s.uid) : null });
+    const nTxt = (await env.DB.prepare("SELECT COUNT(*) AS c FROM ratings WHERE uid = ? AND text != ''").bind(s.uid).first()).c || 0, tt = titleOf(nTxt), nx = [...TITLES].reverse().find(t => t[0] > nTxt);
+    return json(env, { name: await nick(env, s.uid), cnt: nTxt, title: tt ? tt.title : "", lv: tt ? tt.lv : 0, next: nx ? { title: nx[1], need: nx[0] - nTxt } : null, member: !banned, mine, admin: isAdmin(env, s), ban: banned ? await banInfo(env, s.uid) : null });
   }
 
   if (p === "/reviews" && req.method === "GET") {   // 한 영상의 후기 목록 (누구나)
@@ -155,6 +156,21 @@ async function handle(req, env, ctx) {
     }
     const a = await env.DB.prepare("SELECT ROUND(AVG(stars), 2) AS avg, COUNT(*) AS n FROM ratings WHERE vid = ?").bind(vid).first();
     return json(env, { ok: true, avg: a.avg || 0, n: a.n || 0 });
+  }
+
+  if (p === "/account/delete" && req.method === "POST") {   // 내 별점·후기·보관 기록·신고·접속 기록을 한 번에 지워요
+    const s = await getAuth(env, req);
+    if (!s) return json(env, { error: "login" }, 401);
+    if (await isBanned(env, s.uid)) return json(env, await banBody(env, s.uid), 403);   // 차단 기록은 지울 수 없어요
+    const open = await env.DB.prepare("SELECT 1 AS x FROM reports r JOIN ratings g ON g.vid = r.vid AND g.uid = r.uid WHERE r.uid = ? LIMIT 1").bind(s.uid).first();
+    if (open) return json(env, { error: "reported" }, 409);   // 신고가 접수된 후기가 남아 있으면 운영진 확인이 끝날 때까지 막아요
+    await env.DB.batch([
+      env.DB.prepare("DELETE FROM ratings WHERE uid = ?").bind(s.uid),
+      env.DB.prepare("DELETE FROM rating_history WHERE uid = ?").bind(s.uid),
+      env.DB.prepare("DELETE FROM reports WHERE uid = ? OR reporter = ?").bind(s.uid, s.uid),
+      env.DB.prepare("DELETE FROM ip_seen WHERE uid = ?").bind(s.uid),
+    ]);
+    return json(env, { ok: true });
   }
 
   if (p === "/report" && req.method === "POST") {   // 후기 신고 → 운영진 디스코드 채널

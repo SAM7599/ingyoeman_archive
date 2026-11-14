@@ -84,11 +84,13 @@
     const sc = document.createElement("script"); sc.id = "gsi"; sc.src = "https://accounts.google.com/gsi/client"; sc.async = true; sc.onload = go; document.head.appendChild(sc);
   }
   const rApi = (path, opt) => fetch(RATE + path, { ...(opt || {}), headers: { ...(rtok ? { Authorization: "Bearer " + rtok.t } : {}), "Content-Type": "application/json" } });
-  function rLogout() { rtok = null; isAdm = false; mine = {}; store.set("dtok", null); drawRate(); }
+  let meI = null;
+  const refreshMe = () => { if (rtok) rApi("/me").then(r => r.ok ? r.json() : null).then(d => { if (d && d.name) { meI = { name: d.name, cnt: d.cnt || 0, title: d.title || "", next: d.next || null }; drawRate(); } }).catch(() => {}); };
+  function rLogout() { meI = null; rtok = null; isAdm = false; mine = {}; store.set("dtok", null); drawRate(); }
   function loadRatings() {
     if (!RATE) return;
     fetch(RATE + "/ratings").then(r => r.json()).then(d => { ravg = d || {}; render(); if (current) drawRate(); }).catch(() => {});
-    if (rtok) rApi("/me").then(r => r.status === 401 ? Promise.reject("login") : r.json()).then(d => { mine = d.mine || {}; rtok.name = d.name || ""; isAdm = !!d.admin; if (d.member === false) { setBan(true, d.ban); toast("차단된 계정이라 별점을 줄 수 없어요"); } else setBan(false); if (current) { resetDraft(); drawRate(); loadReviews(); } }).catch(e => { if (e === "login") rLogout(); });
+    if (rtok) rApi("/me").then(r => r.status === 401 ? Promise.reject("login") : r.json()).then(d => { mine = d.mine || {}; rtok.name = d.name || ""; meI = { name: d.name || "", cnt: d.cnt || 0, title: d.title || "", next: d.next || null }; isAdm = !!d.admin; if (d.member === false) { setBan(true, d.ban); toast("차단된 계정이라 별점을 줄 수 없어요"); } else setBan(false); if (current) { resetDraft(); drawRate(); loadReviews(); } }).catch(e => { if (e === "login") rLogout(); });
   }
   /* 후기(평점)는 꼭 써야 해요. 신고 번호는 디스코드 채널에 직접 올려요. */
   let draft = { stars: 0, text: "" }, reviews = [], repTarget = null;
@@ -123,10 +125,10 @@
     const BAN = `<div class="r-ban" role="alert"><b>🚫 이용이 제한된 계정이에요</b>${bi.ip ? `<p>이 접속 환경(IP)에서 이용이 제한된 계정이 있어서 후기와 신고를 할 수 없어요. 본인이 아니라면 디스코드로 문의해 주세요.</p>` : `<dl class="r-why"><dt>사유</dt><dd>${esc(bi.reason || "운영 규칙 위반 (광고·스팸·욕설, 과거와 현재를 비교하는 후기 등)")}</dd>${bi.vid ? `<dt>영상</dt><dd>${esc(vTitle(bi.vid))}</dd>` : ""}${bi.txt ? `<dt>문제가 된 후기</dt><dd><q>${esc(bi.txt)}</q></dd>` : ""}${bi.ts ? `<dt>제한된 날</dt><dd>${esc(new Date(bi.ts).toLocaleDateString("ko-KR"))}</dd>` : ""}</dl><p>그래서 후기와 신고를 할 수 없어요.</p>`}<p>잘못 제한됐다고 생각하시면 디스코드의 <b>⭐ 별점·후기</b> 태그로 문의해 주세요.</p><p><a class="btn" data-feedback target="_blank" rel="noopener noreferrer" href="${esc(FB || "#")}">디스코드로 문의하기</a>${rtok ? ` <button type="button" class="r-link" data-rout>로그아웃</button>` : ""}</p></div>`;
     if (isBan && rtok) body = BAN;
     else if (!rtok) body = (isBan ? BAN : "") + `<div id="gbtn" class="r-g"></div><p class="r-note">구글 계정으로 로그인하면 별점과 후기를 남길 수 있어요. 한 계정당 영상마다 하나만 남길 수 있고, <b>별점과 후기를 모두</b> 써야 해요. 후기에는 구글 이름 대신 무작위 별명이 보여요. 로그인하면 <a href="privacy.html" target="_blank" rel="noopener">개인정보처리방침</a>을 확인한 것으로 봐요.</p>`;
-    else body = `<div class="r-stars" role="group" aria-label="내 별점">${[1, 2, 3, 4, 5].map(n => `<button type="button" class="${n <= draft.stars ? "on" : ""}" data-star="${n}" aria-label="별 ${n}개" aria-pressed="${n === draft.stars}">★</button>`).join("")}</div>
+    else body = (meI ? `<p class="r-meinfo">내 별명 <b>${esc(meI.name)}</b>${meI.title ? ` · 칭호 <i class="r-t">${esc(meI.title)}</i>` : ""}<small>${meI.next ? `후기를 쓴 영상 ${meI.cnt}개 · 다음 칭호 ‘${esc(meI.next.title)}’까지 ${meI.next.need}개` : `후기를 쓴 영상 ${meI.cnt}개 · 가장 높은 칭호예요`}</small></p>` : "") + `<div class="r-stars" role="group" aria-label="내 별점">${[1, 2, 3, 4, 5].map(n => `<button type="button" class="${n <= draft.stars ? "on" : ""}" data-star="${n}" aria-label="별 ${n}개" aria-pressed="${n === draft.stars}">★</button>`).join("")}</div>
       <textarea id="rtext" class="r-text" rows="3" maxlength="300" placeholder="후기를 남겨 주세요. 어떤 점이 좋았나요? (5자 이상)">${esc(draft.text)}</textarea>
       <div class="r-row"><span id="rhint" class="r-hint"></span><span id="rlen" class="r-len">0/300</span></div>
-      <div class="r-row"><button type="button" class="btn primary" id="rsend" disabled>${my ? "수정하기" : "등록하기"}</button><span class="r-note">${my ? `<button type="button" class="r-link" data-del>내 별점·후기 지우기</button> ` : ""}<button type="button" class="r-link" data-rout>로그아웃</button>${isAdm ? ` <button type="button" class="r-link" data-adm>운영진 신고함</button>` : ""}</span></div>
+      <div class="r-row"><button type="button" class="btn primary" id="rsend" disabled>${my ? "수정하기" : "등록하기"}</button><span class="r-note">${my ? `<button type="button" class="r-link" data-del>내 별점·후기 지우기</button> ` : ""}<button type="button" class="r-link" data-rout>로그아웃</button> <button type="button" class="r-link" data-delall>내 정보 전부 삭제</button>${isAdm ? ` <button type="button" class="r-link" data-adm>운영진 신고함</button>` : ""}</span></div>
       <p class="r-note">광고, 스팸, 욕설, 링크, 점(.)만 올린 후기, 정치 이야기, 영상과 관계없는 내용은 신고되거나 지워질 수 있어요. 영상을 본 느낌만 남겨 주세요.</p>`;
     const list = reviews.length ? `<ul class="r-list">${reviews.map(r => `<li class="${r.me ? "mine" : ""}"><div class="r-h"><b>${esc(r.name)}</b>${r.title ? `<i class="r-t lv${r.lv}">${esc(r.title)}</i>` : ""}${r.me ? `<i class="r-me">내 후기</i>` : ""}<span class="r-s" aria-label="별 ${r.stars}개">${"★".repeat(r.stars)}${"☆".repeat(5 - r.stars)}</span><time>${rAgo(r.ts)}</time>${r.me ? "" : `<button type="button" class="r-link r-rep" data-rep="${esc(r.id)}">신고</button>`}</div><p>${esc(r.text)}</p></li>`).join("")}</ul>` : "";
     el.innerHTML = `<div class="r-head">${head}</div>${body}${WARN}${list}`;
@@ -143,17 +145,27 @@
       if (r.status === 400) { const d = await r.json().catch(() => ({})); formState(); return toast(TEXT_MSG[d.code] || "내용을 확인해 주세요"); }
       if (!r.ok) { formState(); return toast("지금은 남길 수 없어요. 잠시 후 다시 해 주세요"); }
       const d = await r.json(); mine[id] = [n, text]; ravg[id] = [d.avg, d.n];
-      toast(my0(id) ? "후기를 남겼어요" : "후기를 남겼어요"); loadReviews(); drawRate(); render();
+      toast("후기를 남겼어요"); loadReviews(); drawRate(); render(); refreshMe();
     } catch (e) { formState(); toast("지금은 남길 수 없어요. 잠시 후 다시 해 주세요"); }
   }
   const my0 = () => true;
+  async function doDeleteAll() {
+    if (!rtok || !confirm("내 별점·후기와 보관 기록, 접속 기록을 모두 지울까요?\n\n지우면 되돌릴 수 없고, 칭호도 처음부터 다시 시작해요.")) return;
+    try {
+      const r = await rApi("/account/delete", { method: "POST", body: "{}" });
+      if (r.status === 409) return toast("신고가 접수된 후기가 있어 지금은 지울 수 없어요. 운영진 확인 뒤에 다시 해 주세요");
+      if (r.status === 403) return toast("이용이 제한된 계정은 지울 수 없어요. 디스코드로 문의해 주세요");
+      if (!r.ok) return toast("지금은 지울 수 없어요. 잠시 후 다시 해 주세요");
+      rLogout(); draft = { stars: 0, text: "" }; toast("내 정보를 모두 지웠어요"); loadRatings(); loadReviews(); render();
+    } catch (e) { toast("지금은 지울 수 없어요. 잠시 후 다시 해 주세요"); }
+  }
   async function doDelete() {
     if (!current || !rtok || !confirm("내 별점과 후기를 지울까요?")) return; const id = vid(current);
     try {
       const r = await rApi("/rate", { method: "POST", body: JSON.stringify({ vid: id, stars: 0 }) });
       if (!r.ok) return toast("지금은 지울 수 없어요. 잠시 후 다시 해 주세요");
       const d = await r.json(); delete mine[id]; if (d.n) ravg[id] = [d.avg, d.n]; else delete ravg[id];
-      draft = { stars: 0, text: "" }; toast("지웠어요"); loadReviews(); drawRate(); render();
+      draft = { stars: 0, text: "" }; toast("지웠어요"); loadReviews(); drawRate(); render(); refreshMe();
     } catch (e) { toast("지금은 지울 수 없어요. 잠시 후 다시 해 주세요"); }
   }
 
@@ -251,8 +263,8 @@
       if (r.status === 401) { closeReport(); rLogout(); return toast("다시 로그인해 주세요"); }
       if (!r.ok) { $("repGo").disabled = false; $("repErr").textContent = r.status === 403 ? "차단된 계정은 신고할 수 없어요" : r.status === 404 ? "이미 지워진 후기예요" : r.status === 429 ? "하루에 10건까지 신고할 수 있어요" : r.status === 400 ? "내 후기는 신고할 수 없어요" : "지금은 신고할 수 없어요. 잠시 후 다시 해 주세요"; return; }
       $("repNo").textContent = "#" + d.no;
-      $("repText").value = `[후기 신고 #${d.no}]\n영상: ${location.origin}${location.pathname}#v=${vid(current)}\n작성자: ${repTarget.name}\n사유: ${({ ad: "광고·홍보", spam: "스팸·도배", abuse: "욕설·비방", empty: "무의미한 내용", other: "기타" })[reason]}`; $("repForm").hidden = true; $("repDone").hidden = false;
-      try { const lab = ({ ad: "광고·홍보", spam: "스팸·도배", abuse: "욕설·비방", empty: "무의미한 내용", other: "기타" })[reason]; const blob = await makeShot(repTarget, d.no, lab); if (shotUrl) URL.revokeObjectURL(shotUrl); shotUrl = URL.createObjectURL(blob); $("repShot").src = shotUrl; $("repShot").hidden = false; saveShot(); toast("후기 화면을 사진으로 저장했어요"); } catch (e) {}
+      $("repText").value = `[후기 신고 #${d.no}]\n영상: ${location.origin}${location.pathname}#v=${vid(current)}\n작성자: ${repTarget.name}\n사유: ${({ ad: "광고·홍보", spam: "스팸·도배", abuse: "욕설·비방", empty: "무의미한 내용", off: "정치·영상과 무관", other: "기타" })[reason]}`; $("repForm").hidden = true; $("repDone").hidden = false;
+      try { const lab = ({ ad: "광고·홍보", spam: "스팸·도배", abuse: "욕설·비방", empty: "무의미한 내용", off: "정치·영상과 무관", other: "기타" })[reason]; const blob = await makeShot(repTarget, d.no, lab); if (shotUrl) URL.revokeObjectURL(shotUrl); shotUrl = URL.createObjectURL(blob); $("repShot").src = shotUrl; $("repShot").hidden = false; saveShot(); toast("후기 화면을 사진으로 저장했어요"); } catch (e) {}
       const dc = $("repDiscord"); if (dc) { dc.hidden = !/^https?:\/\//i.test(SITE.discord || ""); dc.href = SITE.discord || "#"; }
       $("repClose2").focus();
     } catch (e) { $("repGo").disabled = false; $("repErr").textContent = "지금은 신고할 수 없어요. 잠시 후 다시 해 주세요"; }
@@ -870,6 +882,7 @@
     const b = e.target.closest("button"); if (!b) return;
     if (b.dataset.rout !== undefined) return rLogout();
     if (b.dataset.del !== undefined) return doDelete();
+    if (b.dataset.delall !== undefined) return doDeleteAll();
     if (b.dataset.rep) return openReport(b.dataset.rep);
     if (b.dataset.adm !== undefined) { admTab = "rep"; document.querySelectorAll(".adm-tabs button").forEach(x => x.classList.toggle("on", x.dataset.tab === "rep")); $("admQ").hidden = true; return openAdmin(); }
     if (b.dataset.star) { draft.stars = +b.dataset.star; const t = $("rtext"); if (t) draft.text = t.value; drawRate(); const t2 = $("rtext"); if (t2) t2.focus(); return; }

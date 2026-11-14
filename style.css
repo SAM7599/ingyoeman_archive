@@ -834,3 +834,6 @@ html[data-motion="off"] .g-deck { display:none !important; }
 .g-dk > * { position:relative; }
 .dk-em { display:grid; place-items:center; width:84px; height:84px; border-radius:50%; border:2px solid rgba(255,179,71,.75); background:radial-gradient(circle, rgba(255,179,71,.22), rgba(255,179,71,.04) 70%); box-shadow:0 0 0 6px rgba(255,255,255,.05); }
 .dk-em .logo-mark { width:48px; height:34px; background:#ffb347; }
+.r-meinfo { margin:0 0 10px; padding:9px 12px; border-radius:10px; background:var(--soft, rgba(127,127,127,.1)); font-size:14px; line-height:1.6; }
+.r-meinfo small { display:block; color:var(--sub); font-size:12.5px; }
+.r-meinfo .r-t { margin-left:2px; }
