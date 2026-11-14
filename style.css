@@ -754,3 +754,9 @@ html.intro-on body { overflow:hidden; }
 .r-ban p { margin:0 0 10px; font-size:13.5px; line-height:1.7; }
 .r-ban p:last-child { margin:0; display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
 [data-theme="dark"] .r-ban { background:#2a1517; border-color:#7a2f35; color:#ffa8a8; }
+
+.r-ban .r-why{margin:8px 0;display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:.92em}
+.r-ban .r-why dt{font-weight:700;white-space:nowrap}
+.r-ban .r-why dd{margin:0;word-break:break-word}
+.r-ban .r-why q{display:block;padding:6px 10px;background:rgba(255,255,255,.7);border-radius:8px;quotes:none}
+html[data-theme="dark"] .r-ban .r-why q{background:rgba(255,255,255,.08)}

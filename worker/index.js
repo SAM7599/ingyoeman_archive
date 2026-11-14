@@ -44,6 +44,8 @@ const ipHash = async (env, req) => { const ip = req.headers.get("CF-Connecting-I
 const IPDAYS = env => (Number(env.IP_BAN_DAYS) || 30) * 864e5;
 const ipBanned = async (env, req) => { const h = await ipHash(env, req); return !!h && !!await env.DB.prepare("SELECT 1 AS x FROM banned_ip WHERE h = ? AND ts > ?").bind(h, Date.now() - IPDAYS(env)).first(); };
 const ipSeen = async (env, req, uid) => { const h = await ipHash(env, req); if (h) await env.DB.prepare("INSERT INTO ip_seen (uid, h, ts) VALUES (?, ?, ?) ON CONFLICT(uid) DO UPDATE SET h = excluded.h, ts = excluded.ts").bind(uid, h, Date.now()).run(); };
+const banInfo = async (env, uid) => { try { return await env.DB.prepare("SELECT reason, vid, txt, ts FROM ban_info WHERE uid = ?").bind(uid).first() || {}; } catch (e) { return {}; } };   // 차단 사유(없으면 빈 값)
+const banBody = async (env, uid, byIp) => ({ error: "banned", ban: byIp ? { ip: 1 } : await banInfo(env, uid) });
 async function isBanned(env, uid) { return !!await env.DB.prepare("SELECT 1 AS x FROM banned WHERE uid = ?").bind(uid).first(); }
 
 // ── 후기 검사 ──
@@ -86,8 +88,8 @@ async function handle(req, env, ctx) {
     if (g.aud !== env.GOOGLE_CLIENT_ID || !/^\d{5,30}$/.test(String(g.sub || "")) || !(g.exp > Date.now() / 1000)) return json(env, { error: "login" }, 401);
     const uid = "g" + g.sub;
     const em0 = g.email_verified === "true" || g.email_verified === true ? String(g.email || "").toLowerCase() : "";
-    if (await isBanned(env, uid)) return json(env, { error: "banned" }, 403);
-    if (!isAdmin(env, { em: em0 }) && await ipBanned(env, req)) return json(env, { error: "banned" }, 403);   // 차단된 사람이 다른 계정으로 들어오는 것도 막아요
+    if (await isBanned(env, uid)) return json(env, await banBody(env, uid), 403);
+    if (!isAdmin(env, { em: em0 }) && await ipBanned(env, req)) return json(env, await banBody(env, uid, true), 403);   // 차단된 사람이 다른 계정으로 들어오는 것도 막아요
     await ipSeen(env, req, uid).catch(() => {});
     const name = String(g.name || (g.email || "").split("@")[0] || "").slice(0, 32);
     const em = g.email_verified === "true" || g.email_verified === true ? String(g.email || "").toLowerCase() : "";
@@ -110,7 +112,7 @@ async function handle(req, env, ctx) {
     const banned = await isBanned(env, s.uid);
     const rs = await env.DB.prepare("SELECT vid, stars, text FROM ratings WHERE uid = ?").bind(s.uid).all();
     const mine = {}; for (const r of rs.results) mine[r.vid] = [r.stars, r.text];
-    return json(env, { name: s.name, member: !banned, mine, admin: isAdmin(env, s) });
+    return json(env, { name: s.name, member: !banned, mine, admin: isAdmin(env, s), ban: banned ? await banInfo(env, s.uid) : null });
   }
 
   if (p === "/reviews" && req.method === "GET") {   // 한 영상의 후기 목록 (누구나)
@@ -129,7 +131,7 @@ async function handle(req, env, ctx) {
     const vid = String(b.vid || ""), stars = Number(b.stars), text = clean(b.text);
     if (!/^[A-Za-z0-9_-]{1,40}$/.test(vid) || !Number.isInteger(stars) || stars < 0 || stars > 5) return json(env, { error: "bad" }, 400);
     if (stars > 0) { const bad = checkText(text); if (bad) return json(env, { error: "text", code: bad }, 400); }   // 후기는 꼭 필요해요
-    if (await isBanned(env, s.uid) || (!isAdmin(env, s) && await ipBanned(env, req))) return json(env, { error: "banned" }, 403);   // 차단된 계정·주소는 막아요
+    { const bn = await isBanned(env, s.uid); if (bn || (!isAdmin(env, s) && await ipBanned(env, req))) return json(env, await banBody(env, s.uid, !bn), 403); }   // 차단된 계정·주소는 막아요
     if (stars === 0) {
       const old = await env.DB.prepare("SELECT stars, text, name, ts FROM ratings WHERE vid = ? AND uid = ?").bind(vid, s.uid).first();
       if (old) await archive(env, vid, s.uid, old, "del");   // 지우기 전 모습 보관
@@ -149,7 +151,7 @@ async function handle(req, env, ctx) {
     let b; try { b = await req.json(); } catch (e) { return json(env, { error: "bad" }, 400); }
     const vid = String(b.vid || ""), reason = String(b.reason || ""), note = clean(b.note).slice(0, 200), id = String(b.id || "");
     if (!/^[A-Za-z0-9_-]{1,40}$/.test(vid) || !REASONS[reason] || !/^[A-Za-z0-9_-]{6,40}$/.test(id)) return json(env, { error: "bad" }, 400);
-    if (await isBanned(env, s.uid) || (!isAdmin(env, s) && await ipBanned(env, req))) return json(env, { error: "banned" }, 403);
+    { const bn = await isBanned(env, s.uid); if (bn || (!isAdmin(env, s) && await ipBanned(env, req))) return json(env, await banBody(env, s.uid, !bn), 403); }
     const all = await env.DB.prepare("SELECT uid, name, stars, text, ts FROM ratings WHERE vid = ?").bind(vid).all();
     let target = null; for (const r of all.results) if (await rid(env, vid, r.uid) === id) { target = r; break; }
     if (!target) return json(env, { error: "gone" }, 404);   // 이미 지워졌거나 없는 후기
@@ -202,12 +204,14 @@ async function handle(req, env, ctx) {
   if (p === "/admin/act" && req.method === "POST") {   // 운영진: 후기 삭제 / 작성자 차단
     const s = await getAuth(env, req); if (!isAdmin(env, s)) return json(env, { error: "forbidden" }, 403);
     let b; try { b = await req.json(); } catch (e) { return json(env, { error: "bad" }, 400); }
-    const row = await env.DB.prepare("SELECT vid, uid FROM reports WHERE id = ?").bind(Number(b.id)).first();
+    const row = await env.DB.prepare("SELECT vid, uid, reason FROM reports WHERE id = ?").bind(Number(b.id)).first();
     if (!row) return json(env, { error: "gone" }, 404);
     if (b.act === "ban") {
       await env.DB.prepare("INSERT OR IGNORE INTO banned (uid, ts) VALUES (?, ?)").bind(row.uid, Date.now()).run();
       const ip = await env.DB.prepare("SELECT h FROM ip_seen WHERE uid = ?").bind(row.uid).first();   // 마지막으로 쓴 접속 주소도 함께 차단
       if (ip) await env.DB.prepare("INSERT INTO banned_ip (h, ts) VALUES (?, ?) ON CONFLICT(h) DO UPDATE SET ts = excluded.ts").bind(ip.h, Date.now()).run();
+      const bad = await env.DB.prepare("SELECT text FROM ratings WHERE vid = ? AND uid = ?").bind(row.vid, row.uid).first();   // 차단 사유: 신고된 후기와 신고 종류
+      await env.DB.prepare("INSERT OR REPLACE INTO ban_info (uid, reason, vid, txt, ts) VALUES (?, ?, ?, ?, ?)").bind(row.uid, REASONS[row.reason] || "", row.vid, bad ? String(bad.text || "").slice(0, 300) : "", Date.now()).run().catch(() => {});
       const all = await env.DB.prepare("SELECT vid, stars, text, name, ts FROM ratings WHERE uid = ?").bind(row.uid).all();
       for (const r of all.results) await archive(env, r.vid, row.uid, r, "ban");
       await env.DB.prepare("DELETE FROM ratings WHERE uid = ?").bind(row.uid).run();
