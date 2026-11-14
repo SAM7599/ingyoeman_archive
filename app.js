@@ -564,7 +564,7 @@
   function syncGachaFav() { if (gv) $("gFav").textContent = favs.has(key(gv)) ? "♥ 담았어요" : "♡ 즐겨찾기"; }
   function gachaReady() {
     const card = $("gCard");
-    card.classList.add("still"); card.classList.remove("flip", "shake", "done"); void card.offsetWidth; card.classList.remove("still");
+    card.classList.add("still"); card.classList.remove("flip", "shake", "done", "shuf"); $("gDeck").classList.remove("on"); void card.offsetWidth; card.classList.remove("still");
     $("gActs").classList.remove("show"); $("gFx").innerHTML = "";
     $("gTitle").textContent = "‘" + drawLabel() + "’에서 한 장 뽑아요. 카드를 눌러 보세요";
     gachaPick();
@@ -588,6 +588,10 @@
     gBusy = true;
     const quick = calm(), tier = card.dataset.tier;
     const shakeMs = quick ? 0 : tier === "legend" ? 1500 : tier === "rare" ? 1150 : 850;
+    const shufMs = quick ? 0 : 1300;   // 카드 섞는 연출
+    $("gTitle").textContent = quick ? "두근두근…" : "카드를 섞는 중…";
+    if (!quick) shuffleDeck(shufMs);
+    setTimeout(() => {
     sfxDraw(tier, shakeMs);
     $("gTitle").textContent = "두근두근…";
     card.classList.add("shake");
@@ -600,6 +604,14 @@
         $("gActs").classList.add("show"); gBusy = false;
       }, quick ? 0 : 620);
     }, shakeMs);
+    }, shufMs);
+  }
+  function shuffleDeck(ms) {   // 카드 뭉치를 좌우로 갈라 섞은 뒤 한 장으로 모아요
+    const deck = $("gDeck"), card = $("gCard");
+    deck.innerHTML = Array.from({ length: 8 }, (_, i) => `<i class="g-dk" style="--i:${i};--d:${i % 2 ? -1 : 1}"></i>`).join("");
+    card.classList.add("shuf"); deck.classList.add("on");
+    for (let k = 0; k < 7; k++) whoosh(0.1 + k * 0.17, 0.12, 0.05);
+    setTimeout(() => { deck.classList.remove("on"); deck.innerHTML = ""; card.classList.remove("shuf"); }, ms);
   }
   $("viewAbout").addEventListener("click", e => { if (e.target.closest("[data-draw-all]")) openGacha(); });
   $("gCard").addEventListener("click", gachaGo);
