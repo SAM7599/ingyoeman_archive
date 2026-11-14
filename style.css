@@ -741,3 +741,10 @@ html.intro-on body { overflow:hidden; }
 @keyframes inletter2 { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
 .in-skip { position:absolute; right:20px; bottom:calc(20px + env(safe-area-inset-bottom)); padding:8px 16px; border:1px solid rgba(255,255,255,.3); border-radius:99px; background:rgba(255,255,255,.08); color:#fff; font:inherit; font-size:13px; cursor:pointer; opacity:0; animation:inletter2 .5s .6s ease-out forwards; }
 .in-skip:hover { background:rgba(255,255,255,.18); }
+
+.logo-story { display:flex; gap:22px; align-items:flex-start; margin:0 0 28px; padding:22px; border:1px solid var(--line); border-radius:18px; background:var(--surface); }
+.logo-story .logo-mark { width:120px; height:84px; flex:none; margin-top:4px; }
+.logo-story p { margin:0 0 10px; color:var(--sub); line-height:1.8; word-break:keep-all; }
+.logo-story p b { color:var(--ink); }
+.logo-story p:last-child { margin:0; }
+@media (max-width:640px) { .logo-story { flex-direction:column; gap:14px; } .logo-story .logo-mark { width:100px; height:70px; } }
