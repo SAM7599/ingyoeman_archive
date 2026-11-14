@@ -508,6 +508,11 @@
     toast("GitHub 제보 화면이 새 창으로 열려요. GitHub 로그인이 필요해요"); window.open("https://github.com/" + SITE.repo + "/issues/new?labels=thumbnail&title=" + encodeURIComponent("[썸네일] " + v.title) + "&body=" + encodeURIComponent(body), "_blank", "noopener");
   }
 
+  /* 검색창 안내 글자: 창이 좁아지면 짧게 줄여서 잘리지 않게 해요 */
+  { const q = $("q"), m1 = matchMedia("(max-width:1320px)"), m2 = matchMedia("(max-width:1180px)"), m3 = matchMedia("(max-width:860px)");
+    const fit = () => { q.placeholder = m3.matches ? "제목이나 분류로 검색" : m2.matches ? "검색" : m1.matches ? "제목·분류 검색" : "제목이나 분류로 검색"; };
+    [m1, m2, m3].forEach(m => m.addEventListener ? m.addEventListener("change", fit) : m.addListener(fit)); fit(); }
+
   /* ── 뽑기 효과음 (파일 없이 브라우저가 직접 만드는 소리) ── */
   let actx = null;
   const soundOn = () => store.get("sound", "on") !== "off";

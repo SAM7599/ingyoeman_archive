@@ -837,3 +837,13 @@ html[data-motion="off"] .g-deck { display:none !important; }
 .r-meinfo { margin:0 0 10px; padding:9px 12px; border-radius:10px; background:var(--soft, rgba(127,127,127,.1)); font-size:14px; line-height:1.6; }
 .r-meinfo small { display:block; color:var(--sub); font-size:12.5px; }
 .r-meinfo .r-t { margin-left:2px; }
+@media (max-width:1320px) { .search input { padding:0 12px 0 38px; } }
+@media (max-width:1320px) { .search kbd { display:none; } }
+@media (max-width:1180px) and (min-width:861px) { .top-in { gap:8px; } .nav .tab { padding:8px 6px; font-size:13.5px; } .search { min-width:120px; } }
+@media (max-width:960px) and (min-width:861px) {
+  .top-in { padding:12px 14px; gap:6px; }
+  .logo { font-size:15px; gap:7px; } .logo .logo-mark { width:30px; height:21px; }
+  .nav .tab { padding:8px 4px; font-size:13px; }
+  .btn.cafe { padding:0 9px; font-size:13px; } .round { width:38px; height:38px; }
+  .search { min-width:96px; }
+}
