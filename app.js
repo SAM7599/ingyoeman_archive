@@ -127,7 +127,7 @@
       <textarea id="rtext" class="r-text" rows="3" maxlength="300" placeholder="후기를 남겨 주세요. 어떤 점이 좋았나요? (5자 이상)">${esc(draft.text)}</textarea>
       <div class="r-row"><span id="rhint" class="r-hint"></span><span id="rlen" class="r-len">0/300</span></div>
       <div class="r-row"><button type="button" class="btn primary" id="rsend" disabled>${my ? "수정하기" : "등록하기"}</button><span class="r-note">${my ? `<button type="button" class="r-link" data-del>내 별점·후기 지우기</button> ` : ""}<button type="button" class="r-link" data-rout>로그아웃</button>${isAdm ? ` <button type="button" class="r-link" data-adm>운영진 신고함</button>` : ""}</span></div>
-      <p class="r-note">광고, 스팸, 욕설, 링크, 점(.)만 올린 후기는 신고되거나 지워질 수 있어요.</p>`;
+      <p class="r-note">광고, 스팸, 욕설, 링크, 점(.)만 올린 후기, 정치 이야기, 영상과 관계없는 내용은 신고되거나 지워질 수 있어요. 영상을 본 느낌만 남겨 주세요.</p>`;
     const list = reviews.length ? `<ul class="r-list">${reviews.map(r => `<li class="${r.me ? "mine" : ""}"><div class="r-h"><b>${esc(r.name)}</b>${r.title ? `<i class="r-t lv${r.lv}">${esc(r.title)}</i>` : ""}${r.me ? `<i class="r-me">내 후기</i>` : ""}<span class="r-s" aria-label="별 ${r.stars}개">${"★".repeat(r.stars)}${"☆".repeat(5 - r.stars)}</span><time>${rAgo(r.ts)}</time>${r.me ? "" : `<button type="button" class="r-link r-rep" data-rep="${esc(r.id)}">신고</button>`}</div><p>${esc(r.text)}</p></li>`).join("")}</ul>` : "";
     el.innerHTML = `<div class="r-head">${head}</div>${body}${WARN}${list}`;
     formState(); if (!rtok) drawGoogleBtn();
