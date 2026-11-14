@@ -6,8 +6,7 @@ window.SITE = {
   cafe: "https://cafe.naver.com/youtubecreateringyoe",   // 네이버 카페 주소
   youtube: "https://www.youtube.com/@잉여맨유튜브",   // 잉여맨 유튜브 채널 (첫 화면 배너)
   feedback: "https://talk.cafe.naver.com/channels/3001014569445",   // 피드백 / 버그 제보 (카페 공개 채팅방)
-  // 댓글(구글 로그인)용 Firebase 설정 — 비워 두면 댓글 기능이 꺼져 있어요
-  firebase: null,
+  discord: "",   // 디스코드 서버 초대 링크 (https://discord.gg/...) — 넣으면 피드백 버튼이 디스코드로 연결돼요. 비우면 위 카페 채팅방으로 가요
   categories: [
     "탈출맵", "상황극", "게임", "하이라이트", "콘텐츠특집", "잉여맨뒷담화",
     "아프리카TV", "게스트출연", "개인녹화본", "펌녹화본",
