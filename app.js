@@ -1076,6 +1076,9 @@
   document.addEventListener("dragstart", e => e.preventDefault());
   document.addEventListener("selectstart", e => { if (!inField(e)) e.preventDefault(); });
 
+  /* ── 새로고침해도 보던 자리 기억 (이 탭에서만, 닫으면 사라져요) ── */
+  const saveView = () => { try { sessionStorage.setItem("view1", JSON.stringify({ h: location.hash, cat, q: $("q").value, y: Math.round(window.scrollY), shown })); } catch (e) {} };
+  window.addEventListener("pagehide", saveView); document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") saveView(); });
   /* ── 시작 ── */
   fetch("videos.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json())
     .then(data => {
@@ -1085,7 +1088,14 @@
       SERIES = defs.map(x => ({ name: x.name, n: all.filter(v => v._s.includes(x.name)).length })).filter(x => x.n >= 3).sort((a, b) => b.n - a.n);
       const ok = new Set(SERIES.map(x => x.name)); all.forEach(v => { v._s = v._s.filter(n => ok.has(n)); });
       $("abN").textContent = nf(all.length); $("abC").textContent = new Set(all.map(v => v.category).filter(Boolean)).size; $("abS").textContent = SERIES.length;
+      let sv = null; try { if (((performance.getEntriesByType("navigation")[0] || {}).type) === "reload") sv = JSON.parse(sessionStorage.getItem("view1")); } catch (e) {}
       route(); achStart();
+      if (sv && sv.h === location.hash && !location.hash.startsWith("#v=") && !location.hash.startsWith("#import=")) {   // 새로고침하면 보던 분류·검색·위치를 그대로 이어서 보여줘요
+        if (typeof sv.cat === "string" && sv.cat) cat = sv.cat;
+        if (typeof sv.q === "string" && sv.q) $("q").value = sv.q.slice(0, 80);
+        reset(); if (sv.shown > shown) { shown = Math.min(sv.shown, all.length + PAGE); render(); }
+        requestAnimationFrame(() => window.scrollTo(0, Number(sv.y) || 0));
+      }
     })
     .catch(() => { route(); $("grid").innerHTML = `<div class="empty"><b>목록을 불러오지 못했어요</b>잠시 뒤 새로고침해 주세요.</div>`; });
 })();
