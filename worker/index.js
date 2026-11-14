@@ -84,10 +84,14 @@ async function handle(req, env, ctx) {
     return json(env, { token: await sign(env, { uid, name, em }, 30 * DAY), name, admin: isAdmin(env, { em }) });
   }
 
-  if (p === "/ratings" && req.method === "GET") {   // 영상별 평균 (누구나)
+  if (p === "/ratings" && req.method === "GET") {   // 영상별 평균 (누구나) — 1분 동안 저장해 두고 재사용해서 데이터 읽기를 아껴요
+    const ck = typeof caches !== "undefined" ? caches.default : null, key = new Request(url.origin + "/__ratings_cache");
+    if (ck) { const hit = await ck.match(key); if (hit) return new Response(hit.body, { status: 200, headers: { "Content-Type": "application/json; charset=utf-8", ...cors(env), "Cache-Control": "public, max-age=60" } }); }
     const rs = await env.DB.prepare("SELECT vid, ROUND(AVG(stars), 2) AS avg, COUNT(*) AS n FROM ratings GROUP BY vid").all();
     const out = {}; for (const r of rs.results) out[r.vid] = [r.avg, r.n];
-    return json(env, out, 200, { "Cache-Control": "public, max-age=60" });
+    const body = JSON.stringify(out);
+    if (ck && ctx) ctx.waitUntil(ck.put(key, new Response(body, { headers: { "Content-Type": "application/json", "Cache-Control": "public, max-age=60" } })));
+    return new Response(body, { status: 200, headers: { "Content-Type": "application/json; charset=utf-8", ...cors(env), "Cache-Control": "public, max-age=60" } });
   }
 
   if (p === "/me" && req.method === "GET") {   // 내가 준 별점 + 아직 멤버인지
