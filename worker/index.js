@@ -39,6 +39,11 @@ const siteUrl = (env, hash) => env.SITE_ORIGIN + (env.SITE_PATH || "/") + "#" + 
 
 const isAdmin = (env, s) => !!s && !!s.em && String(env.ADMIN_EMAILS || "").toLowerCase().split(",").map(x => x.trim()).filter(Boolean).includes(s.em);
 // 차단된 계정인지
+// 접속 주소(IP)는 그대로 저장하지 않고, 되돌릴 수 없는 짧은 코드로 바꿔서만 저장해요
+const ipHash = async (env, req) => { const ip = req.headers.get("CF-Connecting-IP") || ""; return ip ? (await hmac(env.SESSION_SECRET, "ip:" + ip)).slice(0, 22) : ""; };
+const IPDAYS = env => (Number(env.IP_BAN_DAYS) || 30) * 864e5;
+const ipBanned = async (env, req) => { const h = await ipHash(env, req); return !!h && !!await env.DB.prepare("SELECT 1 AS x FROM banned_ip WHERE h = ? AND ts > ?").bind(h, Date.now() - IPDAYS(env)).first(); };
+const ipSeen = async (env, req, uid) => { const h = await ipHash(env, req); if (h) await env.DB.prepare("INSERT INTO ip_seen (uid, h, ts) VALUES (?, ?, ?) ON CONFLICT(uid) DO UPDATE SET h = excluded.h, ts = excluded.ts").bind(uid, h, Date.now()).run(); };
 async function isBanned(env, uid) { return !!await env.DB.prepare("SELECT 1 AS x FROM banned WHERE uid = ?").bind(uid).first(); }
 
 // ── 후기 검사 ──
@@ -55,7 +60,7 @@ function checkText(t) {   // 문제가 있으면 이유 코드를, 괜찮으면 
 const mask = n => { const c = Array.from(String(n || "").trim()); if (!c.length) return "****"; return c.slice(0, c.length <= 2 ? 1 : 2).join("") + "****"; };   // 앞 2글자만 보이고 나머지는 ****
 // 고치기 전 / 지우기 전 모습을 보관함에 남겨요 (why: edit=고침, del=본인이 지움, mod=운영진이 지움, ban=차단으로 지워짐)
 // 보관함 자동 비우기: 보관한 지 RETENTION_DAYS(기본 180일 ≈ 6개월)가 지난 기록을 지워요. 별도 설정 없이 후기가 오갈 때·보관함을 열 때 알아서 정리돼요
-const sweep = (env) => env.DB.prepare("DELETE FROM rating_history WHERE (CASE WHEN at > 0 THEN at ELSE ts END) < ?").bind(Date.now() - (Number(env.RETENTION_DAYS) || 180) * 864e5).run();
+const sweep = (env) => env.DB.prepare("DELETE FROM rating_history WHERE (CASE WHEN at > 0 THEN at ELSE ts END) < ?").bind(Date.now() - (Number(env.RETENTION_DAYS) || 180) * 864e5).run().then(() => env.DB.batch([env.DB.prepare("DELETE FROM ip_seen WHERE ts < ?").bind(Date.now() - IPDAYS(env)), env.DB.prepare("DELETE FROM banned_ip WHERE ts < ?").bind(Date.now() - IPDAYS(env))]));
 const archive = async (env, vid, uid, r, why) => { await env.DB.prepare("INSERT INTO rating_history (vid, uid, stars, text, ts, name, why, at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)").bind(vid, uid, r.stars, r.text, r.ts, r.name || "", why, Date.now()).run(); if (Math.random() < 0.05) await sweep(env).catch(() => {}); };
 const clean = t => String(t || "").replace(/\s+/g, " ").trim();
 const rid = (env, vid, uid) => hmac(env.SESSION_SECRET, "rid:" + vid + ":" + uid).then(h => h.slice(0, 16));
@@ -80,7 +85,10 @@ async function handle(req, env, ctx) {
     const g = await r.json();
     if (g.aud !== env.GOOGLE_CLIENT_ID || !/^\d{5,30}$/.test(String(g.sub || "")) || !(g.exp > Date.now() / 1000)) return json(env, { error: "login" }, 401);
     const uid = "g" + g.sub;
+    const em0 = g.email_verified === "true" || g.email_verified === true ? String(g.email || "").toLowerCase() : "";
     if (await isBanned(env, uid)) return json(env, { error: "banned" }, 403);
+    if (!isAdmin(env, { em: em0 }) && await ipBanned(env, req)) return json(env, { error: "banned" }, 403);   // 차단된 사람이 다른 계정으로 들어오는 것도 막아요
+    await ipSeen(env, req, uid).catch(() => {});
     const name = String(g.name || (g.email || "").split("@")[0] || "").slice(0, 32);
     const em = g.email_verified === "true" || g.email_verified === true ? String(g.email || "").toLowerCase() : "";
     return json(env, { token: await sign(env, { uid, name, em }, 30 * DAY), name, admin: isAdmin(env, { em }) });
@@ -121,7 +129,7 @@ async function handle(req, env, ctx) {
     const vid = String(b.vid || ""), stars = Number(b.stars), text = clean(b.text);
     if (!/^[A-Za-z0-9_-]{1,40}$/.test(vid) || !Number.isInteger(stars) || stars < 0 || stars > 5) return json(env, { error: "bad" }, 400);
     if (stars > 0) { const bad = checkText(text); if (bad) return json(env, { error: "text", code: bad }, 400); }   // 후기는 꼭 필요해요
-    if (await isBanned(env, s.uid)) return json(env, { error: "banned" }, 403);   // 차단된 계정은 막아요
+    if (await isBanned(env, s.uid) || (!isAdmin(env, s) && await ipBanned(env, req))) return json(env, { error: "banned" }, 403);   // 차단된 계정·주소는 막아요
     if (stars === 0) {
       const old = await env.DB.prepare("SELECT stars, text, name, ts FROM ratings WHERE vid = ? AND uid = ?").bind(vid, s.uid).first();
       if (old) await archive(env, vid, s.uid, old, "del");   // 지우기 전 모습 보관
@@ -141,7 +149,7 @@ async function handle(req, env, ctx) {
     let b; try { b = await req.json(); } catch (e) { return json(env, { error: "bad" }, 400); }
     const vid = String(b.vid || ""), reason = String(b.reason || ""), note = clean(b.note).slice(0, 200), id = String(b.id || "");
     if (!/^[A-Za-z0-9_-]{1,40}$/.test(vid) || !REASONS[reason] || !/^[A-Za-z0-9_-]{6,40}$/.test(id)) return json(env, { error: "bad" }, 400);
-    if (await isBanned(env, s.uid)) return json(env, { error: "banned" }, 403);
+    if (await isBanned(env, s.uid) || (!isAdmin(env, s) && await ipBanned(env, req))) return json(env, { error: "banned" }, 403);
     const all = await env.DB.prepare("SELECT uid, name, stars, text, ts FROM ratings WHERE vid = ?").bind(vid).all();
     let target = null; for (const r of all.results) if (await rid(env, vid, r.uid) === id) { target = r; break; }
     if (!target) return json(env, { error: "gone" }, 404);   // 이미 지워졌거나 없는 후기
@@ -198,6 +206,8 @@ async function handle(req, env, ctx) {
     if (!row) return json(env, { error: "gone" }, 404);
     if (b.act === "ban") {
       await env.DB.prepare("INSERT OR IGNORE INTO banned (uid, ts) VALUES (?, ?)").bind(row.uid, Date.now()).run();
+      const ip = await env.DB.prepare("SELECT h FROM ip_seen WHERE uid = ?").bind(row.uid).first();   // 마지막으로 쓴 접속 주소도 함께 차단
+      if (ip) await env.DB.prepare("INSERT INTO banned_ip (h, ts) VALUES (?, ?) ON CONFLICT(h) DO UPDATE SET ts = excluded.ts").bind(ip.h, Date.now()).run();
       const all = await env.DB.prepare("SELECT vid, stars, text, name, ts FROM ratings WHERE uid = ?").bind(row.uid).all();
       for (const r of all.results) await archive(env, r.vid, row.uid, r, "ban");
       await env.DB.prepare("DELETE FROM ratings WHERE uid = ?").bind(row.uid).run();
