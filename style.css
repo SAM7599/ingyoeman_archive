@@ -818,15 +818,15 @@ details.gi[open] > summary::after { content:"－"; }
 .g-deck { position:absolute; inset:0; display:none; pointer-events:none; }
 .g-deck.on { display:block; }
 .g-card.shuf { visibility:hidden; animation:none !important; }
-.g-dk { position:absolute; inset:0; z-index:var(--i); border-radius:22px; background:linear-gradient(150deg,#3a3fb8,#1d1f55 60%,#2a1b55); border:3px solid rgba(255,255,255,.28); box-shadow:0 6px 18px rgba(0,0,0,.45); transform:translateY(calc(var(--i) * -1.5px)); }
+.g-dk { position:absolute; inset:0; z-index:var(--i); will-change:transform; backface-visibility:hidden; -webkit-backface-visibility:hidden; border-radius:22px; background:linear-gradient(150deg,#3a3fb8,#1d1f55 60%,#2a1b55); border:3px solid rgba(255,255,255,.28); box-shadow:0 2px 6px rgba(0,0,0,.35); transform:translateY(calc(var(--i) * -1.5px)); }
 .g-dk::before { content:""; position:absolute; inset:14px; border-radius:14px; border:1.5px solid rgba(255,255,255,.2); background:repeating-linear-gradient(45deg, rgba(255,255,255,.05) 0 10px, transparent 10px 20px); }
 .g-deck.on .g-dk { animation:dkRiffle 1.05s ease-in-out both; animation-delay:calc(var(--i) * 28ms); }
 @keyframes dkRiffle {
   0%   { transform:translate(0, calc(var(--i) * -1.5px)) rotate(0); }
   20%  { transform:translate(calc(var(--d) * 84px), calc(var(--i) * -1.5px)) rotate(calc(var(--d) * 7deg)); }
-  42%  { transform:translate(calc(var(--d) * 22px), calc(var(--i) * -1.5px)) rotate(calc(var(--d) * 2deg)); z-index:calc(8 - var(--i)); }
-  62%  { transform:translate(calc(var(--d) * 90px), calc(var(--i) * -1.5px)) rotate(calc(var(--d) * 8deg)); z-index:calc(8 - var(--i)); }
-  84%  { transform:translate(calc(var(--d) * 16px), calc(var(--i) * -1.5px)) rotate(calc(var(--d) * 2deg)); z-index:var(--i); }
+  42%  { transform:translate(calc(var(--d) * 22px), calc(var(--i) * -1.5px)) rotate(calc(var(--d) * 2deg)); }
+  62%  { transform:translate(calc(var(--d) * 90px), calc(var(--i) * -1.5px)) rotate(calc(var(--d) * 8deg)); }
+  84%  { transform:translate(calc(var(--d) * 16px), calc(var(--i) * -1.5px)) rotate(calc(var(--d) * 2deg)); }
   100% { transform:translate(0, calc(var(--i) * -1.5px)) rotate(0); }
 }
 html[data-motion="off"] .g-deck { display:none !important; }
