@@ -5,6 +5,7 @@ compatibility_date = "2025-01-01"
 [vars]
 CLIENT_ID = ""            # 디스코드 앱의 Application ID
 GUILD_ID = ""             # 디스코드 서버 ID
+REPORT_CHANNEL_ID = ""    # 후기 신고가 올라올 운영진 전용 채널 ID (봇이 이 채널에 글을 쓸 수 있어야 해요)
 SITE_ORIGIN = "https://sam7599.github.io"
 SITE_PATH = "/ingyoeman_archive/"
 # ROLE_ID = ""            # (선택) 이 역할이 있는 멤버만 별점 허용
