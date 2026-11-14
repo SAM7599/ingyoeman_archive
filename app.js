@@ -29,6 +29,21 @@
     if (e.target.closest("[data-intro]")) { e.preventDefault(); return introStart(); }
     if (e.target.closest("#intro")) introEnd(true);
   });
+  /* ── 입장 동의 (인트로 다음에 나와요. 동의해야 이용할 수 있어요) ── */
+  (() => {
+    const root = document.documentElement, box = document.getElementById("consent"); if (!box) return;
+    const lock = on => [...document.body.children].forEach(el => { if (el === box || el.id === "intro" || el.tagName === "SCRIPT") return; on ? el.setAttribute("inert", "") : el.removeAttribute("inert"); });
+    const age = document.getElementById("csAge"), ok = document.getElementById("csOk"), go = document.getElementById("csGo"), no = document.getElementById("csNo"), deny = document.getElementById("csDeny");
+    const sync = () => { go.disabled = !(age.checked && ok.checked); if (!go.disabled) deny.hidden = true; };
+    age.addEventListener("change", sync); ok.addEventListener("change", sync);
+    go.addEventListener("click", () => {
+      if (go.disabled) return;
+      try { localStorage.setItem("consent1", JSON.stringify({ v: 1, t: Date.now(), adult: true })); } catch (e) {}
+      root.classList.remove("consent-on"); lock(false);
+    });
+    no.addEventListener("click", () => { deny.hidden = false; deny.scrollIntoView({ block: "nearest" }); });
+    if (root.classList.contains("consent-on")) { lock(true); setTimeout(() => { if (!document.getElementById("intro")) age.focus({ preventScroll: true }); }, 4300); }
+  })();
   const CATS = SITE.categories || [];
 
   let anim = false, popKey = null, gv = null, gBusy = false;
@@ -69,8 +84,9 @@
   let gsiReady = false;
   async function onGoogle(resp) {
     try {
-      const r = await fetch(RATE + "/google", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ credential: resp.credential }) });
+      const r = await fetch(RATE + "/google", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ credential: resp.credential, adult: (() => { try { return JSON.parse(localStorage.getItem("consent1")).adult === true; } catch (e) { return false; } })() }) });
       if (r.status === 403) { const j = await r.json().catch(() => ({})); setBan(true, j.ban); drawRate(); return toast("이용이 제한되어 로그인할 수 없어요"); }
+      if (r.status === 400) { const j = await r.json().catch(() => ({})); if (j.error === "adult") return toast("만 19세 이상만 로그인할 수 있어요. 새로고침해서 동의 화면에서 확인해 주세요"); }
       if (!r.ok) return toast("로그인하지 못했어요. 잠시 후 다시 해 주세요");
       const d = await r.json(); rtok = { t: d.token, name: d.name || "" }; isAdm = !!d.admin; store.set("dtok", rtok); setBan(false);
       toast("구글로 로그인했어요"); loadRatings(); drawRate();
@@ -124,7 +140,7 @@
     const bi = banI && typeof banI === "object" ? banI : {};
     const BAN = `<div class="r-ban" role="alert"><b>🚫 이용이 제한된 계정이에요</b>${bi.ip ? `<p>이 접속 환경(IP)에서 이용이 제한된 계정이 있어서 후기와 신고를 할 수 없어요. 본인이 아니라면 디스코드로 문의해 주세요.</p>` : `<dl class="r-why"><dt>사유</dt><dd>${esc(bi.reason || "운영 규칙 위반 (광고·스팸·욕설, 과거와 현재를 비교하는 후기 등)")}</dd>${bi.vid ? `<dt>영상</dt><dd>${esc(vTitle(bi.vid))}</dd>` : ""}${bi.txt ? `<dt>문제가 된 후기</dt><dd><q>${esc(bi.txt)}</q></dd>` : ""}${bi.ts ? `<dt>제한된 날</dt><dd>${esc(new Date(bi.ts).toLocaleDateString("ko-KR"))}</dd>` : ""}</dl><p>그래서 후기와 신고를 할 수 없어요.</p>`}<p>잘못 제한됐다고 생각하시면 디스코드의 <b>⭐ 별점·후기</b> 태그로 문의해 주세요.</p><p><a class="btn" data-feedback target="_blank" rel="noopener noreferrer" href="${esc(FB || "#")}">디스코드로 문의하기</a>${rtok ? ` <button type="button" class="r-link" data-rout>로그아웃</button>` : ""}</p></div>`;
     if (isBan && rtok) body = BAN;
-    else if (!rtok) body = (isBan ? BAN : "") + `<div id="gbtn" class="r-g"></div><p class="r-note">구글 계정으로 로그인하면 별점과 후기를 남길 수 있어요. 한 계정당 영상마다 하나만 남길 수 있고, <b>별점과 후기를 모두</b> 써야 해요. 후기에는 구글 이름 대신 무작위 별명이 보여요. 로그인하면 <a href="privacy.html" target="_blank" rel="noopener">개인정보처리방침</a>을 확인한 것으로 봐요.</p>`;
+    else if (!rtok) body = (isBan ? BAN : "") + `<div id="gbtn" class="r-g"></div><p class="r-note">구글 계정으로 로그인하면 별점과 후기를 남길 수 있어요. <b>만 19세 이상</b>만 이용할 수 있어요. 한 계정당 영상마다 하나만 남길 수 있고, <b>별점과 후기를 모두</b> 써야 해요. 후기에는 구글 이름 대신 무작위 별명이 보여요. 로그인하면 <a href="privacy.html" target="_blank" rel="noopener">개인정보처리방침</a>을 확인한 것으로 봐요.</p>`;
     else body = (meI ? `<p class="r-meinfo">내 별명 <b>${esc(meI.name)}</b>${meI.title ? ` · 칭호 <i class="r-t">${esc(meI.title)}</i>` : ""}<small>${meI.next ? `후기를 쓴 영상 ${meI.cnt}개 · 다음 칭호 ‘${esc(meI.next.title)}’까지 ${meI.next.need}개` : `후기를 쓴 영상 ${meI.cnt}개 · 가장 높은 칭호예요`}</small></p>` : "") + `<div class="r-stars" role="group" aria-label="내 별점">${[1, 2, 3, 4, 5].map(n => `<button type="button" class="${n <= draft.stars ? "on" : ""}" data-star="${n}" aria-label="별 ${n}개" aria-pressed="${n === draft.stars}">★</button>`).join("")}</div>
       <textarea id="rtext" class="r-text" rows="3" maxlength="300" placeholder="후기를 남겨 주세요. 어떤 점이 좋았나요? (5자 이상)">${esc(draft.text)}</textarea>
       <div class="r-row"><span id="rhint" class="r-hint"></span><span id="rlen" class="r-len">0/300</span></div>

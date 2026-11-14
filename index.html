@@ -10,6 +10,7 @@
 <meta name="naver-site-verification" content="9bbd6cc30461a65d5bef6f800b6a4c07cb7b2542" />
 <meta property="og:type" content="website"><meta property="og:site_name" content="잉여맨추억자료실"><meta property="og:title" content="잉여맨추억자료실 - 잉여맨 방송 VOD 다시보기"><meta property="og:description" content="잉여맨 방송 다시보기 859개를 한눈에 찾아보세요"><meta property="og:url" content="https://sam7599.github.io/ingyoeman_archive/"><meta property="og:image" content="https://sam7599.github.io/ingyoeman_archive/og-image.png"><meta name="twitter:card" content="summary_large_image">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"잉여맨추억자료실","alternateName":["잉여맨 추억자료실","잉여맨 다시보기"],"url":"https://sam7599.github.io/ingyoeman_archive/","inLanguage":"ko"}</script>
+<script>try{var _c=JSON.parse(localStorage.getItem("consent1")||"null");if((!_c||_c.v!==1)&&!/bot|crawl|spider|yeti|daum|slurp|bing/i.test(navigator.userAgent))document.documentElement.classList.add("consent-on");}catch(e){}</script>
 <script>try{if(!localStorage.getItem("intro1")&&!location.hash&&localStorage.getItem("motion")!=="off"&&!matchMedia("(prefers-reduced-motion:reduce)").matches){document.documentElement.classList.add("intro-on");localStorage.setItem("intro1","1");}}catch(e){}</script>
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2032%2032'%3E%3Crect%20width='32'%20height='32'%20rx='9'%20fill='%234347d9'/%3E%3Cg%20transform='translate%283%206.9%29%20scale%28.65%29'%20stroke='%23ffb347'%20stroke-width='3.4'%20fill='none'%20stroke-linecap='round'%3E%3Ccircle%20cx='11.5'%20cy='12'%20r='8'/%3E%3Ccircle%20cx='28.5'%20cy='12'%20r='8'/%3E%3Cpath%20d='M11.5%2024.6h17'/%3E%3Cpath%20d='M26.3%208.6l5%203.4-5%203.4z'%20fill='%23ffb347'%20stroke-width='1.2'%20stroke-linejoin='round'/%3E%3C/g%3E%3C/svg%3E">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
@@ -22,7 +23,7 @@
   if (m !== "on" && m !== "off") m = (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) ? "off" : "on";
   document.documentElement.setAttribute("data-motion", m); })();
 </script>
-<link rel="stylesheet" href="style.css?v=106">
+<link rel="stylesheet" href="style.css?v=108">
 </head>
 <body>
 <div id="intro" role="dialog" aria-label="잉여맨 추억자료실 소개 화면">
@@ -37,6 +38,24 @@
     <p class="in-tag">다시 보고 싶은 그날의 영상</p>
   </div>
   <button type="button" class="in-skip" id="inSkip">건너뛰기</button>
+</div>
+<div id="consent" role="dialog" aria-modal="true" aria-labelledby="csT">
+  <div class="cs-box">
+    <h2 id="csT">입장하기 전에 확인해 주세요</h2>
+    <p class="cs-lead">잉여맨 추억자료실은 2011~2012년 무렵 방송 영상의 <b>제목을 모아 둔 목록</b> 사이트예요.</p>
+    <ul class="cs-list">
+      <li><b>부적절한 표현이 있을 수 있어요.</b> 그때는 욕설·비속어·드립이 흔했던 시절이라, 영상 제목에 지금 기준으로는 맞지 않는 표현이 일부 들어 있어요. 당시 제목을 그대로 두었어요.</li>
+      <li><b>만 19세 이상만 이용할 수 있어요.</b> 미성년자는 이용할 수 없고, 별점·후기도 남길 수 없어요.</li>
+      <li>별점·후기를 남기려면 구글 로그인이 필요해요. 개인정보는 <a href="privacy.html" target="_blank" rel="noopener noreferrer">개인정보처리방침</a>에 따라 다뤄요.</li>
+    </ul>
+    <label class="cs-ck"><input type="checkbox" id="csAge"><span><b>(필수)</b> 저는 만 19세 이상이에요</span></label>
+    <label class="cs-ck"><input type="checkbox" id="csOk"><span><b>(필수)</b> 위 내용을 확인했고 동의해요</span></label>
+    <div class="cs-act">
+      <button type="button" class="btn primary" id="csGo" disabled>동의하고 입장하기</button>
+      <button type="button" class="btn" id="csNo">동의하지 않아요</button>
+    </div>
+    <p class="cs-deny" id="csDeny" role="alert" hidden>동의하지 않으면 이 사이트를 이용할 수 없어요. 창을 닫고 나가시거나, 마음이 바뀌면 위 두 항목을 체크하고 입장해 주세요.</p>
+  </div>
 </div>
 
 <header class="top">
@@ -198,6 +217,7 @@
   </div>
 
   <h2>자주 묻는 질문</h2>
+  <details><summary>미성년자도 이용할 수 있나요?</summary><p>아니요. 이 사이트는 <b>만 19세 이상</b>만 이용할 수 있어요. 2011~2012년 무렵 영상의 제목을 그대로 모아 둔 목록이라 욕설·비속어 같은 부적절한 표현이 일부 있고, 별점·후기도 만 19세 이상만 남길 수 있어요. 처음 들어올 때 나이와 내용에 동의해야 이용할 수 있어요.</p></details>
   <details><summary>영상이 안 열려요</summary><p>영상은 카페에 가입하고 올드팬 인증을 받은 분만 볼 수 있어요. 카페 가입은 <b>1980년생부터 2004년생까지 출생자만</b> 할 수 있어요. 네이버에 로그인한 뒤 카페 가입과 올드팬 인증이 되어 있는지 확인해 주세요. 카페 글이 지워졌을 수도 있어요.</p></details>
   <details><summary>올드팬 인증은 어떻게 받나요?</summary><p>네이버 카페 「잉여맨추억자료실」에 가입한 뒤(<b>1980년생부터 2004년생까지 출생자만</b> 가입할 수 있어요), 카페 안내에 따라 인증을 받으시면 돼요. 자세한 방법은 카페의 안내 글 두 개를 확인해 주세요.</p><p><a class="btn" href="https://cafe.naver.com/youtubecreateringyoe/2951" target="_blank" rel="noopener noreferrer">처음 오신 분을 위한 공지</a> <a class="btn" href="https://cafe.naver.com/youtubecreateringyoe/2828" target="_blank" rel="noopener noreferrer">팬클럽 등업 가이드</a></p></details>
   <details><summary>영상이 이 사이트에 직접 들어 있나요?</summary><p>아니요. 여기는 카페 영상을 쉽게 찾도록 모아 둔 목록이에요. 영상은 네이버 카페에 있고, 누르면 카페 글로 이동해요.</p></details>
@@ -363,7 +383,7 @@
 
 <div class="ach-pop" id="achPop" role="status" hidden><span class="ach-ic"><svg viewBox="0 0 24 24"><path d="M8 4h8v5a4 4 0 0 1-8 0zM8 6H5v1a3 3 0 0 0 3 3M16 6h3v1a3 3 0 0 1-3 3M12 13v4M8.5 20h7M10 17h4"/></svg></span><span class="ach-tx"><small>도전과제 달성!</small><b id="achPopT"></b><i id="achPopD"></i></span></div>
 <div id="toast" role="status"></div>
-<script src="config.js?v=106"></script>
-<script src="app.js?v=106"></script>
+<script src="config.js?v=108"></script>
+<script src="app.js?v=108"></script>
 </body>
 </html>

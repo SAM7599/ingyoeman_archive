@@ -91,6 +91,7 @@ async function handle(req, env, ctx) {
   if (p === "/google" && req.method === "POST") {   // 구글 로그인 확인 → 우리 사이트용 로그인 토큰
     let b; try { b = await req.json(); } catch (e) { return json(env, { error: "bad" }, 400); }
     const cred = String(b.credential || "");
+    if (b.adult !== true) return json(env, { error: "adult" }, 400);   // 만 19세 이상 확인(본인 선언)을 하지 않으면 로그인할 수 없어요 — 이 값은 저장하지 않아요
     if (!cred || cred.length > 4000) return json(env, { error: "bad" }, 400);
     const r = await fetch("https://oauth2.googleapis.com/tokeninfo?id_token=" + encodeURIComponent(cred));
     if (!r.ok) return json(env, { error: "login" }, 401);
