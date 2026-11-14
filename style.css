@@ -830,8 +830,7 @@ details.gi[open] > summary::after { content:"－"; }
   100% { transform:translate(0, calc(var(--i) * -1.5px)) rotate(0); }
 }
 html[data-motion="off"] .g-deck { display:none !important; }
-.g-dk { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; font-style:normal; overflow:hidden; }
+.g-dk { display:flex; align-items:center; justify-content:center; font-style:normal; overflow:hidden; }
 .g-dk > * { position:relative; }
-.g-dk .logo-mark { width:110px; height:77px; background:#ffb347; }
-.g-dk b { font-size:17px; font-weight:800; letter-spacing:-.4px; color:#fff; }
-@media (max-width:420px) { .g-dk .logo-mark { width:96px; height:67px; } .g-dk b { font-size:15px; } }
+.dk-em { display:grid; place-items:center; width:84px; height:84px; border-radius:50%; border:2px solid rgba(255,179,71,.75); background:radial-gradient(circle, rgba(255,179,71,.22), rgba(255,179,71,.04) 70%); box-shadow:0 0 0 6px rgba(255,255,255,.05); }
+.dk-em .logo-mark { width:48px; height:34px; background:#ffb347; }
