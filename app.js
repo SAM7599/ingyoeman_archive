@@ -164,7 +164,19 @@
   const aAgo = ms => new Date(ms).toLocaleString("ko-KR");
   let admTab = "rep", arcRows = [];
   const WHY = { edit: "고침", del: "본인이 지움", mod: "운영진이 지움", ban: "차단으로 지워짐" };
-  function admSetTab(t) { admTab = t; document.querySelectorAll(".adm-tabs button").forEach(b => b.classList.toggle("on", b.dataset.tab === t)); $("admQ").hidden = t !== "arc"; $("admQ").value = ""; t === "arc" ? openArchive() : openAdmin(); }
+  function admSetTab(t) { admTab = t; document.querySelectorAll(".adm-tabs button").forEach(b => b.classList.toggle("on", b.dataset.tab === t)); $("admQ").hidden = t !== "arc"; $("admQ").value = ""; t === "arc" ? openArchive() : t === "ban" ? openBans() : openAdmin(); }
+  async function openBans() {
+    $("admModal").hidden = false; $("admList").textContent = "불러오는 중…";
+    try {
+      const r = await rApi("/admin/bans"); if (!r.ok) { $("admList").textContent = "운영진만 볼 수 있어요"; return; }
+      const l = await r.json();
+      $("admList").innerHTML = l.length ? l.map(x => `<section class="adm-it"><b>${esc(x.name || "이름 없음")}</b> (${esc(x.uid)}) · 차단한 때 ${aAgo(x.ts)}<br>사유: ${esc(x.reason || "기록 없음")}${x.vid ? `<br>${vLink(x.vid)}` : ""}${x.txt ? `<blockquote>${esc(x.txt)}</blockquote>` : ""}<div class="adm-b"><button type="button" class="btn" data-u="${esc(x.uid)}">차단 해제</button></div></section>`).join("") : "차단된 사람이 없어요";
+    } catch (e) { $("admList").textContent = "불러오지 못했어요"; }
+  }
+  async function admUnban(uid) {
+    if (!confirm("이 사람의 차단을 풀까요?\n(계정과 접속 환경 차단이 함께 풀려요. 지워진 후기는 돌아오지 않아요.)")) return;
+    try { const r = await rApi("/admin/unban", { method: "POST", body: JSON.stringify({ uid }) }); if (!r.ok) return toast("처리하지 못했어요"); toast("차단을 풀었어요"); openBans(); } catch (e) { toast("처리하지 못했어요"); }
+  }
   async function openArchive() {
     $("admList").textContent = "불러오는 중…";
     try {
@@ -853,7 +865,7 @@
   $("rate").addEventListener("input", e => { if (e.target.id === "rtext") { draft.text = e.target.value; formState(); } });
   $("repGo").addEventListener("click", sendReport);
   $("repCopy").addEventListener("click", () => { const t = $("repText"); t.select(); try { navigator.clipboard.writeText(t.value).then(() => toast("복사했어요"), () => { document.execCommand("copy"); toast("복사했어요"); }); } catch (e) { document.execCommand("copy"); toast("복사했어요"); } });
-  $("admList").addEventListener("click", e => { const b = e.target.closest("button[data-a]"); if (b) return admAct(b.dataset.id, b.dataset.a); const c = e.target.closest("button[data-p]"); if (c) admPurge(c.dataset.p, c.dataset.id); });
+  $("admList").addEventListener("click", e => { const b = e.target.closest("button[data-a]"); if (b) return admAct(b.dataset.id, b.dataset.a); const u = e.target.closest("button[data-u]"); if (u) return admUnban(u.dataset.u); const c = e.target.closest("button[data-p]"); if (c) admPurge(c.dataset.p, c.dataset.id); });
   document.querySelector(".adm-tabs").addEventListener("click", e => { const b = e.target.closest("button[data-tab]"); if (b) admSetTab(b.dataset.tab); });
   $("admQ").addEventListener("input", drawArchive);
   $("admClose").addEventListener("click", () => { $("admModal").hidden = true; });

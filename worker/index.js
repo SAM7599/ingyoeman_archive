@@ -192,6 +192,29 @@ async function handle(req, env, ctx) {
     return json(env, out, 200, { "Cache-Control": "no-store" });
   }
 
+  if (p === "/admin/bans" && req.method === "GET") {   // 운영진: 차단 목록
+    const s = await getAuth(env, req); if (!isAdmin(env, s)) return json(env, { error: "forbidden" }, 403);
+    const rows = (await env.DB.prepare("SELECT uid, ts FROM banned ORDER BY ts DESC LIMIT 200").all()).results;
+    const out = [];
+    for (const r of rows) {
+      const i = await banInfo(env, r.uid);
+      const n = await env.DB.prepare("SELECT name FROM rating_history WHERE uid = ? AND name != '' ORDER BY id DESC LIMIT 1").bind(r.uid).first().catch(() => null);
+      out.push({ uid: r.uid, ts: r.ts, name: n ? n.name : "", reason: i.reason || "", vid: i.vid || "", txt: i.txt || "" });
+    }
+    return json(env, out, 200, { "Cache-Control": "no-store" });
+  }
+
+  if (p === "/admin/unban" && req.method === "POST") {   // 운영진: 차단 해제 (계정 + 접속 주소)
+    const s = await getAuth(env, req); if (!isAdmin(env, s)) return json(env, { error: "forbidden" }, 403);
+    let b; try { b = await req.json(); } catch (e) { return json(env, { error: "bad" }, 400); }
+    const uid = String(b.uid || ""); if (!/^g\d+$/.test(uid)) return json(env, { error: "bad" }, 400);
+    const ip = await env.DB.prepare("SELECT h FROM ip_seen WHERE uid = ?").bind(uid).first();
+    await env.DB.prepare("DELETE FROM banned WHERE uid = ?").bind(uid).run();
+    await env.DB.prepare("DELETE FROM ban_info WHERE uid = ?").bind(uid).run().catch(() => {});
+    if (ip) await env.DB.prepare("DELETE FROM banned_ip WHERE h = ?").bind(ip.h).run();
+    return json(env, { ok: true });
+  }
+
   if (p === "/admin/purge" && req.method === "POST") {   // 운영진: 보관함 기록 영구 삭제 (본인이 보관을 원치 않을 때)
     const s = await getAuth(env, req); if (!isAdmin(env, s)) return json(env, { error: "forbidden" }, 403);
     let b; try { b = await req.json(); } catch (e) { return json(env, { error: "bad" }, 400); }
