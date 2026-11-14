@@ -144,7 +144,32 @@
     const first = $("repForm").querySelector('input[name="reason"]'); if (first) first.checked = true;
     $("repGo").disabled = false; $("repModal").hidden = false; $("repGo").focus();
   }
-  function closeReport() { $("repModal").hidden = true; repTarget = null; }
+  function closeReport() { $("repShot").hidden = true; $("repModal").hidden = true; repTarget = null; }
+  /* 신고한 후기를 그림(PNG)으로 만들어 저장해요. 디스코드에 올릴 증거 캡처로 쓰세요 */
+  let shotUrl = "";
+  function makeShot(r, no, reasonLabel) {
+    const W = 720, pad = 32, f = "'Pretendard','Noto Sans KR','Malgun Gothic',sans-serif";
+    const c = document.createElement("canvas"), x = c.getContext("2d");
+    const wrap = (t, w, font) => { x.font = font; const out = []; for (const para of String(t).split(/\n/)) { let line = ""; for (const ch of Array.from(para)) { if (x.measureText(line + ch).width > w) { out.push(line); line = ch; } else line += ch; } out.push(line); } return out; };
+    const title = wrap(current.title || "", W - pad * 2, "600 18px " + f).slice(0, 2);
+    const body = wrap(r.text, W - pad * 2 - 4, "400 20px " + f).slice(0, 14);
+    const H = pad + 22 + title.length * 26 + 22 + 30 + 18 + body.length * 30 + 28 + 56 + pad;
+    c.width = W * 2; c.height = H * 2; x.scale(2, 2);
+    x.fillStyle = "#ffffff"; x.fillRect(0, 0, W, H);
+    x.fillStyle = "#fff4f4"; x.fillRect(0, 0, W, 8);
+    let y = pad; x.textBaseline = "top";
+    x.fillStyle = "#777"; x.font = "400 14px " + f; x.fillText("후기 신고 #" + no + " · " + new Date().toLocaleString("ko-KR"), pad, y); y += 22;
+    x.fillStyle = "#222"; x.font = "600 18px " + f; for (const l of title) { x.fillText(l, pad, y); y += 26; } y += 14;
+    x.strokeStyle = "#e3e3e8"; x.beginPath(); x.moveTo(pad, y); x.lineTo(W - pad, y); x.stroke(); y += 16;
+    x.fillStyle = "#111"; x.font = "700 18px " + f; x.fillText(r.name, pad, y);
+    const nw = x.measureText(r.name).width;
+    x.fillStyle = "#e8a600"; x.font = "400 18px " + f; x.fillText("★".repeat(r.stars) + "☆".repeat(5 - r.stars), pad + nw + 12, y);
+    x.fillStyle = "#888"; x.font = "400 14px " + f; const when = new Date(r.ts).toLocaleString("ko-KR"); x.fillText(when, W - pad - x.measureText(when).width, y + 3); y += 40;
+    x.fillStyle = "#222"; x.font = "400 20px " + f; for (const l of body) { x.fillText(l, pad + 2, y); y += 30; } y += 14;
+    x.fillStyle = "#fdecec"; x.fillRect(pad, y, W - pad * 2, 44); x.fillStyle = "#b42318"; x.font = "600 15px " + f; x.fillText("신고 사유: " + reasonLabel, pad + 14, y + 13);
+    return new Promise(res => c.toBlob(res, "image/png"));
+  }
+  function saveShot() { if (!shotUrl) return; const a = document.createElement("a"); a.href = shotUrl; a.download = "후기신고_" + ($("repNo").textContent || "").replace("#", "") + ".png"; document.body.appendChild(a); a.click(); a.remove(); }
   async function sendReport() {
     if (!repTarget || !current) return;
     const reason = ($("repForm").querySelector('input[name="reason"]:checked') || {}).value; if (!reason) return;
@@ -156,6 +181,7 @@
       if (!r.ok) { $("repGo").disabled = false; $("repErr").textContent = r.status === 403 ? "차단된 계정은 신고할 수 없어요" : r.status === 404 ? "이미 지워진 후기예요" : r.status === 429 ? "하루에 10건까지 신고할 수 있어요" : r.status === 400 ? "내 후기는 신고할 수 없어요" : "지금은 신고할 수 없어요. 잠시 후 다시 해 주세요"; return; }
       $("repNo").textContent = "#" + d.no;
       $("repText").value = `[후기 신고 #${d.no}]\n영상: ${location.origin}${location.pathname}#v=${vid(current)}\n작성자: ${repTarget.name}\n사유: ${({ ad: "광고·홍보", spam: "스팸·도배", abuse: "욕설·비방", empty: "무의미한 내용", other: "기타" })[reason]}`; $("repForm").hidden = true; $("repDone").hidden = false;
+      try { const lab = ({ ad: "광고·홍보", spam: "스팸·도배", abuse: "욕설·비방", empty: "무의미한 내용", other: "기타" })[reason]; const blob = await makeShot(repTarget, d.no, lab); if (shotUrl) URL.revokeObjectURL(shotUrl); shotUrl = URL.createObjectURL(blob); $("repShot").src = shotUrl; $("repShot").hidden = false; saveShot(); toast("후기 화면을 사진으로 저장했어요"); } catch (e) {}
       const dc = $("repDiscord"); if (dc) { dc.hidden = !/^https?:\/\//i.test(SITE.discord || ""); dc.href = SITE.discord || "#"; }
       $("repClose2").focus();
     } catch (e) { $("repGo").disabled = false; $("repErr").textContent = "지금은 신고할 수 없어요. 잠시 후 다시 해 주세요"; }
@@ -761,6 +787,7 @@
   $("rate").addEventListener("input", e => { if (e.target.id === "rtext") { draft.text = e.target.value; formState(); } });
   $("repGo").addEventListener("click", sendReport);
   $("repCopy").addEventListener("click", () => { const t = $("repText"); t.select(); try { navigator.clipboard.writeText(t.value).then(() => toast("복사했어요"), () => { document.execCommand("copy"); toast("복사했어요"); }); } catch (e) { document.execCommand("copy"); toast("복사했어요"); } });
+  $("repSave").addEventListener("click", saveShot);
   $("repCancel").addEventListener("click", closeReport); $("repClose2").addEventListener("click", closeReport);
   $("repModal").addEventListener("click", e => { if (e.target === $("repModal")) closeReport(); });
   $("mClose").addEventListener("click", () => closeModal());
