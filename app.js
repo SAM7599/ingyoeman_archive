@@ -844,6 +844,7 @@
   $("totop").addEventListener("click", () => window.scrollTo({ top: 0, behavior: calm() ? "auto" : "smooth" }));
   document.addEventListener("click", e => { if (!$("menu").hidden && !e.target.closest(".menu")) closeMenu(); if (!$("setMenu").hidden && !e.target.closest(".menu")) closeSet(); });
   document.addEventListener("keydown", e => {
+    if (e.key === "Escape" && !$("dcChat").hidden) { closeDc(); return; }
     if (e.key === "Escape" && !$("repModal").hidden) { closeReport(); return; }
     if (e.key === "Escape") {
       if (!$("setMenu").hidden) closeSet(); else if (!$("menu").hidden) closeMenu(); else if (!$("modal").hidden) closeModal(); else if (!$("gacha").hidden) closeGacha(); else if (!$("xfer").hidden) closeXfer(); else if (!$("imp").hidden) closeImp();
@@ -859,7 +860,36 @@
 
   const FB = /^https?:\/\//i.test(SITE.discord || "") ? SITE.discord : SITE.feedback;   // 디스코드 주소가 있으면 디스코드로, 없으면 카페 채팅방으로
   document.querySelectorAll("[data-feedback]").forEach(a => { if (/^https?:\/\//i.test(FB || "")) a.href = FB; else a.hidden = true; });
-  if (FB === SITE.discord) { const g = $("fbHelp"); if (g) g.innerHTML = "고쳤으면 하는 점이나 잘못된 시리즈 분류·영상 정보를 발견하면 화면 오른쪽 아래 <b>피드백 / 버그 제보</b> 버튼을 눌러 주세요. 디스코드 서버로 연결돼요. 입장한 뒤 피드백·버그 제보 채널에 남겨 주시면 돼요."; }
+  if (FB === SITE.discord) { const g = $("fbHelp"); if (g) g.innerHTML = "화면 오른쪽 아래 <b>디스코드 참여하기</b> 버튼을 누르면 안내 채팅창이 열려요. 디스코드에서는 사이트 버그·시리즈 분류나 영상 정보 오류 제보, 건의, 영상 추가 요청, 부적절한 후기 신고를 할 수 있어요."; }
+  /* ── 디스코드 참여하기 (채팅창 안내) ── */
+  const DC = [
+    "안녕하세요! 👋 잉여맨추억자료실 디스코드에 오신 걸 환영해요.",
+    "<b>여기에서는 이런 걸 할 수 있어요</b><ul><li>🐞 사이트가 이상할 때 <b>버그 제보</b></li><li>📚 시리즈 분류나 영상 정보가 틀렸을 때 <b>제보</b></li><li>💡 있었으면 하는 기능 <b>건의</b></li><li>📥 목록에 없는 영상 <b>추가 요청</b></li><li>🚨 부적절한 <b>후기 신고</b> (광고·스팸·욕설, 과거와 현재를 비교하는 후기 등)</li></ul>",
+    "<b>후기 신고는 이렇게 해요</b><br>사이트에서 후기의 <b>신고</b> 버튼을 누르면 신고 번호가 나오고, 후기 사진이 저장돼요. 그 번호와 사진을 디스코드 <b>🚨-후기-신고</b> 채널에 올려 주세요.",
+    ["warn", "⚠ 신고할 때 후기 내용을 글로 그대로 적지 마세요. 보안봇이 글을 막거나 지울 수 있어요. 번호와 사진만 올려 주세요."],
+    "그 밖의 제보와 건의는 <b>🛠-사이트-제보</b> 채널에 남겨 주시면 돼요. 디스코드 가입은 무료예요.",
+    "그럼 <b>디스코드에 참여하시겠어요?</b>"
+  ];
+  let dcT = [];
+  function openDc() {
+    const b = $("dcBody"); b.innerHTML = ""; $("dcAsk").hidden = true; $("dcJoin").href = SITE.discord; dcT.forEach(clearTimeout); dcT = [];
+    $("dcChat").hidden = false; document.body.style.overflow = "hidden";
+    const quick = calm();
+    const add = m => { const d = document.createElement("div"); d.className = "dc-m" + (Array.isArray(m) ? " " + m[0] : ""); d.innerHTML = Array.isArray(m) ? m[1] : m; b.appendChild(d); b.scrollTop = b.scrollHeight; };
+    let t = 0;
+    DC.forEach((m, n) => {
+      const last = n === DC.length - 1;
+      if (quick) { add(m); if (last) $("dcAsk").hidden = false; return; }
+      dcT.push(setTimeout(() => { const ty = document.createElement("div"); ty.className = "dc-typing"; ty.innerHTML = "<i></i><i></i><i></i>"; b.appendChild(ty); b.scrollTop = b.scrollHeight; }, t));
+      t += n === 1 || n === 2 ? 1100 : 750;
+      dcT.push(setTimeout(() => { const ty = b.querySelector(".dc-typing"); if (ty) ty.remove(); add(m); if (last) { $("dcAsk").hidden = false; $("dcJoin").focus({ preventScroll: true }); } }, t));
+      t += 250;
+    });
+  }
+  function closeDc() { dcT.forEach(clearTimeout); dcT = []; $("dcChat").hidden = true; document.body.style.overflow = ""; }
+  if (/^https?:\/\//i.test(SITE.discord || "")) document.addEventListener("click", e => { const f = e.target.closest("[data-feedback]"); if (!f) return; e.preventDefault(); closeMenu(); openDc(); });
+  $("dcX").addEventListener("click", closeDc); $("dcNo").addEventListener("click", closeDc); $("dcJoin").addEventListener("click", () => setTimeout(closeDc, 150));
+  $("dcChat").addEventListener("click", e => { if (e.target === $("dcChat")) closeDc(); });
   document.querySelectorAll("[data-cafe]").forEach(a => { if (/^https?:\/\//i.test(SITE.cafe || "")) a.href = SITE.cafe; else a.hidden = true; });
 
   /* ── 화면 설정 (어두운 화면 / 움직임 줄이기) ── */
