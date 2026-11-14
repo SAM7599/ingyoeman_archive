@@ -70,7 +70,7 @@
     if (s === "likes") return list.sort((a, b) => pop(b) - pop(a) || order(b) - order(a));
     return list.sort((a, b) => s === "title" ? (a.title || "").localeCompare(b.title || "", "ko") : s === "old" ? order(a) - order(b) : order(b) - order(a));
   }
-  const isInfo = () => tab === "guide" || tab === "about" || tab === "ach";
+  const isInfo = () => tab === "guide" || tab === "about" || tab === "ach" || tab === "notes";
   const isHome = () => tab === "all" && !cat && !words().length;
 
   /* ── 그리기 ── */
@@ -188,14 +188,14 @@
   /* ── 화면 바꾸기 ── */
   function route() {
     let h = location.hash.replace("#", ""); try { h = decodeURIComponent(h); } catch (e) {}
-    const next = ["fav", "recent", "guide", "about", "ach", "rank", "series"].includes(h) ? h : h.startsWith("series=") ? "series" : "all";
+    const next = ["fav", "recent", "guide", "about", "notes", "ach", "rank", "series"].includes(h) ? h : h.startsWith("series=") ? "series" : "all";
     const nextSer = h.startsWith("series=") ? h.slice(7) : "";
     if (next !== tab || nextSer !== ser) cat = "";
     if (nextSer !== ser) $("q").value = "";
     tab = next; ser = nextSer;
-    $("viewGuide").hidden = tab !== "guide"; $("viewAbout").hidden = tab !== "about"; $("viewAch").hidden = tab !== "ach"; if (tab === "ach") renderAch(); $("viewList").hidden = isInfo();
+    $("viewGuide").hidden = tab !== "guide"; $("viewAbout").hidden = tab !== "about"; $("viewNotes").hidden = tab !== "notes"; if (tab === "notes") showNotes(); $("viewAch").hidden = tab !== "ach"; if (tab === "ach") renderAch(); $("viewList").hidden = isInfo();
     document.querySelectorAll(".tab").forEach(a => a.classList.toggle("on", a.dataset.tab === (tab === "ach" ? "ach" : isInfo() ? "info" : tab)));
-    const pg = tab === "guide" ? $("viewGuide") : tab === "about" ? $("viewAbout") : tab === "ach" ? $("viewAch") : $("viewList"); pg.classList.remove("enter"); void pg.offsetWidth; pg.classList.add("enter");
+    const pg = tab === "guide" ? $("viewGuide") : tab === "about" ? $("viewAbout") : tab === "notes" ? $("viewNotes") : tab === "ach" ? $("viewAch") : $("viewList"); pg.classList.remove("enter"); void pg.offsetWidth; pg.classList.add("enter");
     if (!$("gacha").hidden) closeGacha();
     closeMenu();
     if (!isInfo()) reset();
@@ -669,6 +669,24 @@
   });
   $("setMenu").addEventListener("click", e => { if (e.target.closest("a")) closeSet(); });
 
+
+  /* ── 패치노트 (patchnotes.json) ── */
+  let notes = null;
+  const NOTE_TAG = { "신규": "new", "개선": "up", "수정": "fix" };
+  const noteDate = d => { const m = /^(\d+)-(\d+)-(\d+)$/.exec(d || ""); return m ? m[1] + "년 " + +m[2] + "월 " + +m[3] + "일" : esc(d || ""); };
+  function drawNotes() {
+    const box = $("notesList"); if (!box) return;
+    if (!notes) { box.innerHTML = `<p class="empty">불러오는 중이에요…</p>`; return; }
+    box.innerHTML = notes.length ? notes.map(n => `<section class="g-item note"><time>${noteDate(n.date)}</time><h3>${esc(n.title)}</h3><ul>${(n.items || []).map(i => `<li><span class="nt ${NOTE_TAG[i.t] || ""}">${esc(i.t || "")}</span>${esc(i.text)}</li>`).join("")}</ul></section>`).join("") : `<p class="empty">아직 패치노트가 없어요.</p>`;
+  }
+  function markNotes() {   // 새 패치노트가 있으면 설정 메뉴에 표시
+    if (!notes || !notes.length) return;
+    const latest = notes[0].date, seen = store.get("notes_seen", "");
+    const l = $("notesLink"); if (l) l.classList.toggle("new", latest !== seen);
+    const b = $("set"); if (b) b.classList.toggle("dot", latest !== seen);
+  }
+  function showNotes() { drawNotes(); if (notes && notes.length) { store.set("notes_seen", notes[0].date); markNotes(); } }
+  fetch("patchnotes.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).then(n => { notes = Array.isArray(n) ? n : []; if (tab === "notes") showNotes(); else markNotes(); }).catch(() => { notes = []; if (tab === "notes") drawNotes(); });
 
   /* ── 공지 (notice.json) ── */
   fetch("notice.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).then(n => {

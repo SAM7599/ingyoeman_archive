@@ -84,7 +84,7 @@
 </main>
 
 <main id="viewAbout" class="guide about" hidden>
-  <div class="pg-tabs"><a href="#about" class="on">사이트 소개</a><a href="#guide">이용방법</a></div>
+  <div class="pg-tabs"><a href="#about" class="on">사이트 소개</a><a href="#guide">이용방법</a><a href="#notes">패치노트</a></div>
   <h1>그때 그 방송을 다시 찾는 곳</h1>
   <p class="lead">잉여맨 추억자료실은 2012년 그 시절부터 이어진 잉여맨 방송 다시보기를 한곳에서 찾아볼 수 있게 정리한 팬 자료실이에요.</p>
 
@@ -114,8 +114,15 @@
   <p class="fine">비공식 팬 자료실이에요. 영상은 모두 네이버 카페에 있고, 이 사이트는 영상 파일을 담고 있지 않아요.</p>
 </main>
 
+<main id="viewNotes" class="guide notes" hidden>
+  <div class="pg-tabs"><a href="#about">사이트 소개</a><a href="#guide">이용방법</a><a href="#notes" class="on">패치노트</a></div>
+  <h1>패치노트</h1>
+  <p class="lead">사이트에 새로 생기거나 바뀐 내용이에요.</p>
+  <div id="notesList"></div>
+</main>
+
 <main id="viewGuide" class="guide" hidden>
-  <div class="pg-tabs"><a href="#about">사이트 소개</a><a href="#guide" class="on">이용방법</a></div>
+  <div class="pg-tabs"><a href="#about">사이트 소개</a><a href="#guide" class="on">이용방법</a><a href="#notes">패치노트</a></div>
   <h1>이용방법</h1>
   <p class="lead">처음 오셨어도 어렵지 않아요.</p>
 
@@ -157,7 +164,7 @@
   <a class="btn" href="#">다시보기 목록으로</a>
 </main>
 
-<footer><p>비공식 팬 자료실이에요. 영상은 네이버 카페 「잉여맨추억자료실」에 있어요.</p><p><a href="#about">사이트 소개</a> <a data-cafe target="_blank" rel="noopener noreferrer">네이버 카페로 가기</a> <a data-feedback target="_blank" rel="noopener noreferrer">피드백 / 버그 제보</a></p></footer>
+<footer><p>비공식 팬 자료실이에요. 영상은 네이버 카페 「잉여맨추억자료실」에 있어요.</p><p><a href="#about">사이트 소개</a> <a href="#notes">패치노트</a> <a data-cafe target="_blank" rel="noopener noreferrer">네이버 카페로 가기</a> <a data-feedback target="_blank" rel="noopener noreferrer">피드백 / 버그 제보</a></p></footer>
 
 <nav class="bottom" aria-label="메뉴">
   <a class="tab" href="#" data-tab="all"><svg viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v9h-5v-6H9v6H4z"/></svg>다시보기</a>
@@ -180,6 +187,7 @@
   <button type="button" id="xferOpen" role="menuitem"><span>다른 기기로 옮기기</span></button>
   <a href="#about" role="menuitem">사이트 소개</a>
   <a href="#guide" role="menuitem">이용방법</a>
+  <a href="#notes" role="menuitem" id="notesLink">패치노트</a>
 </div>
 
 <div class="menu" id="menu" hidden role="menu">
@@ -259,7 +267,7 @@
 
 <div class="ach-pop" id="achPop" role="status" hidden><span class="ach-ic"><svg viewBox="0 0 24 24"><path d="M8 4h8v5a4 4 0 0 1-8 0zM8 6H5v1a3 3 0 0 0 3 3M16 6h3v1a3 3 0 0 1-3 3M12 13v4M8.5 20h7M10 17h4"/></svg></span><span class="ach-tx"><small>도전과제 달성!</small><b id="achPopT"></b><i id="achPopD"></i></span></div>
 <div id="toast" role="status"></div>
-<script src="config.js?v=30"></script>
-<script src="app.js?v=30"></script>
+<script src="config.js?v=31"></script>
+<script src="app.js?v=31"></script>
 </body>
 </html>
