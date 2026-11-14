@@ -97,7 +97,9 @@
     return all;
   }
   const LIKE_W = 50;   // 인기 점수 = 조회수 + 좋아요 × 50
-  const pop = v => (v.views || 0) + LIKE_W * (v.likes || 0);
+  const RATE_W = 40;   // 별점 한 표 = (점수 - 3) × 40점 (5점 +80, 4점 +40, 3점 0, 2점 -40, 1점 -80)
+  const starBonus = v => { const a = ravg[vid(v)]; return a ? (a[0] - 3) * a[1] * RATE_W : 0; };
+  const pop = v => Math.max(0, (v.views || 0) + LIKE_W * (v.likes || 0) + starBonus(v));
   const nf = n => Number(n || 0).toLocaleString("ko-KR");
   const ranked = list => list.filter(v => pop(v) > 0).sort((a, b) => pop(b) - pop(a) || order(a) - order(b));   // 카페 조회수와 좋아요를 합친 순
   const words = () => $("q").value.trim().toLowerCase().split(/\s+/).filter(Boolean);
@@ -215,7 +217,7 @@
     $("back").hidden = !(tab === "series" && ser);
     $("sort").hidden = tiles || rank; document.querySelector(".seg").hidden = tiles || rank;
     const note = tiles ? "같은 콘텐츠끼리 묶었어요. 제목으로 자동 분류해서 빠지거나 잘못 들어간 영상이 있을 수 있어요."
-      : rank ? "네이버 카페 조회수와 좋아요를 합친 점수 순서예요. 좋아요 1개를 조회수 " + LIKE_W + "회로 쳤어요. 목록을 정리한 때의 숫자라 지금과 조금 다를 수 있어요." : "";
+      : rank ? "네이버 카페 조회수와 좋아요를 합친 점수 순서예요. 좋아요 1개를 조회수 " + LIKE_W + "회로 쳤어요." + (RATE ? " 사이트 별점도 반영해요. 별 한 표는 (점수 − 3) × " + RATE_W + "점이라 5점이면 +" + 2 * RATE_W + ", 1점이면 −" + 2 * RATE_W + "점이에요." : "") + " 카페 숫자는 목록을 정리한 때 기준이라 지금과 조금 다를 수 있어요." : "";
     $("pageNote").hidden = !note; $("pageNote").textContent = note;
     $("grid").className = tiles ? "grid tiles" : "grid" + (view === "rows" || rank ? " rows" : "");
     $("vGrid").classList.toggle("on", view === "grid"); $("vList").classList.toggle("on", view === "rows");
