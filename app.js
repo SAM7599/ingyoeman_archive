@@ -264,7 +264,7 @@
       if (!r.ok) { $("repGo").disabled = false; $("repErr").textContent = r.status === 403 ? "차단된 계정은 신고할 수 없어요" : r.status === 404 ? "이미 지워진 후기예요" : r.status === 429 ? "하루에 10건까지 신고할 수 있어요" : r.status === 400 ? "내 후기는 신고할 수 없어요" : "지금은 신고할 수 없어요. 잠시 후 다시 해 주세요"; return; }
       $("repNo").textContent = "#" + d.no;
       $("repText").value = `[후기 신고 #${d.no}]\n영상: ${location.origin}${location.pathname}#v=${vid(current)}\n작성자: ${repTarget.name}\n사유: ${({ ad: "광고·홍보", spam: "스팸·도배", abuse: "욕설·비방", empty: "무의미한 내용", off: "정치·영상과 무관", other: "기타" })[reason]}`; $("repForm").hidden = true; $("repDone").hidden = false;
-      try { const lab = ({ ad: "광고·홍보", spam: "스팸·도배", abuse: "욕설·비방", empty: "무의미한 내용", off: "정치·영상과 무관", other: "기타" })[reason]; const blob = await makeShot(repTarget, d.no, lab); if (shotUrl) URL.revokeObjectURL(shotUrl); shotUrl = URL.createObjectURL(blob); $("repShot").src = shotUrl; $("repShot").hidden = false; saveShot(); toast("후기 화면을 사진으로 저장했어요"); } catch (e) {}
+      try { const lab = ({ ad: "광고·홍보", spam: "스팸·도배", abuse: "욕설·비방", empty: "무의미한 내용", off: "정치·영상과 무관", other: "기타" })[reason]; const blob = await makeShot(repTarget, d.no, lab); if (shotUrl) URL.revokeObjectURL(shotUrl); shotUrl = URL.createObjectURL(blob); $("repShot").src = shotUrl; $("repShot").hidden = false; saveShot(); toast("후기 화면을 사진으로 저장했어요. 다운로드 폴더에서 찾을 수 있어요"); } catch (e) {}
       const dc = $("repDiscord"); if (dc) { dc.hidden = !/^https?:\/\//i.test(SITE.discord || ""); dc.href = SITE.discord || "#"; }
       $("repClose2").focus();
     } catch (e) { $("repGo").disabled = false; $("repErr").textContent = "지금은 신고할 수 없어요. 잠시 후 다시 해 주세요"; }
