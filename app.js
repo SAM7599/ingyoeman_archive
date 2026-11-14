@@ -149,7 +149,7 @@
   function drawArchive() {
     const q = $("admQ").value.trim().toLowerCase();
     const l = arcRows.filter(x => !q || (x.name + " " + x.text + " " + x.uid).toLowerCase().includes(q));
-    $("admList").innerHTML = l.length ? l.map(x => `<section class="adm-it"><b>${esc(x.name || "이름 없음")}</b> (${esc(x.uid)})${x.banned ? " · <b>차단됨</b>" : ""}<br>영상 <a href="#v=${esc(x.vid)}">${esc(x.vid)}</a> · <b>${WHY[x.why] || esc(x.why)}</b> · 이 내용을 올린 때 ${aAgo(x.ts)}<blockquote>${"★".repeat(x.stars)} ${esc(x.text)}</blockquote>${x.cur ? `<div class="adm-h">지금 후기: ★${x.cur.stars} ${esc(x.cur.text)}</div>` : `<div class="adm-h">지금은 없는 후기예요</div>`}</section>`).join("") : "보관된 후기가 없어요";
+    $("admList").innerHTML = l.length ? l.map(x => `<section class="adm-it"><b>${esc(x.name || "이름 없음")}</b> (${esc(x.uid)})${x.banned ? " · <b>차단됨</b>" : ""}<br>영상 <a href="#v=${esc(x.vid)}">${esc(x.vid)}</a> · <b>${WHY[x.why] || esc(x.why)}</b> · 이 내용을 올린 때 ${aAgo(x.ts)}<blockquote>${"★".repeat(x.stars)} ${esc(x.text)}</blockquote>${x.cur ? `<div class="adm-h">지금 후기: ★${x.cur.stars} ${esc(x.cur.text)}</div>` : `<div class="adm-h">지금은 없는 후기예요</div>`}<div class="adm-b"><button type="button" class="btn" data-p="id" data-id="${x.id}">이 기록 영구 삭제</button><button type="button" class="btn adm-ban" data-p="uid" data-id="${esc(x.uid)}">이 사람 보관 기록 전부 삭제</button></div></section>`).join("") : "보관된 후기가 없어요";
   }
   async function openAdmin() {
     $("admModal").hidden = false; $("admList").textContent = "불러오는 중…";
@@ -162,6 +162,10 @@
   async function admAct(id, act) {
     if (!confirm(act === "ban" ? "작성자를 차단하고 그 사람의 모든 후기를 지울까요? 되돌릴 수 없어요." : "이 후기를 삭제할까요? 되돌릴 수 없어요.")) return;
     try { const r = await rApi("/admin/act", { method: "POST", body: JSON.stringify({ id: +id, act }) }); if (!r.ok) return toast("처리하지 못했어요"); toast("처리했어요"); admSetTab("rep"); loadRatings(); loadReviews(); } catch (e) { toast("처리하지 못했어요"); }
+  }
+  async function admPurge(k, v) {
+    if (!confirm(k === "uid" ? "이 사람의 보관 기록을 전부 영구 삭제할까요? 되돌릴 수 없어요." : "이 보관 기록을 영구 삭제할까요? 되돌릴 수 없어요.")) return;
+    try { const r = await rApi("/admin/purge", { method: "POST", body: JSON.stringify(k === "uid" ? { uid: v } : { id: +v }) }); if (!r.ok) return toast("처리하지 못했어요"); toast("보관 기록을 지웠어요"); openArchive(); } catch (e) { toast("처리하지 못했어요"); }
   }
   /* ── 후기 신고 ── */
   function openReport(rid) {
@@ -817,7 +821,7 @@
   $("rate").addEventListener("input", e => { if (e.target.id === "rtext") { draft.text = e.target.value; formState(); } });
   $("repGo").addEventListener("click", sendReport);
   $("repCopy").addEventListener("click", () => { const t = $("repText"); t.select(); try { navigator.clipboard.writeText(t.value).then(() => toast("복사했어요"), () => { document.execCommand("copy"); toast("복사했어요"); }); } catch (e) { document.execCommand("copy"); toast("복사했어요"); } });
-  $("admList").addEventListener("click", e => { const b = e.target.closest("button[data-a]"); if (b) admAct(b.dataset.id, b.dataset.a); });
+  $("admList").addEventListener("click", e => { const b = e.target.closest("button[data-a]"); if (b) return admAct(b.dataset.id, b.dataset.a); const c = e.target.closest("button[data-p]"); if (c) admPurge(c.dataset.p, c.dataset.id); });
   document.querySelector(".adm-tabs").addEventListener("click", e => { const b = e.target.closest("button[data-tab]"); if (b) admSetTab(b.dataset.tab); });
   $("admQ").addEventListener("input", drawArchive);
   $("admClose").addEventListener("click", () => { $("admModal").hidden = true; });
