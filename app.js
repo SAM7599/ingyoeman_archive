@@ -33,18 +33,24 @@
   (() => {
     const root = document.documentElement, box = document.getElementById("consent"); if (!box) return;
     const lock = on => [...document.body.children].forEach(el => { if (el === box || el.id === "intro" || el.tagName === "SCRIPT") return; on ? el.setAttribute("inert", "") : el.removeAttribute("inert"); });
-    const age = document.getElementById("csAge"), ok = document.getElementById("csOk"), go = document.getElementById("csGo"), no = document.getElementById("csNo"), deny = document.getElementById("csDeny");
-    const sync = () => { go.disabled = !(age.checked && ok.checked); if (!go.disabled) deny.hidden = true; };
+    const age = document.getElementById("csAge"), ok = document.getElementById("csOk"), go = document.getElementById("csGo"), no = document.getElementById("csNo");
+    const sync = () => { go.disabled = !(age.checked && ok.checked); };
     age.addEventListener("change", sync); ok.addEventListener("change", sync);
     go.addEventListener("click", () => {
       if (go.disabled) return;
       try { localStorage.setItem("consent1", JSON.stringify({ v: 2, t: Date.now(), adult: true })); } catch (e) {}
       root.classList.remove("consent-on"); lock(false);
     });
-    no.addEventListener("click", () => { deny.hidden = false; deny.scrollIntoView({ block: "nearest" }); try { window.close(); } catch (e) {} setTimeout(() => {   // 창이 안 닫히면 처음 오던 곳(없으면 네이버)으로 보내요
-      let to = "https://www.naver.com/"; try { const r = document.referrer; if (r && new URL(r).origin !== location.origin) to = r; } catch (e) {}
-      try { location.replace(to); } catch (e) {}
-    }, 1200); });
+    const bye = document.getElementById("csBye"), sec = document.getElementById("csSec"), main = box.querySelector(".cs-box:not(.cs-bye)"); let byeT = 0;
+    const leave = () => {   // 창 닫기를 먼저 시도하고, 안 닫히면 처음 오던 페이지(없으면 네이버)로 보내요
+      try { window.close(); } catch (e) {}
+      setTimeout(() => { let to = "https://www.naver.com/"; try { const r = document.referrer; if (r && new URL(r).origin !== location.origin) to = r; } catch (e) {} try { location.replace(to); } catch (e) {} }, 500);
+    };
+    no.addEventListener("click", () => {
+      main.hidden = true; bye.hidden = false; let n = 3; sec.textContent = n; document.getElementById("csBack").focus({ preventScroll: true });
+      clearInterval(byeT); byeT = setInterval(() => { n--; if (n <= 0) { clearInterval(byeT); sec.textContent = "0"; leave(); } else sec.textContent = n; }, 1000);
+    });
+    document.getElementById("csBack").addEventListener("click", () => { clearInterval(byeT); bye.hidden = true; main.hidden = false; age.focus({ preventScroll: true }); });
     if (root.classList.contains("consent-on")) { lock(true); setTimeout(() => { if (!document.getElementById("intro")) age.focus({ preventScroll: true }); }, 4300); }
   })();
   const CATS = SITE.categories || [];

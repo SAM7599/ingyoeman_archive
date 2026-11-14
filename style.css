@@ -867,3 +867,10 @@ html.consent-on body { overflow:hidden; }
 .cs-act .btn.primary:disabled { opacity:.45; cursor:not-allowed; }
 .cs-deny { margin:12px 0 0; font-size:13.5px; color:#d6455d; line-height:1.6; }
 @media (max-width:520px) { .cs-box { padding:22px 18px 18px; } .cs-box h2 { font-size:20px; } }
+.cs-bye { text-align:center; padding:34px 24px 28px; }
+.cs-bye h2 { margin-bottom:12px; }
+.cs-bye p { margin:0 0 8px; color:var(--sub); line-height:1.7; }
+.cs-count { font-size:16px; color:var(--ink) !important; margin:14px 0 22px !important; }
+.cs-count b { display:inline-block; min-width:1.4em; font-size:30px; color:#d6455d; }
+.cs-bye .btn { height:48px; padding:0 20px; justify-content:center; }
+.cs-box[hidden] { display:none !important; }
