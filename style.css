@@ -760,3 +760,5 @@ html.intro-on body { overflow:hidden; }
 .r-ban .r-why dd{margin:0;word-break:break-word}
 .r-ban .r-why q{display:block;padding:6px 10px;background:rgba(255,255,255,.7);border-radius:8px;quotes:none}
 html[data-theme="dark"] .r-ban .r-why q{background:rgba(255,255,255,.08)}
+
+.menu button small { display:block; margin-top:2px; font-size:11.5px; font-weight:400; color:var(--sub); line-height:1.35; }

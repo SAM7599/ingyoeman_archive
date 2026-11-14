@@ -492,7 +492,7 @@
     if (SITE.repo) achFlag("report");
     if (!SITE.repo) return toast("썸네일 제보는 준비 중이에요");
     const body = "**영상**: " + v.title + "\n**카페 글**: " + (v.url || "") + "\n\n**썸네일 이미지** (아래에 이미지를 끌어다 놓거나 주소를 붙여넣어 주세요)\n\n";
-    window.open("https://github.com/" + SITE.repo + "/issues/new?labels=thumbnail&title=" + encodeURIComponent("[썸네일] " + v.title) + "&body=" + encodeURIComponent(body), "_blank", "noopener");
+    toast("GitHub 제보 화면이 새 창으로 열려요. GitHub 로그인이 필요해요"); window.open("https://github.com/" + SITE.repo + "/issues/new?labels=thumbnail&title=" + encodeURIComponent("[썸네일] " + v.title) + "&body=" + encodeURIComponent(body), "_blank", "noopener");
   }
 
   /* ── 뽑기 효과음 (파일 없이 브라우저가 직접 만드는 소리) ── */
@@ -792,7 +792,7 @@
     const m = $("menu"), k = key(v);
     menuFor = v; openMenu.y = window.scrollY;
     m.querySelector('[data-act="seen"]').hidden = !recent.includes(k);
-    m.querySelector('[data-act="report"]').textContent = "썸네일 제보" + (repCount(v) ? " (지금 " + repCount(v) + "건)" : "");
+    m.querySelector('[data-act="report"] .mt').textContent = "썸네일 제보" + (repCount(v) ? " (지금 " + repCount(v) + "건)" : "");
     m.hidden = false;
     const r = btn.getBoundingClientRect(), w = m.offsetWidth, h = m.offsetHeight;
     const below = r.bottom + h + 12 <= window.innerHeight;

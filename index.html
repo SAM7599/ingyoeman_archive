@@ -17,7 +17,7 @@
   if (m !== "on" && m !== "off") m = (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) ? "off" : "on";
   document.documentElement.setAttribute("data-motion", m); })();
 </script>
-<link rel="stylesheet" href="style.css?v=75">
+<link rel="stylesheet" href="style.css?v=76">
 </head>
 <body>
 <div id="intro" role="dialog" aria-label="잉여맨 추억자료실 소개 화면">
@@ -176,8 +176,11 @@
     <p>영상의 하트를 누르면 <b>즐겨찾기</b>에 모여요. 지금 쓰는 기기와 브라우저에만 저장되고, 인터넷 사용 기록을 지우면 함께 사라질 수 있어요.</p></div>
   <div class="g-item"><h3>열어본 영상</h3>
     <p>한 번 누른 영상에는 <b>열어봄</b> 표시가 붙고 <b>열어본 영상</b>에 쌓여서 다시 찾기 쉬워요. 영상은 카페에서 재생되기 때문에 끝까지 봤는지는 표시하지 않아요. 기록은 제목 옆 <b>점 세 개</b> 메뉴에서 지울 수 있어요.</p></div>
-  <div class="g-item"><h3>친구에게 보내기와 썸네일 제보</h3>
-    <p>영상 제목 옆 <b>점 세 개</b>를 누르면 메뉴가 나와요. <b>링크 복사</b>로 그 영상 주소를 복사해 보낼 수 있고, <b>썸네일 제보</b>로 영상 그림을 보내 줄 수 있어요. 제보는 GitHub 로그인이 필요해요. 제보가 들어온 영상에는 <b>썸네일 제보 몇 건</b>인지 표시되고, 썸네일이 반영되면 표시가 사라져요.</p></div>
+  <div class="g-item"><h3>썸네일 제보 (GitHub 사용)</h3>
+    <p>영상 제목 옆 <b>점 세 개</b>를 누르고 <b>썸네일 제보</b>를 누르면 <b>GitHub</b>(개발자들이 쓰는 코드 공유 사이트)의 제보 작성 화면이 새 창으로 열려요. 이 사이트의 파일이 GitHub에 있어서, 제보도 그곳의 <b>이슈</b>라는 게시판으로 받고 있어요.</p>
+    <p><b>이렇게 하세요</b>: ① GitHub에 로그인해요 (계정이 없으면 무료로 가입할 수 있어요). ② 영상 제목과 카페 글 주소는 미리 채워져 있어요. ③ 썸네일 그림을 입력칸에 끌어다 놓거나 이미지 주소를 붙여넣어요. ④ <b>Submit new issue</b> 버튼을 눌러요.</p>
+    <p><b>알아 두세요</b>: GitHub 이슈는 <b>누구나 볼 수 있는 공개 글</b>이라, 올린 그림과 GitHub 닉네임이 공개돼요. 제보가 들어온 영상에는 <b>썸네일 제보 몇 건</b>인지 표시되고, 썸네일이 반영되면 표시가 사라져요.</p>
+  </div>
 
   <div class="g-item"><h3>디스코드 참여하기</h3>
     <p id="fbHelp">고쳤으면 하는 점이나 잘못된 시리즈 분류·영상 정보를 발견하면 화면 오른쪽 아래 <b>디스코드 참여하기</b> 버튼을 눌러 주세요. 네이버 카페 채팅방이 열려요. 네이버 로그인과 카페 가입이 필요할 수 있어요. 바로 열리지 않으면 카페의 <b>채팅</b>에서 <b>잉여맨추억자료실 (VOD 사이트)</b> 채팅방을 찾아 들어오시면 돼요.</p>
@@ -259,7 +262,7 @@
 
 <div class="menu" id="menu" hidden role="menu">
   <button type="button" data-act="seen" role="menuitem">열어본 기록에서 지우기</button>
-  <button type="button" data-act="report" role="menuitem">썸네일 제보</button>
+  <button type="button" data-act="report" role="menuitem"><span class="mt">썸네일 제보</span><small>GitHub 이슈로 접수돼요 (GitHub 로그인 필요)</small></button>
 </div>
 
 <div class="modal" id="modal" hidden>
@@ -346,7 +349,7 @@
 
 <div class="ach-pop" id="achPop" role="status" hidden><span class="ach-ic"><svg viewBox="0 0 24 24"><path d="M8 4h8v5a4 4 0 0 1-8 0zM8 6H5v1a3 3 0 0 0 3 3M16 6h3v1a3 3 0 0 1-3 3M12 13v4M8.5 20h7M10 17h4"/></svg></span><span class="ach-tx"><small>도전과제 달성!</small><b id="achPopT"></b><i id="achPopD"></i></span></div>
 <div id="toast" role="status"></div>
-<script src="config.js?v=75"></script>
-<script src="app.js?v=75"></script>
+<script src="config.js?v=76"></script>
+<script src="app.js?v=76"></script>
 </body>
 </html>
