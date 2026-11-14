@@ -397,6 +397,7 @@
     const note = tiles ? "같은 콘텐츠끼리 묶었어요. 제목으로 자동 분류해서 빠지거나 잘못 들어간 영상이 있을 수 있어요."
       : rank ? "네이버 카페 조회수와 좋아요를 합친 점수 순서예요. 좋아요 1개를 조회수 " + LIKE_W + "회로 쳤어요." + (RATE ? " 사이트 별점도 반영해요. 별 한 표는 (점수 − 3) × " + RATE_W + "점이라 5점이면 +" + 2 * RATE_W + ", 1점이면 −" + 2 * RATE_W + "점이에요." : "") + " 카페 숫자는 목록을 정리한 때 기준이라 지금과 조금 다를 수 있어요." : "";
     $("pageNote").hidden = !note; $("pageNote").textContent = note;
+    $("favXferBox").hidden = tab !== "fav";
     $("grid").className = tiles ? "grid tiles" : "grid" + (view === "rows" || rank ? " rows" : "");
     $("vGrid").classList.toggle("on", view === "grid"); $("vList").classList.toggle("on", view === "rows");
     if (rank && !rankWas) { $("grid").classList.add("rank-in"); setTimeout(() => $("grid").classList.remove("rank-in"), 1800); }   // 랭킹 화면에 처음 들어올 때만 차례로 등장
@@ -750,7 +751,7 @@
     }).catch(() => { $("xQr").textContent = "QR코드를 만들지 못했어요. 아래 링크를 써 주세요."; });
   }
   function closeXfer() { $("xfer").hidden = true; document.body.style.overflow = ""; }
-  $("xferOpen").addEventListener("click", openXfer);
+  $("favXfer").addEventListener("click", openXfer);
   $("xClose").addEventListener("click", closeXfer);
   $("xfer").addEventListener("click", e => { if (e.target === $("xfer")) closeXfer(); });
   $("xLink").addEventListener("focus", () => $("xLink").select());

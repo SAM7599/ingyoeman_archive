@@ -789,3 +789,7 @@ details.gi[open] > summary::after { content:"－"; }
 .gi-b .gwarn { padding:9px 12px; border-radius:10px; background:rgba(226,58,92,.1); color:var(--ink); }
 .gi-b .btn { height:36px; padding:0 13px; font-size:13.5px; border-radius:10px; }
 @media (max-width:640px) { .gsteps { grid-template-columns:1fr; } .gi-b { padding:2px 16px 14px 16px; } }
+
+.fav-xfer { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin:0 0 14px; }
+.fav-xfer .btn { height:38px; padding:0 14px; font-size:14px; border-radius:10px; }
+.fav-xfer span { font-size:13px; color:var(--sub); }
