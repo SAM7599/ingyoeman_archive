@@ -11,6 +11,24 @@
     set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
   };
   const SITE = window.SITE || {};
+  /* ── 처음 오신 분께 보여 드리는 인트로 ── */
+  const introHTML = (document.getElementById("intro") || {}).outerHTML || "";
+  let introT = 0;
+  function introEnd(fast) {
+    const el = document.getElementById("intro"); clearTimeout(introT);
+    if (!el) return document.documentElement.classList.remove("intro-on");
+    if (fast && !el.classList.contains("out")) { el.classList.add("out"); introT = setTimeout(() => introEnd(false), 380); return; }
+    el.remove(); document.documentElement.classList.remove("intro-on");
+  }
+  function introStart() {
+    introEnd(false); document.body.insertAdjacentHTML("afterbegin", introHTML);
+    document.documentElement.classList.add("intro-on"); introT = setTimeout(() => introEnd(false), 4200);
+  }
+  if (document.documentElement.classList.contains("intro-on")) introT = setTimeout(() => introEnd(false), 4200);
+  document.addEventListener("click", e => {
+    if (e.target.closest("[data-intro]")) { e.preventDefault(); return introStart(); }
+    if (e.target.closest("#intro")) introEnd(true);
+  });
   const CATS = SITE.categories || [];
 
   let anim = false, popKey = null, gv = null, gBusy = false;
@@ -844,6 +862,7 @@
   $("totop").addEventListener("click", () => window.scrollTo({ top: 0, behavior: calm() ? "auto" : "smooth" }));
   document.addEventListener("click", e => { if (!$("menu").hidden && !e.target.closest(".menu")) closeMenu(); if (!$("setMenu").hidden && !e.target.closest(".menu")) closeSet(); });
   document.addEventListener("keydown", e => {
+    if (e.key === "Escape" && document.getElementById("intro")) { introEnd(true); return; }
     if (e.key === "Escape" && !$("dcChat").hidden) { closeDc(); return; }
     if (e.key === "Escape" && !$("repModal").hidden) { closeReport(); return; }
     if (e.key === "Escape") {
