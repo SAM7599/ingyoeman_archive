@@ -8,7 +8,7 @@ window.SITE = {
   feedback: "https://talk.cafe.naver.com/channels/3001014569445",   // 피드백 / 버그 제보 (카페 공개 채팅방)
   discord: "https://discord.gg/PNYHFfeXZQ",   // 디스코드 서버 초대 링크 (https://discord.gg/...) — 넣으면 피드백 버튼이 디스코드로 연결돼요. 비우면 위 카페 채팅방으로 가요
   google: "313175138585-0lj420uspicahtk0nutdpvlp8rgqk5mc.apps.googleusercontent.com",   // 구글 로그인 클라이언트 ID (....apps.googleusercontent.com)
-  rating: "",   // 별점 서버 주소 (https://....workers.dev) — 비우면 별점 기능이 꺼져 있어요
+  rating: "https://ingyoeman-rating.programguy53.workers.dev",   // 별점 서버 주소 (https://....workers.dev) — 비우면 별점 기능이 꺼져 있어요
   categories: [
     "탈출맵", "상황극", "게임", "하이라이트", "콘텐츠특집", "잉여맨뒷담화",
     "아프리카TV", "게스트출연", "개인녹화본", "펌녹화본",
