@@ -273,7 +273,7 @@
   function cardHtml(v, shelf, rank) {
     const k = key(v), on = favs.has(k), seen = recent.includes(k) && tab !== "recent" && !shelf, rows = (view === "rows" || tab === "rank") && !shelf;
     const sn = v._s && v._s.find(n => n !== ser), showLikes = pop(v) > 0 && (rank || $("sort").value === "likes" && !shelf);
-    const meta = `<div class="meta"><span class="cat-dot" style="--c:${dot(v.category)}">${esc(v.category || "기타")}</span>${ravg[vid(v)] ? `<span class="rt" title="별점 ${ravg[vid(v)][0].toFixed(1)} (${ravg[vid(v)][1]}명)">★ ${ravg[vid(v)][0].toFixed(1)}</span>` : ""}${showLikes ? `<span class="vw">조회 ${nf(v.views)}</span><span class="lk">♥ ${v.likes || 0}</span>` : ""}${repCount(v) ? `<span class="rp">썸네일 제보 ${repCount(v)}건</span>` : ""}${sn ? `<span class="ser" role="link" tabindex="0" data-ser="${esc(sn)}">${esc(sn)}</span>` : ""}</div>`;
+    const meta = `<div class="meta"><span class="cat-dot" style="--c:${dot(v.category)}">${esc(v.category || "기타")}</span>${RATE ? (ravg[vid(v)] ? `<span class="rt" data-rate role="button" tabindex="0" title="별점 ${ravg[vid(v)][0].toFixed(1)} (${ravg[vid(v)][1]}명) · 눌러서 후기 보기">★ ${ravg[vid(v)][0].toFixed(1)}<small>(${ravg[vid(v)][1]})</small></span>` : `<span class="rt none" data-rate role="button" tabindex="0" title="눌러서 별점·후기 남기기">☆ 별점 남기기</span>`) : ""}${showLikes ? `<span class="vw">조회 ${nf(v.views)}</span><span class="lk">♥ ${v.likes || 0}</span>` : ""}${repCount(v) ? `<span class="rp">썸네일 제보 ${repCount(v)}건</span>` : ""}${sn ? `<span class="ser" role="link" tabindex="0" data-ser="${esc(sn)}">${esc(sn)}</span>` : ""}</div>`;
     const info = `<div class="t"><h3>${shelf ? esc(v.title) : mark(v.title)}</h3>${meta}</div>`;
     const dots = `<button class="dots" type="button" aria-label="더 보기 메뉴" aria-haspopup="menu">${DOTS}</button>`;
     const heart = `<button class="heart ${on ? "on" : ""} ${k === popKey ? "pop" : ""}" type="button" aria-label="${on ? "즐겨찾기에서 빼기" : "즐겨찾기에 담기"}" title="즐겨찾기">${HEART}</button>`;
@@ -784,6 +784,8 @@
   /* ── 누르기 ── */
   function onCards(e) {
     if (e.target.closest("[data-reset]")) { $("q").value = ""; cat = ""; return reset(); }
+    const rb = e.target.closest("[data-rate]");
+    if (rb) { const cd = rb.closest(".card"), vv = cd && byKey(cd.dataset.k); if (vv) { e.preventDefault(); e.stopPropagation(); openModal(vv); setTimeout(() => { const r = $("rate"); if (r && !r.hidden) r.scrollIntoView({ block: "center", behavior: calm() ? "auto" : "smooth" }); }, 60); return; } }
     const sr = e.target.closest("[data-ser]"); if (sr) { e.preventDefault(); location.hash = "series=" + encodeURIComponent(sr.dataset.ser); return; }
     const card = e.target.closest(".card"); if (!card) return;
     const v = byKey(card.dataset.k); if (!v) return;
