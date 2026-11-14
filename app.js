@@ -273,7 +273,7 @@
   function cardHtml(v, shelf, rank) {
     const k = key(v), on = favs.has(k), seen = recent.includes(k) && tab !== "recent" && !shelf, rows = (view === "rows" || tab === "rank") && !shelf;
     const sn = v._s && v._s.find(n => n !== ser), showLikes = pop(v) > 0 && (rank || $("sort").value === "likes" && !shelf);
-    const meta = `<div class="meta"><span class="cat-dot" style="--c:${dot(v.category)}">${esc(v.category || "기타")}</span>${RATE ? (ravg[vid(v)] ? `<span class="rt" data-rate role="button" tabindex="0" title="별점 ${ravg[vid(v)][0].toFixed(1)} (${ravg[vid(v)][1]}명) · 눌러서 후기 보기">${ravg[vid(v)][0].toFixed(1)}<small>(${ravg[vid(v)][1]})</small></span>` : `<span class="rt none" data-rate role="button" tabindex="0" title="눌러서 별점·후기 남기기">별점 남기기</span>`) : ""}${showLikes ? `<span class="vw">조회 ${nf(v.views)}</span><span class="lk">♥ ${v.likes || 0}</span>` : ""}${repCount(v) ? `<span class="rp">썸네일 제보 ${repCount(v)}건</span>` : ""}${sn ? `<span class="ser" role="link" tabindex="0" data-ser="${esc(sn)}">${esc(sn)}</span>` : ""}</div>`;
+    const meta = `<div class="meta"><span class="cat-dot" style="--c:${dot(v.category)}">${esc(v.category || "기타")}</span>${RATE && ravg[vid(v)] ? `<span class="rt" title="별점 ${ravg[vid(v)][0].toFixed(1)} (${ravg[vid(v)][1]}명)">${ravg[vid(v)][0].toFixed(1)}<small>(${ravg[vid(v)][1]})</small></span>` : ""}${showLikes ? `<span class="vw">조회 ${nf(v.views)}</span><span class="lk">♥ ${v.likes || 0}</span>` : ""}${repCount(v) ? `<span class="rp">썸네일 제보 ${repCount(v)}건</span>` : ""}${sn ? `<span class="ser" role="link" tabindex="0" data-ser="${esc(sn)}">${esc(sn)}</span>` : ""}</div>`;
     const info = `<div class="t"><h3>${shelf ? esc(v.title) : mark(v.title)}</h3>${meta}</div>`;
     const dots = `<button class="dots" type="button" aria-label="더 보기 메뉴" aria-haspopup="menu">${DOTS}</button>`;
     const heart = `<button class="heart ${on ? "on" : ""} ${k === popKey ? "pop" : ""}" type="button" aria-label="${on ? "즐겨찾기에서 빼기" : "즐겨찾기에 담기"}" title="즐겨찾기">${HEART}</button>`;
@@ -434,7 +434,7 @@
     $("mCat").textContent = v.category || "기타"; $("mCat").style.setProperty("--c", dot(v.category));
     $("mTitle").textContent = v.title || "";
     $("mGo").href = safeUrl(v.url); $("mGo").innerHTML = (id ? "원본 글 열기" : "다시보기") + OUT; $("mGo").hidden = safeUrl(v.url) === "#";
-    syncModalFav(); reviews = []; resetDraft(); drawRate(); loadReviews();
+    $("mRate").hidden = !RATE; syncModalFav(); reviews = []; resetDraft(); drawRate(); loadReviews();
     $("modal").hidden = false; document.body.style.overflow = "hidden"; $("mClose").focus();
     if (id) { markSeen(v); render(); }
   }
@@ -784,15 +784,13 @@
   /* ── 누르기 ── */
   function onCards(e) {
     if (e.target.closest("[data-reset]")) { $("q").value = ""; cat = ""; return reset(); }
-    const rb = e.target.closest("[data-rate]");
-    if (rb) { const cd = rb.closest(".card"), vv = cd && byKey(cd.dataset.k); if (vv) { e.preventDefault(); e.stopPropagation(); openModal(vv); setTimeout(() => { const r = $("rate"); if (r && !r.hidden) r.scrollIntoView({ block: "center", behavior: calm() ? "auto" : "smooth" }); }, 60); return; } }
     const sr = e.target.closest("[data-ser]"); if (sr) { e.preventDefault(); location.hash = "series=" + encodeURIComponent(sr.dataset.ser); return; }
     const card = e.target.closest(".card"); if (!card) return;
     const v = byKey(card.dataset.k); if (!v) return;
     if (e.target.closest(".heart")) return toggleFav(key(v));
     const d = e.target.closest(".dots");
     if (d) { e.stopPropagation(); return menuFor === v ? closeMenu() : openMenu(d, v); }
-    const link = e.target.closest("a"); if (link) follow(e, v, link.href);
+    const link = e.target.closest("a"); if (link) { if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return follow(e, v, link.href); e.preventDefault(); openModal(v); }
   }
   $("grid").addEventListener("click", onCards);
   $("home").addEventListener("click", e => {
@@ -814,6 +812,12 @@
   $("vList").addEventListener("click", () => { view = "rows"; store.set("view2", view); render(); });
   $("mFav").addEventListener("click", () => current && toggleFav(key(current)));
   $("mShare").addEventListener("click", () => current && share(current));
+  $("mRate").addEventListener("click", () => {
+    const r = $("rate"); if (!r || r.hidden) return;
+    r.scrollIntoView({ block: "center", behavior: calm() ? "auto" : "smooth" });
+    r.classList.remove("flash"); void r.offsetWidth; r.classList.add("flash");
+    const f = r.querySelector("[data-star], #rtext, #gbtn"); if (f && f.focus) f.focus({ preventScroll: true });
+  });
   $("mGo").addEventListener("click", e => current && follow(e, current, $("mGo").href));
   $("rate").addEventListener("click", e => {
     const b = e.target.closest("button"); if (!b) return;
