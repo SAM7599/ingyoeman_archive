@@ -23,7 +23,7 @@
   if (m !== "on" && m !== "off") m = (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) ? "off" : "on";
   document.documentElement.setAttribute("data-motion", m); })();
 </script>
-<link rel="stylesheet" href="style.css?v=113">
+<link rel="stylesheet" href="style.css?v=114">
 </head>
 <body>
 <div id="intro" role="dialog" aria-label="잉여맨 추억자료실 소개 화면">
@@ -55,7 +55,7 @@
       <button type="button" class="btn primary" id="csGo" disabled>동의하고 입장하기</button>
       <button type="button" class="btn" id="csNo">동의하지 않아요</button>
     </div>
-    <p class="cs-deny" id="csDeny" role="alert" hidden>동의하지 않으면 이 사이트를 이용할 수 없어요. 창을 닫고 나가시거나, 마음이 바뀌면 위 두 항목을 체크하고 입장해 주세요.</p>
+    <p class="cs-deny" id="csDeny" role="alert" hidden>동의하지 않으면 이 사이트를 이용할 수 없어요. 잠시 뒤 창이 닫혀요. 마음이 바뀌면 다시 접속해서 동의해 주세요.</p>
   </div>
 </div>
 
@@ -384,7 +384,7 @@
 
 <div class="ach-pop" id="achPop" role="status" hidden><span class="ach-ic"><svg viewBox="0 0 24 24"><path d="M8 4h8v5a4 4 0 0 1-8 0zM8 6H5v1a3 3 0 0 0 3 3M16 6h3v1a3 3 0 0 1-3 3M12 13v4M8.5 20h7M10 17h4"/></svg></span><span class="ach-tx"><small>도전과제 달성!</small><b id="achPopT"></b><i id="achPopD"></i></span></div>
 <div id="toast" role="status"></div>
-<script src="config.js?v=113"></script>
-<script src="app.js?v=113"></script>
+<script src="config.js?v=114"></script>
+<script src="app.js?v=114"></script>
 </body>
 </html>

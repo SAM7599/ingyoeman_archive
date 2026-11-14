@@ -41,7 +41,7 @@
       try { localStorage.setItem("consent1", JSON.stringify({ v: 2, t: Date.now(), adult: true })); } catch (e) {}
       root.classList.remove("consent-on"); lock(false);
     });
-    no.addEventListener("click", () => { deny.hidden = false; deny.scrollIntoView({ block: "nearest" }); });
+    no.addEventListener("click", () => { deny.hidden = false; deny.scrollIntoView({ block: "nearest" }); try { window.close(); } catch (e) {} setTimeout(() => { try { location.replace("about:blank"); } catch (e) {} }, 1200); });
     if (root.classList.contains("consent-on")) { lock(true); setTimeout(() => { if (!document.getElementById("intro")) age.focus({ preventScroll: true }); }, 4300); }
   })();
   const CATS = SITE.categories || [];
