@@ -792,7 +792,6 @@
     const m = $("menu"), k = key(v);
     menuFor = v; openMenu.y = window.scrollY;
     m.querySelector('[data-act="fav"]').textContent = favs.has(k) ? "즐겨찾기에서 빼기" : "즐겨찾기에 담기";
-    m.querySelector('[data-act="rate"]').hidden = !RATE;
     m.querySelector('[data-act="seen"]').hidden = !recent.includes(k);
     m.querySelector('[data-act="report"]').textContent = "썸네일 제보" + (repCount(v) ? " (지금 " + repCount(v) + "건)" : "");
     m.hidden = false;
@@ -807,7 +806,6 @@
     closeMenu();
     const k = key(v), a = b.dataset.act;
     if (a === "share") share(v);
-    else if (a === "rate") openModal(v);
     else if (a === "fav") toggleFav(k);
     else if (a === "report") report(v);
     else if (a === "seen") {
