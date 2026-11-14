@@ -135,6 +135,9 @@
   }
 
   /* ── 운영진 신고함 (지정한 구글 계정만) ── */
+  let tmap = null;
+  const vTitle = id => { if (!tmap) { tmap = {}; all.forEach(v => { tmap[vid(v)] = v.title || ""; }); } return tmap[id] || "(목록에서 사라진 영상)"; };
+  const vLink = id => `영상 <a href="#v=${esc(id)}">${esc(vTitle(id))}</a>`;
   const aAgo = ms => new Date(ms).toLocaleString("ko-KR");
   let admTab = "rep", arcRows = [];
   const WHY = { edit: "고침", del: "본인이 지움", mod: "운영진이 지움", ban: "차단으로 지워짐" };
@@ -148,15 +151,15 @@
   }
   function drawArchive() {
     const q = $("admQ").value.trim().toLowerCase();
-    const l = arcRows.filter(x => !q || (x.name + " " + x.text + " " + x.uid).toLowerCase().includes(q));
-    $("admList").innerHTML = l.length ? l.map(x => `<section class="adm-it"><b>${esc(x.name || "이름 없음")}</b> (${esc(x.uid)})${x.banned ? " · <b>차단됨</b>" : ""}<br>영상 <a href="#v=${esc(x.vid)}">${esc(x.vid)}</a> · <b>${WHY[x.why] || esc(x.why)}</b> · 이 내용을 올린 때 ${aAgo(x.ts)}<blockquote>${"★".repeat(x.stars)} ${esc(x.text)}</blockquote>${x.cur ? `<div class="adm-h">지금 후기: ★${x.cur.stars} ${esc(x.cur.text)}</div>` : `<div class="adm-h">지금은 없는 후기예요</div>`}<div class="adm-b"><button type="button" class="btn" data-p="id" data-id="${x.id}">이 기록 영구 삭제</button><button type="button" class="btn adm-ban" data-p="uid" data-id="${esc(x.uid)}">이 사람 보관 기록 전부 삭제</button></div></section>`).join("") : "보관된 후기가 없어요";
+    const l = arcRows.filter(x => !q || (x.name + " " + x.text + " " + x.uid + " " + vTitle(x.vid)).toLowerCase().includes(q));
+    $("admList").innerHTML = l.length ? l.map(x => `<section class="adm-it"><b>${esc(x.name || "이름 없음")}</b> (${esc(x.uid)})${x.banned ? " · <b>차단됨</b>" : ""}<br>${vLink(x.vid)} · <b>${WHY[x.why] || esc(x.why)}</b> · 이 내용을 올린 때 ${aAgo(x.ts)}<blockquote>${"★".repeat(x.stars)} ${esc(x.text)}</blockquote>${x.cur ? `<div class="adm-h">지금 후기: ★${x.cur.stars} ${esc(x.cur.text)}</div>` : `<div class="adm-h">지금은 없는 후기예요</div>`}<div class="adm-b"><button type="button" class="btn" data-p="id" data-id="${x.id}">이 기록 영구 삭제</button><button type="button" class="btn adm-ban" data-p="uid" data-id="${esc(x.uid)}">이 사람 보관 기록 전부 삭제</button></div></section>`).join("") : "보관된 후기가 없어요";
   }
   async function openAdmin() {
     $("admModal").hidden = false; $("admList").textContent = "불러오는 중…";
     try {
       const r = await rApi("/admin/reports"); if (!r.ok) { $("admList").textContent = "운영진만 볼 수 있어요"; return; }
       const l = await r.json();
-      $("admList").innerHTML = l.length ? l.map(x => `<section class="adm-it"><b>#${x.id}</b> · ${esc(x.reason)} · 누적 ${x.cnt}건 · ${aAgo(x.ts)}${x.note ? `<br>신고자 메모: ${esc(x.note)}` : ""}<br>영상 <a href="#v=${esc(x.vid)}">${esc(x.vid)}</a> · 작성자 ${esc(x.cur ? x.cur.name : "(이미 삭제됨)")} (${esc(x.uid)})${x.banned ? " · <b>차단됨</b>" : ""}${x.cur ? `<blockquote>${"★".repeat(x.cur.stars)} ${esc(x.cur.text)}</blockquote>` : ""}${x.hist.length ? `<div class="adm-h">이전 후기(고치기 전)<br>${x.hist.map(h => `• ${aAgo(h.ts)} ★${h.stars} ${esc(h.text)}`).join("<br>")}</div>` : ""}<div class="adm-b">${x.cur ? `<button type="button" class="btn" data-a="del" data-id="${x.id}">이 후기만 삭제</button>` : ""}${x.banned ? "" : `<button type="button" class="btn adm-ban" data-a="ban" data-id="${x.id}">삭제 + 작성자 차단</button>`}</div></section>`).join("") : "아직 신고가 없어요";
+      $("admList").innerHTML = l.length ? l.map(x => `<section class="adm-it"><b>#${x.id}</b> · ${esc(x.reason)} · 누적 ${x.cnt}건 · ${aAgo(x.ts)}${x.note ? `<br>신고자 메모: ${esc(x.note)}` : ""}<br>${vLink(x.vid)} · 작성자 ${esc(x.cur ? x.cur.name : "(이미 삭제됨)")} (${esc(x.uid)})${x.banned ? " · <b>차단됨</b>" : ""}${x.cur ? `<blockquote>${"★".repeat(x.cur.stars)} ${esc(x.cur.text)}</blockquote>` : ""}${x.hist.length ? `<div class="adm-h">이전 후기(고치기 전)<br>${x.hist.map(h => `• ${aAgo(h.ts)} ★${h.stars} ${esc(h.text)}`).join("<br>")}</div>` : ""}<div class="adm-b">${x.cur ? `<button type="button" class="btn" data-a="del" data-id="${x.id}">이 후기만 삭제</button>` : ""}${x.banned ? "" : `<button type="button" class="btn adm-ban" data-a="ban" data-id="${x.id}">삭제 + 작성자 차단</button>`}</div></section>`).join("") : "아직 신고가 없어요";
     } catch (e) { $("admList").textContent = "불러오지 못했어요"; }
   }
   async function admAct(id, act) {
