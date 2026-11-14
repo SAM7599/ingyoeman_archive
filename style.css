@@ -111,7 +111,7 @@ svg { fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stro
 .ser:hover { border-color:var(--tint); }
 .rkb { position:absolute; left:8px; top:8px; min-width:30px; height:30px; padding:0 8px; border-radius:9px; background:var(--accent); color:var(--on-accent); font-size:15px; font-weight:800; display:grid; place-items:center; }
 .rk { flex:none; width:44px; text-align:center; font-size:19px; font-weight:800; color:var(--sub); font-variant-numeric:tabular-nums; }
-.rk.top { color:var(--accent); font-size:24px; }
+.rk.hot { color:var(--accent); font-size:24px; }
 .grid.tiles { grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:14px; }
 .tile { position:relative; overflow:hidden; min-height:104px; padding:16px; border-radius:16px; background:var(--g); color:#fff; text-decoration:none; display:flex; flex-direction:column; justify-content:flex-end; gap:2px; }
 .tile::before { content:""; position:absolute; right:-30px; top:-30px; width:110px; height:110px; border-radius:50%; border:18px solid rgba(255,255,255,.1); }
@@ -322,7 +322,7 @@ footer a + a { margin-left:14px; }
   .rows .card > a { gap:11px; }
   .guide { padding:22px 16px 6px; }
   footer { padding:36px 20px calc(96px + env(safe-area-inset-bottom)); }
-  .rk { width:28px; font-size:16px; } .rk.top { font-size:19px; }
+  .rk { width:28px; font-size:16px; } .rk.hot { font-size:19px; }
   .grid.tiles { grid-template-columns:1fr 1fr; gap:10px; }
   .tile { min-height:88px; padding:13px; } .tile b { font-size:15.5px; }
   .rkb { min-width:26px; height:26px; font-size:13.5px; left:6px; top:6px; }
@@ -437,7 +437,7 @@ html[data-motion="off"] *, html[data-motion="off"] *::before, html[data-motion="
   .sheet, .menu { animation:zoom .22s both; }
   .menu { transform-origin:top right; }
   .rows .card { transition:background-color .16s; }
-  .rk.top { transition:transform .16s; } .rows .card:hover .rk.top { transform:scale(1.12); }
+  .rk.hot { transition:transform .16s; } .rows .card:hover .rk.hot { transform:scale(1.12); }
   .g-card:not(.flip):not(.shake) { animation:bob 2.6s ease-in-out infinite; }
   .g-card.shake { animation:shake .55s ease-in-out infinite; }
   .g-card.shake .g-back { animation:glow .8s ease-in both; }
@@ -553,3 +553,45 @@ html:not([data-motion="off"]) .ach-pop.show .ach-ic svg { animation:pop .6s .15s
 .r-link { border:0; background:none; color:var(--tint); font:inherit; cursor:pointer; text-decoration:underline; padding:0 2px; }
 .meta .rt { color:var(--accent); font-weight:700; }
 html[data-motion="off"] .r-stars button { transition:none; }
+
+/* ── 인기 랭킹 연출 (움직임 줄이기를 켜면 멈춰요) ── */
+@property --ang { syntax:"<angle>"; initial-value:0deg; inherits:false; }
+.card.r1 { --c1:#ffe27a; --c2:#ff9a1f; --gl:255,170,40; }
+.card.r2 { --c1:#f1f5ff; --c2:#7d8db0; --gl:150,165,200; }
+.card.r3 { --c1:#f0b27a; --c2:#b06a34; --gl:205,130,70; }
+.crown { width:1.05em; height:1.05em; margin-right:3px; vertical-align:-.12em; fill:currentColor; }
+.rkb .crown { width:15px; height:15px; margin-right:3px; vertical-align:-2px; }
+.card.r1 .rkb, .card.r2 .rkb, .card.r3 .rkb { background:linear-gradient(135deg,var(--c1),var(--c2)); color:#2b1a00; box-shadow:0 0 14px rgba(var(--gl),.7); }
+.rk.hot { color:var(--c2); font-weight:900; text-shadow:0 0 10px rgba(var(--gl),.55); }
+.rk.hot .crown { fill:var(--c2); }
+.rk.t1 { font-size:30px; }
+.rows .card.r1, .rows .card.r2, .rows .card.r3 { border-radius:16px; border-bottom-color:transparent; }
+.rows .card.r1 { background:linear-gradient(90deg,rgba(var(--gl),.14),transparent 70%); }
+.rows .card.r2 { background:linear-gradient(90deg,rgba(var(--gl),.10),transparent 70%); }
+.rows .card.r3 { background:linear-gradient(90deg,rgba(var(--gl),.09),transparent 70%); }
+.rows .card.r1:hover, .rows .card.r2:hover, .rows .card.r3:hover { background:linear-gradient(90deg,rgba(var(--gl),.2),transparent 75%); }
+.card.r1 .thumb, .card.r2 .thumb, .card.r3 .thumb { box-shadow:0 0 0 2px var(--c2), 0 0 18px rgba(var(--gl),.45); }
+.card.r1 .thumb::after, .card.r2 .thumb::after, .card.r3 .thumb::after { content:""; position:absolute; inset:0; pointer-events:none; background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,.5) 50%,transparent 60%); transform:translateX(-120%); }
+.card.rt10 .rk { color:var(--accent); }
+@media all {
+  .card.r1::after, .card.r2::after, .card.r3::after { content:""; position:absolute; inset:0; border-radius:16px; padding:2px; pointer-events:none; background:conic-gradient(from var(--ang),var(--c1),transparent 28%,var(--c2) 52%,transparent 78%,var(--c1)); -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite:xor; mask-composite:exclude; animation:ring 4s linear infinite; }
+  .card.r2::after, .card.r3::after { animation-duration:6s; opacity:.8; }
+  .rail .card.r1::after, .rail .card.r2::after, .rail .card.r3::after { display:none; }
+  .card.r1 .thumb::after { animation:sheen 3.6s ease-in-out infinite; }
+  .card.r2 .thumb::after { animation:sheen 5.2s ease-in-out 1.1s infinite; }
+  .card.r3 .thumb::after { animation:sheen 5.2s ease-in-out 2.2s infinite; }
+  .card.r1 .thumb { animation:aura 2.8s ease-in-out infinite; }
+  .rk.hot { animation:numglow 2.6s ease-in-out infinite; }
+  .rk.t1 .crown, .rkb .crown { animation:crown 2.4s ease-in-out infinite; transform-origin:50% 100%; }
+  .card.r1 .rkb { animation:badge 2.2s ease-in-out infinite; }
+  .grid.rank-in .card { animation:rankin .55s cubic-bezier(.2,.9,.3,1.1) both; animation-delay:calc(var(--i) * 45ms); }
+  .grid.rank-in .card.r1 { animation-name:rankin1; }
+  @keyframes ring { to { --ang:360deg; } }
+  @keyframes sheen { 0%,55% { transform:translateX(-120%); } 85%,100% { transform:translateX(120%); } }
+  @keyframes aura { 0%,100% { box-shadow:0 0 0 2px var(--c2), 0 0 14px rgba(var(--gl),.4); } 50% { box-shadow:0 0 0 2px var(--c1), 0 0 30px rgba(var(--gl),.8); } }
+  @keyframes numglow { 0%,100% { text-shadow:0 0 6px rgba(var(--gl),.35); } 50% { text-shadow:0 0 16px rgba(var(--gl),.95); } }
+  @keyframes crown { 0%,100% { transform:translateY(0) rotate(-6deg); } 50% { transform:translateY(-2px) rotate(6deg); } }
+  @keyframes badge { 0%,100% { transform:scale(1); } 50% { transform:scale(1.1); } }
+  @keyframes rankin { from { opacity:0; transform:translateX(-26px); } to { opacity:1; transform:none; } }
+  @keyframes rankin1 { 0% { opacity:0; transform:scale(.85); } 60% { opacity:1; transform:scale(1.03); } 100% { transform:none; } }
+}
