@@ -1,12 +1,11 @@
 // 잉여맨추억자료실 별점 서버 (Cloudflare Worker)
-// - 디스코드로 로그인 → 우리 서버 멤버인지 확인 → 별점 + 후기 저장 (한 계정당 영상 하나에 한 번, 후기는 꼭 써야 해요)
-// - 별점을 줄 때마다 멤버인지 다시 확인해서, 차단·추방된 사람은 바로 막혀요
-// - 후기 신고 → 운영진 디스코드 채널로 전달 (현재 후기 + 고치기 전 기록, 삭제 링크 포함)
-// - 하루 한 번, 서버를 나간 사람의 별점을 정리해요
+// - 구글로 로그인 → 별점 + 후기 저장 (한 계정당 영상 하나에 한 번, 후기는 꼭 써야 해요)
+// - 후기 신고 → 운영진 디스코드 채널로 전달 (웹훅, 현재 후기 + 고치기 전 기록, 삭제·차단 링크 포함)
+// - 차단된 구글 계정은 별점·후기·신고를 할 수 없고, 그 사람의 후기는 사라져요
 //
 // 필요한 설정(wrangler.toml / 대시보드):
-//   변수  : CLIENT_ID, GUILD_ID, REPORT_CHANNEL_ID (신고가 올라올 운영진 채널), SITE_ORIGIN (예: https://sam7599.github.io), SITE_PATH (예: /ingyoeman_archive/), [ROLE_ID 선택]
-//   비밀값: CLIENT_SECRET, BOT_TOKEN, SESSION_SECRET
+//   변수  : GOOGLE_CLIENT_ID, SITE_ORIGIN (예: https://sam7599.github.io), SITE_PATH (예: /ingyoeman_archive/)
+//   비밀값: SESSION_SECRET, REPORT_WEBHOOK (운영진 채널의 웹훅 주소)
 //   D1    : DB (schema.sql 로 표 만들기)
 
 const DAY = 86400;
@@ -36,15 +35,8 @@ const cors = env => ({ "Access-Control-Allow-Origin": env.SITE_ORIGIN, "Access-C
 const json = (env, data, status = 200, extra = {}) => new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json; charset=utf-8", ...cors(env), ...extra } });
 const siteUrl = (env, hash) => env.SITE_ORIGIN + (env.SITE_PATH || "/") + "#" + hash;
 
-// 디스코드 서버 멤버인지 확인 (봇이 확인해요). true=멤버, false=아님(차단·추방·미가입), null=확인 실패
-async function isMember(env, uid) {
-  if (!/^\d{5,25}$/.test(uid)) return false;
-  const r = await fetch(`https://discord.com/api/v10/guilds/${env.GUILD_ID}/members/${uid}`, { headers: { Authorization: "Bot " + env.BOT_TOKEN } });
-  if (r.status === 404) return false;
-  if (!r.ok) return null;
-  if (env.ROLE_ID) { const m = await r.json(); return Array.isArray(m.roles) && m.roles.includes(env.ROLE_ID); }
-  return true;
-}
+// 차단된 계정인지
+async function isBanned(env, uid) { return !!await env.DB.prepare("SELECT 1 AS x FROM banned WHERE uid = ?").bind(uid).first(); }
 
 // ── 후기 검사 ──
 const REASONS = { ad: "광고·홍보", spam: "스팸·도배", abuse: "욕설·비방", empty: "무의미한 내용 (점·기호만 올림 등)", other: "기타" };
@@ -72,28 +64,18 @@ async function handle(req, env, ctx) {
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: cors(env) });
   const redirect = `${url.origin}/callback`;
 
-  if (p === "/login") {   // 디스코드 로그인 화면으로 보내기
-    const state = await sign(env, { n: crypto.randomUUID() }, 600);
-    const q = new URLSearchParams({ client_id: env.CLIENT_ID, redirect_uri: redirect, response_type: "code", scope: "identify", state, prompt: "none" });
-    return Response.redirect("https://discord.com/oauth2/authorize?" + q, 302);
-  }
-
-  if (p === "/callback") {   // 로그인 끝나고 돌아오는 곳
-    if (url.searchParams.get("error")) return Response.redirect(siteUrl(env, "auth=cancel"), 302);
-    if (!await verify(env, url.searchParams.get("state"))) return Response.redirect(siteUrl(env, "auth=fail"), 302);
-    const code = url.searchParams.get("code");
-    if (!code) return Response.redirect(siteUrl(env, "auth=fail"), 302);
-    const t = await fetch("https://discord.com/api/v10/oauth2/token", { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ client_id: env.CLIENT_ID, client_secret: env.CLIENT_SECRET, grant_type: "authorization_code", code, redirect_uri: redirect }) });
-    if (!t.ok) return Response.redirect(siteUrl(env, "auth=fail"), 302);
-    const { access_token } = await t.json();
-    const me = await fetch("https://discord.com/api/v10/users/@me", { headers: { Authorization: "Bearer " + access_token } });
-    if (!me.ok) return Response.redirect(siteUrl(env, "auth=fail"), 302);
-    const u = await me.json();
-    const mem = await isMember(env, u.id);
-    if (mem === null) return Response.redirect(siteUrl(env, "auth=fail"), 302);
-    if (!mem) return Response.redirect(siteUrl(env, "auth=nomember"), 302);
-    const tok = await sign(env, { uid: u.id, name: String(u.global_name || u.username || "").slice(0, 32) }, 30 * DAY);
-    return Response.redirect(siteUrl(env, "auth=" + tok), 302);
+  if (p === "/google" && req.method === "POST") {   // 구글 로그인 확인 → 우리 사이트용 로그인 토큰
+    let b; try { b = await req.json(); } catch (e) { return json(env, { error: "bad" }, 400); }
+    const cred = String(b.credential || "");
+    if (!cred || cred.length > 4000) return json(env, { error: "bad" }, 400);
+    const r = await fetch("https://oauth2.googleapis.com/tokeninfo?id_token=" + encodeURIComponent(cred));
+    if (!r.ok) return json(env, { error: "login" }, 401);
+    const g = await r.json();
+    if (g.aud !== env.GOOGLE_CLIENT_ID || !/^\d{5,30}$/.test(String(g.sub || "")) || !(g.exp > Date.now() / 1000)) return json(env, { error: "login" }, 401);
+    const uid = "g" + g.sub;
+    if (await isBanned(env, uid)) return json(env, { error: "banned" }, 403);
+    const name = String(g.name || (g.email || "").split("@")[0] || "").slice(0, 32);
+    return json(env, { token: await sign(env, { uid, name }, 30 * DAY), name });
   }
 
   if (p === "/ratings" && req.method === "GET") {   // 영상별 평균 (누구나)
@@ -105,10 +87,10 @@ async function handle(req, env, ctx) {
   if (p === "/me" && req.method === "GET") {   // 내가 준 별점 + 아직 멤버인지
     const s = await verify(env, (req.headers.get("Authorization") || "").replace(/^Bearer /, ""));
     if (!s) return json(env, { error: "login" }, 401);
-    const mem = await isMember(env, s.uid);
+    const banned = await isBanned(env, s.uid);
     const rs = await env.DB.prepare("SELECT vid, stars, text FROM ratings WHERE uid = ?").bind(s.uid).all();
     const mine = {}; for (const r of rs.results) mine[r.vid] = [r.stars, r.text];
-    return json(env, { name: s.name, member: mem !== false, mine });
+    return json(env, { name: s.name, member: !banned, mine });
   }
 
   if (p === "/reviews" && req.method === "GET") {   // 한 영상의 후기 목록 (누구나)
@@ -127,9 +109,7 @@ async function handle(req, env, ctx) {
     const vid = String(b.vid || ""), stars = Number(b.stars), text = clean(b.text);
     if (!/^[A-Za-z0-9_-]{1,40}$/.test(vid) || !Number.isInteger(stars) || stars < 0 || stars > 5) return json(env, { error: "bad" }, 400);
     if (stars > 0) { const bad = checkText(text); if (bad) return json(env, { error: "text", code: bad }, 400); }   // 후기는 꼭 필요해요
-    const mem = await isMember(env, s.uid);   // 줄 때마다 지금도 멤버인지 확인
-    if (mem === null) return json(env, { error: "busy" }, 503);
-    if (!mem) { await env.DB.prepare("DELETE FROM ratings WHERE uid = ?").bind(s.uid).run(); return json(env, { error: "nomember" }, 403); }
+    if (await isBanned(env, s.uid)) return json(env, { error: "banned" }, 403);   // 차단된 계정은 막아요
     if (stars === 0) await env.DB.prepare("DELETE FROM ratings WHERE vid = ? AND uid = ?").bind(vid, s.uid).run();
     else {
       const old = await env.DB.prepare("SELECT stars, text, ts FROM ratings WHERE vid = ? AND uid = ?").bind(vid, s.uid).first();
@@ -146,9 +126,7 @@ async function handle(req, env, ctx) {
     let b; try { b = await req.json(); } catch (e) { return json(env, { error: "bad" }, 400); }
     const vid = String(b.vid || ""), reason = String(b.reason || ""), note = clean(b.note).slice(0, 200), id = String(b.id || "");
     if (!/^[A-Za-z0-9_-]{1,40}$/.test(vid) || !REASONS[reason] || !/^[A-Za-z0-9_-]{6,40}$/.test(id)) return json(env, { error: "bad" }, 400);
-    const mem = await isMember(env, s.uid);
-    if (mem === null) return json(env, { error: "busy" }, 503);
-    if (!mem) return json(env, { error: "nomember" }, 403);
+    if (await isBanned(env, s.uid)) return json(env, { error: "banned" }, 403);
     const all = await env.DB.prepare("SELECT uid, name, stars, text, ts FROM ratings WHERE vid = ?").bind(vid).all();
     let target = null; for (const r of all.results) if (await rid(env, vid, r.uid) === id) { target = r; break; }
     if (!target) return json(env, { error: "gone" }, 404);   // 이미 지워졌거나 없는 후기
@@ -161,7 +139,7 @@ async function handle(req, env, ctx) {
     const row = await env.DB.prepare("SELECT id FROM reports WHERE vid = ? AND uid = ? AND reporter = ?").bind(vid, target.uid, s.uid).first();
     const total = (await env.DB.prepare("SELECT COUNT(*) AS n FROM reports WHERE vid = ? AND uid = ?").bind(vid, target.uid).first()).n;
     const hist = await env.DB.prepare("SELECT stars, text, ts FROM rating_history WHERE vid = ? AND uid = ? ORDER BY id DESC LIMIT 3").bind(vid, target.uid).all();
-    const modTok = await sign(env, { a: "del", vid, uid: target.uid }, 30 * DAY);
+    const modTok = await sign(env, { a: "mod", vid, uid: target.uid }, 30 * DAY);
     const sent = await notify(env, {
       title: "🚨 후기 신고 #" + row.id,
       color: 0xe5484d,
@@ -171,54 +149,46 @@ async function handle(req, env, ctx) {
         { name: "누적 신고", value: total + "건", inline: true },
         { name: "현재 후기 — " + cut(target.name, 30) + " · " + "★".repeat(target.stars) + " · " + ago(target.ts), value: cut(target.text, 900) || "(없음)" },
         { name: "이전 후기 (고치기 전)", value: hist.results.length ? hist.results.map(h => `• ${ago(h.ts)} · ★${h.stars} · ${cut(h.text, 160)}`).join("\n") : "고친 기록 없음" },
-        { name: "작성자", value: `<@${target.uid}> (${target.uid})`, inline: true },
+        { name: "작성자", value: `${cut(target.name, 30)} (${target.uid})`, inline: true },
         { name: "신고자", value: `${cut(s.name, 30)} (${s.uid})`, inline: true },
         ...(note ? [{ name: "신고자 메모", value: cut(note, 200) }] : []),
-        { name: "처리", value: `[이 후기 삭제하기](${url.origin}/mod?t=${modTok})\n신고자가 캡처를 올리면 #${row.id} 번호와 함께 올라와요.` }
+        { name: "처리", value: `[후기 삭제 / 작성자 차단](${url.origin}/mod?t=${modTok})\n신고자가 캡처를 올리면 #${row.id} 번호와 함께 올라와요.` }
       ],
       footer: { text: "삭제 링크는 이 채널 운영진만 보세요" }, timestamp: new Date().toISOString()
     });
     return json(env, { ok: true, no: row.id, sent });
   }
 
-  if (p === "/mod") {   // 운영진용: 신고된 후기 삭제 (디스코드 링크 → 확인 화면 → 삭제 버튼)
-    const tok = req.method === "POST" ? new URLSearchParams(await req.text()).get("t") : url.searchParams.get("t");
+  if (p === "/mod") {   // 운영진용: 신고된 후기 삭제 / 작성자 차단 (디스코드 링크 → 확인 화면 → 버튼)
+    let form = null; if (req.method === "POST") form = new URLSearchParams(await req.text());
+    const tok = form ? form.get("t") : url.searchParams.get("t");
     const m = await verify(env, tok);
-    if (!m || m.a !== "del") return html("<h2>링크가 올바르지 않거나 만료됐어요</h2>");
+    if (!m || m.a !== "mod") return html("<h2>링크가 올바르지 않거나 만료됐어요</h2>");
     const r = await env.DB.prepare("SELECT name, stars, text, ts FROM ratings WHERE vid = ? AND uid = ?").bind(m.vid, m.uid).first();
-    if (req.method === "POST") {
+    if (form) {
+      const act = form.get("act");
+      if (act === "ban") { await env.DB.prepare("INSERT OR IGNORE INTO banned (uid, ts) VALUES (?, ?)").bind(m.uid, Date.now()).run(); await env.DB.prepare("DELETE FROM ratings WHERE uid = ?").bind(m.uid).run(); return html("<h2>✅ 작성자를 차단하고 그 사람의 모든 후기를 지웠어요</h2><p>이 계정은 앞으로 별점·후기·신고를 할 수 없어요.</p>"); }
       await env.DB.prepare("DELETE FROM ratings WHERE vid = ? AND uid = ?").bind(m.vid, m.uid).run();
       return html("<h2>✅ 후기를 삭제했어요</h2><p>이 영상의 별점 평균에서도 빠졌어요. 사이트에는 몇 분 안에 반영돼요.</p>");
     }
     if (!r) return html("<h2>이미 삭제됐거나 없는 후기예요</h2>");
-    return html(`<h2>이 후기를 삭제할까요?</h2><p><b>${esc(r.name)}</b> · ${"★".repeat(r.stars)} · ${ago(r.ts)}</p><blockquote style="border-left:4px solid #ccc;margin:0;padding:6px 12px;white-space:pre-wrap">${esc(r.text)}</blockquote><form method="post"><input type="hidden" name="t" value="${esc(tok)}"><button style="margin-top:18px;padding:10px 18px;font-size:16px;background:#e5484d;color:#fff;border:0;border-radius:8px;cursor:pointer">삭제하기</button></form><p style="color:#666;font-size:14px">삭제는 되돌릴 수 없어요. 작성자 제재는 디스코드에서 따로 해 주세요.</p>`);
+    const btn = (act, label, bg) => `<button name="act" value="${act}" style="margin:14px 8px 0 0;padding:10px 18px;font-size:16px;background:${bg};color:#fff;border:0;border-radius:8px;cursor:pointer">${label}</button>`;
+    return html(`<h2>이 후기를 어떻게 할까요?</h2><p><b>${esc(r.name)}</b> · ${"★".repeat(r.stars)} · ${ago(r.ts)}</p><blockquote style="border-left:4px solid #ccc;margin:0;padding:6px 12px;white-space:pre-wrap">${esc(r.text)}</blockquote><form method="post"><input type="hidden" name="t" value="${esc(tok)}">${btn("del", "이 후기만 삭제", "#e5484d")}${btn("ban", "삭제 + 작성자 차단", "#7a1f23")}</form><p style="color:#666;font-size:14px">되돌릴 수 없어요. 차단하면 그 사람의 모든 후기가 지워지고 다시 남길 수 없어요.</p>`);
   }
 
   return json(env, { error: "not found" }, 404);
 }
 
-// 운영진 채널에 신고 알림 (봇이 보내요)
+// 운영진 채널에 신고 알림 (웹훅)
 async function notify(env, embed) {
-  if (!env.REPORT_CHANNEL_ID) return false;
+  if (!env.REPORT_WEBHOOK) return false;
   try {
-    const r = await fetch(`https://discord.com/api/v10/channels/${env.REPORT_CHANNEL_ID}/messages`, { method: "POST", headers: { Authorization: "Bot " + env.BOT_TOKEN, "Content-Type": "application/json" }, body: JSON.stringify({ embeds: [embed], allowed_mentions: { parse: [] } }) });
+    const r = await fetch(env.REPORT_WEBHOOK, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username: "후기 신고", embeds: [embed], allowed_mentions: { parse: [] } }) });
     return r.ok;
   } catch (e) { return false; }
 }
 
-// 하루 한 번: 서버를 나갔거나 차단·추방된 사람의 별점을 지워요
-async function purge(env) {
-  const rs = await env.DB.prepare("SELECT DISTINCT uid FROM ratings LIMIT 300").all();
-  let removed = 0;
-  for (const r of rs.results) {
-    const mem = await isMember(env, r.uid);
-    if (mem === false) { await env.DB.prepare("DELETE FROM ratings WHERE uid = ?").bind(r.uid).run(); removed++; }
-  }
-  return removed;
-}
-
 export default {
-  async fetch(req, env, ctx) { try { return await handle(req, env, ctx); } catch (e) { return json(env, { error: "server" }, 500); } },
-  async scheduled(event, env, ctx) { ctx.waitUntil(purge(env)); }
+  async fetch(req, env, ctx) { try { return await handle(req, env, ctx); } catch (e) { return json(env, { error: "server" }, 500); } }
 };
-export { handle, purge, sign, verify };
+export { handle, sign, verify };

@@ -3,17 +3,11 @@ main = "index.js"
 compatibility_date = "2025-01-01"
 
 [vars]
-CLIENT_ID = ""            # 디스코드 앱의 Application ID
-GUILD_ID = ""             # 디스코드 서버 ID
-REPORT_CHANNEL_ID = ""    # 후기 신고가 올라올 운영진 전용 채널 ID (봇이 이 채널에 글을 쓸 수 있어야 해요)
+GOOGLE_CLIENT_ID = ""     # 구글 클라우드에서 만든 웹 클라이언트 ID
 SITE_ORIGIN = "https://sam7599.github.io"
 SITE_PATH = "/ingyoeman_archive/"
-# ROLE_ID = ""            # (선택) 이 역할이 있는 멤버만 별점 허용
 
 [[d1_databases]]
 binding = "DB"
 database_name = "ingyoeman-rating"
 database_id = ""
-
-[triggers]
-crons = ["17 19 * * *"]   # 매일 한국 시간 새벽 4시 17분 (서버 나간 사람 별점 정리)

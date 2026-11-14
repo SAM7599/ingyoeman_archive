@@ -33,3 +33,5 @@ CREATE TABLE IF NOT EXISTS reports (
   UNIQUE (vid, uid, reporter)
 );
 CREATE INDEX IF NOT EXISTS reports_reporter ON reports (reporter, ts);
+
+CREATE TABLE IF NOT EXISTS banned (uid TEXT PRIMARY KEY, ts INTEGER NOT NULL);

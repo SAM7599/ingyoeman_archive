@@ -40,26 +40,36 @@
   const byKey = k => all.find(v => key(v) === k);
   function toast(t) { const el = $("toast"); el.textContent = t; el.classList.add("show"); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove("show"), 2200); }
 
-  /* ── 별점 (디스코드 서버 멤버만) — 서버 주소는 config.js 의 rating ── */
+  /* ── 별점 (구글 로그인) — 서버 주소는 config.js 의 rating ── */
   const RATE = /^(https:\/\/|http:\/\/localhost)/i.test(SITE.rating || "") ? SITE.rating.replace(/\/+$/, "") : "";
   let ravg = {}, mine = {}, rtok = store.get("dtok", null);
   const rScore = v => { const a = ravg[vid(v)]; return a ? (a[0] * a[1] + 3 * 2) / (a[1] + 2) : 0; };   // 표가 적을 때 흔들리지 않게 보정
   const rStars = n => "★".repeat(Math.round(n)) + "☆".repeat(5 - Math.round(n));
-  function authBack() {   // 디스코드 로그인 후 돌아왔을 때
-    const m = /^#auth=(.+)$/.exec(location.hash); if (!m) return;
-    history.replaceState(null, "", location.pathname + location.search);
-    const v = m[1];
-    if (v === "nomember") return setTimeout(() => toast("디스코드 서버에 가입한 분만 별점을 줄 수 있어요"), 400);
-    if (v === "cancel" || v === "fail") return setTimeout(() => toast(v === "cancel" ? "로그인을 취소했어요" : "로그인하지 못했어요. 잠시 후 다시 해 주세요"), 400);
-    try { const b = JSON.parse(atob(v.split(".")[0].replace(/-/g, "+").replace(/_/g, "/"))); rtok = { t: v, name: "" }; store.set("dtok", rtok); setTimeout(() => toast("디스코드로 로그인했어요"), 400); } catch (e) {}
+  const GID = SITE.google || "";
+  /* 구글 로그인: 버튼을 눌러 로그인하면 구글이 확인 정보를 주고, 서버가 그걸 검사해서 우리 사이트용 토큰을 줘요 */
+  let gsiReady = false;
+  async function onGoogle(resp) {
+    try {
+      const r = await fetch(RATE + "/google", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ credential: resp.credential }) });
+      if (r.status === 403) return toast("차단된 계정이라 로그인할 수 없어요");
+      if (!r.ok) return toast("로그인하지 못했어요. 잠시 후 다시 해 주세요");
+      const d = await r.json(); rtok = { t: d.token, name: d.name || "" }; store.set("dtok", rtok);
+      toast("구글로 로그인했어요"); loadRatings(); drawRate();
+    } catch (e) { toast("로그인하지 못했어요. 잠시 후 다시 해 주세요"); }
   }
-  authBack();
+  function drawGoogleBtn() {
+    const box = $("gbtn"); if (!box || !GID) return;
+    const go = () => { try { if (!gsiReady) { google.accounts.id.initialize({ client_id: GID, callback: onGoogle, ux_mode: "popup" }); gsiReady = true; } google.accounts.id.renderButton(box, { theme: "outline", size: "large", text: "signin_with", locale: "ko", width: 260 }); } catch (e) {} };
+    if (window.google && google.accounts) return go();
+    if (document.getElementById("gsi")) return setTimeout(drawGoogleBtn, 300);
+    const sc = document.createElement("script"); sc.id = "gsi"; sc.src = "https://accounts.google.com/gsi/client"; sc.async = true; sc.onload = go; document.head.appendChild(sc);
+  }
   const rApi = (path, opt) => fetch(RATE + path, { ...(opt || {}), headers: { ...(rtok ? { Authorization: "Bearer " + rtok.t } : {}), "Content-Type": "application/json" } });
   function rLogout() { rtok = null; mine = {}; store.set("dtok", null); drawRate(); }
   function loadRatings() {
     if (!RATE) return;
     fetch(RATE + "/ratings").then(r => r.json()).then(d => { ravg = d || {}; render(); if (current) drawRate(); }).catch(() => {});
-    if (rtok) rApi("/me").then(r => r.status === 401 ? Promise.reject("login") : r.json()).then(d => { mine = d.mine || {}; rtok.name = d.name || ""; if (d.member === false) toast("서버 멤버가 아니어서 별점을 줄 수 없어요"); if (current) { resetDraft(); drawRate(); loadReviews(); } }).catch(e => { if (e === "login") rLogout(); });
+    if (rtok) rApi("/me").then(r => r.status === 401 ? Promise.reject("login") : r.json()).then(d => { mine = d.mine || {}; rtok.name = d.name || ""; if (d.member === false) toast("차단된 계정이라 별점을 줄 수 없어요"); if (current) { resetDraft(); drawRate(); loadReviews(); } }).catch(e => { if (e === "login") rLogout(); });
   }
   /* 후기(평점)는 꼭 써야 해요. 신고는 운영진 디스코드 채널로 가요. */
   let draft = { stars: 0, text: "" }, reviews = [], repTarget = null;
@@ -89,7 +99,7 @@
     const id = vid(current), a = ravg[id], my = mine[id];
     const head = a ? `<b class="r-avg">★ ${a[0].toFixed(1)}</b><span>${a[1]}명이 남겼어요</span>` : `<span>아직 별점과 후기가 없어요</span>`;
     let body;
-    if (!rtok) body = `<a class="btn" href="${esc(RATE)}/login">디스코드로 로그인하고 별점·후기 남기기</a><p class="r-note">디스코드 서버에 가입한 분만 남길 수 있어요. 한 계정당 영상마다 하나만 남길 수 있고, <b>별점과 후기를 모두</b> 써야 해요.</p>`;
+    if (!rtok) body = `<div id="gbtn" class="r-g"></div><p class="r-note">구글 계정으로 로그인하면 별점과 후기를 남길 수 있어요. 한 계정당 영상마다 하나만 남길 수 있고, <b>별점과 후기를 모두</b> 써야 해요. 후기에는 이름 앞 2글자만 보여요.</p>`;
     else body = `<div class="r-stars" role="group" aria-label="내 별점">${[1, 2, 3, 4, 5].map(n => `<button type="button" class="${n <= draft.stars ? "on" : ""}" data-star="${n}" aria-label="별 ${n}개" aria-pressed="${n === draft.stars}">★</button>`).join("")}</div>
       <textarea id="rtext" class="r-text" rows="3" maxlength="300" placeholder="후기를 남겨 주세요. 어떤 점이 좋았나요? (5자 이상)">${esc(draft.text)}</textarea>
       <div class="r-row"><span id="rhint" class="r-hint"></span><span id="rlen" class="r-len">0/300</span></div>
@@ -97,7 +107,7 @@
       <p class="r-note">광고, 스팸, 욕설, 링크, 점(.)만 올린 후기는 신고되거나 지워질 수 있어요.</p>`;
     const list = reviews.length ? `<ul class="r-list">${reviews.map(r => `<li class="${r.me ? "mine" : ""}"><div class="r-h"><b>${esc(r.name)}</b>${r.me ? `<i class="r-me">내 후기</i>` : ""}<span class="r-s" aria-label="별 ${r.stars}개">${"★".repeat(r.stars)}${"☆".repeat(5 - r.stars)}</span><time>${rAgo(r.ts)}</time>${r.me ? "" : `<button type="button" class="r-link r-rep" data-rep="${esc(r.id)}">신고</button>`}</div><p>${esc(r.text)}</p></li>`).join("")}</ul>` : "";
     el.innerHTML = `<div class="r-head">${head}</div>${body}${list}`;
-    formState();
+    formState(); if (!rtok) drawGoogleBtn();
   }
   async function doSubmit() {
     if (!current || !rtok) return; const id = vid(current), n = draft.stars, text = draft.text.trim();
@@ -106,7 +116,7 @@
     try {
       const r = await rApi("/rate", { method: "POST", body: JSON.stringify({ vid: id, stars: n, text }) });
       if (r.status === 401) { rLogout(); return toast("다시 로그인해 주세요"); }
-      if (r.status === 403) { mine = {}; drawRate(); return toast("서버 멤버가 아니어서 남길 수 없어요"); }
+      if (r.status === 403) { mine = {}; drawRate(); return toast("차단된 계정이라 남길 수 없어요"); }
       if (r.status === 400) { const d = await r.json().catch(() => ({})); formState(); return toast(TEXT_MSG[d.code] || "내용을 확인해 주세요"); }
       if (!r.ok) { formState(); return toast("지금은 남길 수 없어요. 잠시 후 다시 해 주세요"); }
       const d = await r.json(); mine[id] = [n, text]; ravg[id] = [d.avg, d.n];
@@ -126,7 +136,7 @@
 
   /* ── 후기 신고 ── */
   function openReport(rid) {
-    if (!rtok) return toast("신고하려면 먼저 디스코드로 로그인해 주세요");
+    if (!rtok) return toast("신고하려면 먼저 구글로 로그인해 주세요");
     const r = reviews.find(x => x.id === rid); if (!r) return;
     repTarget = r;
     $("repWho").innerHTML = `<b>${esc(r.name)}</b> · ${"★".repeat(r.stars)}${"☆".repeat(5 - r.stars)}<p>${esc(r.text)}</p>`;
@@ -143,7 +153,7 @@
       const r = await rApi("/report", { method: "POST", body: JSON.stringify({ vid: vid(current), id: repTarget.id, reason, note: $("repNote").value.trim() }) });
       const d = await r.json().catch(() => ({}));
       if (r.status === 401) { closeReport(); rLogout(); return toast("다시 로그인해 주세요"); }
-      if (!r.ok) { $("repGo").disabled = false; $("repErr").textContent = r.status === 403 ? "서버 멤버만 신고할 수 있어요" : r.status === 404 ? "이미 지워진 후기예요" : r.status === 429 ? "하루에 10건까지 신고할 수 있어요" : r.status === 400 ? "내 후기는 신고할 수 없어요" : "지금은 신고할 수 없어요. 잠시 후 다시 해 주세요"; return; }
+      if (!r.ok) { $("repGo").disabled = false; $("repErr").textContent = r.status === 403 ? "차단된 계정은 신고할 수 없어요" : r.status === 404 ? "이미 지워진 후기예요" : r.status === 429 ? "하루에 10건까지 신고할 수 있어요" : r.status === 400 ? "내 후기는 신고할 수 없어요" : "지금은 신고할 수 없어요. 잠시 후 다시 해 주세요"; return; }
       $("repNo").textContent = "#" + d.no; $("repForm").hidden = true; $("repDone").hidden = false;
       const dc = $("repDiscord"); if (dc) { dc.hidden = !/^https?:\/\//i.test(SITE.discord || ""); dc.href = SITE.discord || "#"; }
       $("repClose2").focus();
