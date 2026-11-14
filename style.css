@@ -797,3 +797,12 @@ details.gi[open] > summary::after { content:"－"; }
 :root[data-theme="light"] .nt.fix { background:#d6264f; color:#fff; }
 :root[data-theme="light"] .nt.new { background:#4347d9; color:#fff; }
 .gi-b .gnote { padding:10px 14px; border-radius:10px; background:var(--raise); color:var(--ink); border-left:4px solid var(--accent); }
+
+.need { display:flex; gap:12px; align-items:flex-start; margin:0 0 18px; padding:13px 16px; border-radius:14px; border:1px solid var(--line); border-left:5px solid var(--accent); background:var(--surface); }
+.need-ic { flex:none; font-size:18px; line-height:1.5; }
+.need p { margin:0; font-size:14.5px; line-height:1.7; color:var(--sub); word-break:keep-all; }
+.need b { color:var(--ink); }
+.need a { color:var(--tint); font-weight:700; text-underline-offset:3px; white-space:nowrap; }
+.m-need { margin:6px 0 12px; padding:9px 12px; border-radius:10px; background:var(--raise); font-size:13.5px; line-height:1.65; color:var(--sub); word-break:keep-all; }
+.m-need b { color:var(--ink); }
+@media (max-width:640px) { .need { padding:11px 12px; gap:9px; } .need p { font-size:13.5px; } }
