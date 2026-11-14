@@ -864,31 +864,56 @@
   /* ── 디스코드 참여하기 (채팅창 안내) ── */
   const DC = [
     "안녕하세요! 👋 잉여맨추억자료실 디스코드에 오신 걸 환영해요.",
-    "<b>여기에서는 이런 걸 할 수 있어요</b><ul><li>🐞 사이트가 이상할 때 <b>버그 제보</b></li><li>📚 시리즈 몰아보기의 <b>분류가 틀렸을 때 제보</b></li><li>💡 있었으면 하는 기능이나 영상 <b>건의</b></li><li>⭐ 별점·후기 기능 <b>문의</b></li><li>🚨 부적절한 <b>후기 신고</b> (광고·스팸·욕설, 과거와 현재를 비교하는 후기 등)</li></ul>",
-    "<b>후기 신고는 이렇게 해요</b><br>사이트에서 후기의 <b>신고</b> 버튼을 누르면 신고 번호가 나오고, 후기 사진이 저장돼요. 그 번호와 사진을 디스코드 <b>🚨-후기-신고</b> 채널에 올려 주세요.",
+    "여기에서는 사이트에 대한 <b>제보와 문의</b>를 받아요. <b>🛠-사이트-제보</b> 채널에 글을 올릴 때 아래 종류 중 하나를 골라 주세요.",
+    "<ul><li>🐞 <b>버그</b> : 버튼이 안 눌리거나 화면이 깨지는 등 사이트가 제대로 작동하지 않을 때</li><li>📚 <b>시리즈 분류</b> : 시리즈 몰아보기에 다른 시리즈 영상이 섞여 있거나, 들어가야 할 영상이 빠져 있을 때</li><li>💡 <b>건의</b> : 이런 기능이 있으면 좋겠다는 아이디어</li><li>⭐ <b>별점·후기</b> : 후기 등록·로그인 문제, 내 후기 삭제·보관 삭제 요청</li></ul>",
+    "그리고 🚨 <b>부적절한 후기 신고</b>는 따로 받아요. 사이트에서 후기의 <b>신고</b> 버튼을 누르면 신고 번호가 나오고 후기 사진이 저장돼요. 그 번호와 사진을 <b>🚨-후기-신고</b> 채널에 올려 주세요.",
     ["warn", "⚠ 신고할 때 후기 내용을 글로 그대로 적지 마세요. 보안봇이 글을 막거나 지울 수 있어요. 번호와 사진만 올려 주세요."],
-    "그 밖의 제보와 건의는 <b>🛠-사이트-제보</b> 채널에 남겨 주시면 돼요. 디스코드 가입은 무료예요.",
+    "디스코드 가입은 무료예요 🙂",
     "그럼 <b>디스코드에 참여하시겠어요?</b>"
   ];
-  let dcT = [];
-  function openDc() {
-    const b = $("dcBody"); b.innerHTML = ""; $("dcAsk").hidden = true; $("dcJoin").href = SITE.discord; dcT.forEach(clearTimeout); dcT = [];
-    $("dcChat").hidden = false; document.body.style.overflow = "hidden";
-    const quick = calm();
-    const add = m => { const d = document.createElement("div"); d.className = "dc-m" + (Array.isArray(m) ? " " + m[0] : ""); d.innerHTML = Array.isArray(m) ? m[1] : m; b.appendChild(d); b.scrollTop = b.scrollHeight; };
-    let t = 0;
-    DC.forEach((m, n) => {
-      const last = n === DC.length - 1;
-      if (quick) { add(m); if (last) $("dcAsk").hidden = false; return; }
-      dcT.push(setTimeout(() => { const ty = document.createElement("div"); ty.className = "dc-typing"; ty.innerHTML = "<i></i><i></i><i></i>"; b.appendChild(ty); b.scrollTop = b.scrollHeight; }, t));
-      t += n === 1 || n === 2 ? 1100 : 750;
-      dcT.push(setTimeout(() => { const ty = b.querySelector(".dc-typing"); if (ty) ty.remove(); add(m); if (last) { $("dcAsk").hidden = false; $("dcJoin").focus({ preventScroll: true }); } }, t));
-      t += 250;
-    });
+  const SLEEP = ms => new Promise(r => setTimeout(r, ms));
+  const AVSVG = '<span class="av"><svg viewBox="0 0 24 24"><path d="M5 5h14v10H10l-5 4z"/></svg></span>';
+  let dcRun = 0, dcFirst = true;
+  const dcNow = () => new Date().toLocaleTimeString("ko-KR", { hour: "numeric", minute: "2-digit" });
+  const dcScroll = () => { const b = $("dcBody"); b.scrollTo({ top: b.scrollHeight, behavior: calm() ? "auto" : "smooth" }); };
+  function dcAdd(html, cls, me) {
+    const row = document.createElement("div"); row.className = "dc-r" + (me ? " me" : "") + (!me && !dcFirst ? " sp" : "");
+    row.innerHTML = (me ? "" : AVSVG) + `<div class="dc-col"><div class="dc-m ${cls || ""}${me ? " me" : ""}">${html}</div><span class="dc-t">${dcNow()}</span></div>`;
+    $("dcBody").appendChild(row); dcFirst = !!me; dcScroll();
   }
-  function closeDc() { dcT.forEach(clearTimeout); dcT = []; $("dcChat").hidden = true; document.body.style.overflow = ""; }
+  async function dcTyping(run, ms) {   // 입력 중 … 말풍선과 윗줄 "입력 중"
+    if (calm()) return;
+    const row = document.createElement("div"); row.className = "dc-r" + (dcFirst ? "" : " sp");
+    row.innerHTML = AVSVG + '<div class="dc-typing"><i></i><i></i><i></i></div>';
+    $("dcBody").appendChild(row); dcScroll();
+    const st = $("dcSt"); st.classList.add("typing"); st.lastChild.textContent = "입력 중…";
+    await SLEEP(ms); row.remove(); st.classList.remove("typing"); st.lastChild.textContent = "운영진이 안내해 드려요";
+  }
+  const dcMs = html => Math.min(2300, 650 + html.replace(/<[^>]+>/g, "").length * 24);   // 글이 길수록 오래 입력해요
+  async function dcSay(run, m) {
+    const warn = Array.isArray(m), html = warn ? m[1] : m;
+    await dcTyping(run, dcMs(html)); if (run !== dcRun) return false;
+    dcAdd(html, warn ? "warn" : ""); await (calm() ? 0 : SLEEP(420)); return run === dcRun;
+  }
+  async function openDc() {
+    const run = ++dcRun; dcFirst = true;
+    $("dcBody").innerHTML = ""; $("dcAsk").hidden = true; $("dcJoin").href = SITE.discord;
+    $("dcChat").hidden = false; document.body.style.overflow = "hidden";
+    await (calm() ? 0 : SLEEP(500));
+    for (const m of DC) if (!await dcSay(run, m)) return;
+    $("dcAsk").hidden = false; $("dcJoin").focus({ preventScroll: true });
+  }
+  function closeDc() { dcRun++; $("dcChat").hidden = true; document.body.style.overflow = ""; }
+  async function dcAnswer(me, bot, wait) {   // 버튼을 누르면 내 말풍선 → 운영진 답장 → 창 닫기
+    const run = dcRun; $("dcAsk").hidden = true; dcAdd(me, "", true);
+    await SLEEP(calm() ? 0 : 650); if (run !== dcRun) return;
+    await dcTyping(run, 900); if (run !== dcRun) return;
+    dcAdd(bot); await SLEEP(wait); if (run === dcRun) closeDc();
+  }
   if (/^https?:\/\//i.test(SITE.discord || "")) document.addEventListener("click", e => { const f = e.target.closest("[data-feedback]"); if (!f) return; e.preventDefault(); closeMenu(); openDc(); });
-  $("dcX").addEventListener("click", closeDc); $("dcNo").addEventListener("click", closeDc); $("dcJoin").addEventListener("click", () => setTimeout(closeDc, 150));
+  $("dcX").addEventListener("click", closeDc);
+  $("dcNo").addEventListener("click", () => dcAnswer("다음에 할게요", "알겠어요! 필요할 때 언제든 다시 눌러 주세요 👋", 1500));
+  $("dcJoin").addEventListener("click", () => dcAnswer("네, 참여할래요!", "좋아요! 🎉 새 탭에서 디스코드가 열려요. 곧 만나요!", 2200));
   $("dcChat").addEventListener("click", e => { if (e.target === $("dcChat")) closeDc(); });
   document.querySelectorAll("[data-cafe]").forEach(a => { if (/^https?:\/\//i.test(SITE.cafe || "")) a.href = SITE.cafe; else a.hidden = true; });
 
