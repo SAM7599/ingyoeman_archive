@@ -560,7 +560,8 @@ html[data-motion="off"] .r-stars button { transition:none; }
 .card.r2 { --c1:#f1f5ff; --c2:#7d8db0; --gl:150,165,200; }
 .card.r3 { --c1:#f0b27a; --c2:#b06a34; --gl:205,130,70; }
 .crown { width:1.05em; height:1.05em; margin-right:3px; vertical-align:-.12em; fill:currentColor; }
-.rkb .crown { width:15px; height:15px; margin-right:3px; vertical-align:-2px; }
+.rkb { display:inline-flex; align-items:center; justify-content:center; gap:3px; white-space:nowrap; }
+.rkb .crown { width:15px; height:15px; margin:0; flex:none; }
 .card.r1 .rkb, .card.r2 .rkb, .card.r3 .rkb { background:linear-gradient(135deg,var(--c1),var(--c2)); color:#2b1a00; box-shadow:0 0 14px rgba(var(--gl),.7); }
 .rk.hot { color:var(--c2); font-weight:900; text-shadow:0 0 10px rgba(var(--gl),.55); }
 .rk.hot .crown { fill:var(--c2); }
