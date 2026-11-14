@@ -743,7 +743,7 @@
     $("xfer").hidden = false; document.body.style.overflow = "hidden"; $("xClose").focus();
     if (!has) return;
     const link = moveLink();
-    $("xLink").value = link; $("xShare").hidden = !navigator.share;
+    $("xLink").value = link; $("xShare").hidden = !(navigator.share && matchMedia("(pointer:coarse)").matches);   // 휴대폰·태블릿에서만 보여요 (컴퓨터에서는 링크 복사를 써요)
     $("xQr").textContent = "QR코드를 만드는 중이에요";
     loadQr().then(() => {
       const q = window.qrcode(0, "L"); q.addData(link); q.make();
@@ -759,7 +759,12 @@
     const link = $("xLink").value, done = () => toast("링크를 복사했어요. 다른 기기에서 열어 주세요"), fail = () => { $("xLink").focus(); toast("위 칸의 링크를 직접 복사해 주세요"); };
     if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(link).then(done, fail); else fail();
   });
-  $("xShare").addEventListener("click", () => { navigator.share({ title: "잉여맨 추억자료실 내 기록", url: $("xLink").value }).catch(() => {}); });
+  $("xShare").addEventListener("click", () => {
+    const link = $("xLink").value;
+    const copy = () => { if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(link).then(() => toast("공유가 안 돼서 링크를 복사했어요. 카톡이나 메모에 붙여넣어 주세요"), () => { $("xLink").focus(); toast("위 칸의 링크를 직접 복사해 주세요"); }); else { $("xLink").focus(); toast("위 칸의 링크를 직접 복사해 주세요"); } };
+    if (!navigator.share) return copy();
+    navigator.share({ title: "잉여맨 추억자료실 내 기록", text: "잉여맨 추억자료실 내 기록 링크예요. 다른 기기에서 열어 주세요", url: link }).catch(e => { if (!e || e.name !== "AbortError") copy(); });   // 닫기만 한 경우는 그대로 두고, 오류면 복사해 줘요
+  });
 
   /* ── 썸네일 제보 건수 (GitHub에 열려 있는 제보 글을 세요) ── */
   let reports = {};
