@@ -629,3 +629,4 @@ html[data-motion="off"] .r-stars button { transition:none; }
 .rep-ok { font-size:16px; margin:0 0 12px; }
 #repModal { z-index:42; }
 .r-g { min-height:44px; margin-top:6px; }
+.rep-shot-img { display:block; width:100%; max-height:220px; object-fit:contain; margin:0 0 12px; border:1px solid var(--line); border-radius:12px; background:#fff; }
