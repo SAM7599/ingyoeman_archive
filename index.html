@@ -17,7 +17,7 @@
   if (m !== "on" && m !== "off") m = (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) ? "off" : "on";
   document.documentElement.setAttribute("data-motion", m); })();
 </script>
-<link rel="stylesheet" href="style.css?v=76">
+<link rel="stylesheet" href="style.css?v=77">
 </head>
 <body>
 <div id="intro" role="dialog" aria-label="잉여맨 추억자료실 소개 화면">
@@ -149,42 +149,45 @@
 
 <main id="viewGuide" class="guide" hidden>
   <div class="pg-tabs"><a href="#about">사이트 소개</a><a href="#guide" class="on">이용방법</a><a href="#notes">패치노트</a></div>
-  <h1>이용방법</h1>
-  <p class="lead">처음 오셨어도 어렵지 않아요.</p>
+  <h1>이용 가이드</h1>
+  <p class="lead">처음 오셨어도 어렵지 않아요. 아래 세 단계면 충분해요.</p>
 
-  <div class="g-item"><h3>다시보기 열기</h3>
-    <p>여기는 다시보기 링크를 모아 둔 곳이에요. 영상 카드나 <b>다시보기</b> 버튼을 누르면 <b>네이버 카페 글</b>이 열려요. 컴퓨터는 사이트 위에 뜨는 <b>팝업 창</b>으로, 휴대폰은 <b>네이버 카페 앱</b>으로 열려요. 팝업 창이 불편하면 설정 버튼에서 <b>카페 글 팝업 창으로</b>를 꺼서 새 탭으로 열 수 있어요. 영상을 보려면 <b>카페 가입과 올드팬 인증</b>이 필요해요. 방법은 카페의 <a href="https://cafe.naver.com/youtubecreateringyoe/2951" target="_blank" rel="noopener noreferrer">처음 오신 분을 위한 공지</a>와 <a href="https://cafe.naver.com/youtubecreateringyoe/2828" target="_blank" rel="noopener noreferrer">팬클럽 등업 가이드</a>에 있어요.</p></div>
-  <div class="g-item"><h3>영상 찾기</h3>
-    <p>맨 위 <b>검색창</b>에 제목 일부나 분류 이름을 적어요. 여러 단어를 띄어 쓰면 모두 들어간 영상만 나와요. 첫 화면에는 분류별로 영상이 한 줄씩 나오고, 옆으로 넘겨 볼 수 있어요. <b>전체 보기</b>나 위쪽 <b>분류 버튼</b>을 누르면 그 분류만 모아 볼 수 있어요.</p></div>
-  <div class="g-item"><h3>인기 랭킹</h3>
-    <p><b>인기 랭킹</b>에서는 네이버 카페 조회수와 좋아요를 합친 점수로 순위를 볼 수 있어요. 좋아요 1개는 조회수 50회로 쳐요. 분류 버튼을 누르면 그 분류 안에서의 순위가 나와요. 조회수와 좋아요 수는 목록을 정리한 때의 숫자라 지금 카페와 조금 다를 수 있어요.</p></div>
-  <div class="g-item"><h3>시리즈</h3>
-    <p><b>시리즈</b>에서는 아오오니저택, 경찰과 도둑처럼 같은 콘텐츠를 한데 모아 볼 수 있어요. 영상 아래의 시리즈 이름을 눌러도 같은 시리즈가 모여요. 제목으로 자동 분류해서 빠지거나 잘못 들어간 영상이 있을 수 있어요.</p></div>
-  <div class="g-item"><h3>오늘의 다시보기</h3>
-    <p>첫 화면 맨 위 큰 배너에 매일 다른 영상을 하나 골라 드려요.</p></div>
-  <div class="g-item"><h3>랜덤 뽑기</h3>
-    <p>뭘 볼지 모르겠으면 <b>랜덤 뽑기</b>를 눌러 보세요. 카드를 누르면 영상 하나가 뽑혀요. 분류나 시리즈를 고른 상태에서 누르면 그 안에서만 뽑아요. 카페 좋아요가 5개 이상이면 <b>희귀</b>, 10개 이상이면 <b>전설</b> 카드로 나와요. 뽑을 때 효과음이 나고, 뽑기 화면 왼쪽 위 버튼이나 설정에서 끌 수 있어요.</p></div>
-  <div class="g-item"><h3>별점·후기 남기기</h3>
-    <p>영상 카드를 누르면 <b>다시보기 · 즐겨찾기 · 별점 남기기</b> 버튼이 있는 창이 열려요. <b>★ 별점 남기기</b>를 누르면 별점과 후기를 쓰는 곳으로 이동해요. 구글 로그인이 필요하고, 영상마다 한 번만 남길 수 있어요. 예전과 지금을 비교하는 후기는 금지예요.</p></div>
-  <div class="g-item"><h3>도전과제</h3>
-    <p>영상을 열어 보거나, 즐겨찾기에 담거나, 랜덤 뽑기를 하다 보면 <b>도전과제</b>가 달성돼요. 달성하면 화면에 알림이 뜨고, 맨 위의 <b>트로피 버튼</b>에서 전체 목록과 진행 상황을 볼 수 있어요. 기록은 이 기기에만 저장돼요.</p></div>
-  <div class="g-item"><h3>다른 기기로 옮기기</h3>
-    <p>즐겨찾기와 열어본 영상 기록은 기기마다 따로 저장돼요. 맨 위 오른쪽 <b>설정 버튼</b>의 <b>다른 기기로 옮기기</b>를 누르면 QR코드와 링크가 나와요. 다른 기기의 카메라로 QR코드를 찍거나, 링크를 나에게 보내서 열면 기록이 합쳐져요.</p></div>
-  <div class="g-item"><h3>화면 설정</h3>
-    <p>맨 위 오른쪽의 <b>설정 버튼</b>을 누르면 <b>어두운 화면</b>, <b>움직임 줄이기</b>, <b>뽑기 소리</b>, <b>카페 글 팝업 창으로</b>를 켜고 끌 수 있어요. 움직임 줄이기를 켜면 화면이 움직이는 효과가 사라지고, 랜덤 뽑기도 바로 결과가 나와요. 고른 설정은 이 기기에 기억돼요.</p></div>
-  <div class="g-item"><h3>즐겨찾기</h3>
-    <p>영상의 하트를 누르면 <b>즐겨찾기</b>에 모여요. 지금 쓰는 기기와 브라우저에만 저장되고, 인터넷 사용 기록을 지우면 함께 사라질 수 있어요.</p></div>
-  <div class="g-item"><h3>열어본 영상</h3>
-    <p>한 번 누른 영상에는 <b>열어봄</b> 표시가 붙고 <b>열어본 영상</b>에 쌓여서 다시 찾기 쉬워요. 영상은 카페에서 재생되기 때문에 끝까지 봤는지는 표시하지 않아요. 기록은 제목 옆 <b>점 세 개</b> 메뉴에서 지울 수 있어요.</p></div>
-  <div class="g-item"><h3>썸네일 제보 (GitHub 사용)</h3>
-    <p>영상 제목 옆 <b>점 세 개</b>를 누르고 <b>썸네일 제보</b>를 누르면 <b>GitHub</b>(개발자들이 쓰는 코드 공유 사이트)의 제보 작성 화면이 새 창으로 열려요. 이 사이트의 파일이 GitHub에 있어서, 제보도 그곳의 <b>이슈</b>라는 게시판으로 받고 있어요.</p>
-    <p><b>이렇게 하세요</b>: ① GitHub에 로그인해요 (계정이 없으면 무료로 가입할 수 있어요). ② 영상 제목과 카페 글 주소는 미리 채워져 있어요. ③ 썸네일 그림을 입력칸에 끌어다 놓거나 이미지 주소를 붙여넣어요. ④ <b>Submit new issue</b> 버튼을 눌러요.</p>
-    <p><b>알아 두세요</b>: GitHub 이슈는 <b>누구나 볼 수 있는 공개 글</b>이라, 올린 그림과 GitHub 닉네임이 공개돼요. 제보가 들어온 영상에는 <b>썸네일 제보 몇 건</b>인지 표시되고, 썸네일이 반영되면 표시가 사라져요.</p>
+  <ol class="gsteps">
+    <li><b>카페 가입 + 올드팬 인증</b><span>영상을 보려면 꼭 필요해요</span></li>
+    <li><b>영상 찾기</b><span>검색창이나 분류, 시리즈로요</span></li>
+    <li><b>카드 눌러 다시보기</b><span>네이버 카페 글이 열려요</span></li>
+  </ol>
+  <p class="gtip">항목을 누르면 자세한 설명이 펼쳐져요.</p>
+
+  <h2 class="gh">영상 보기</h2>
+  <div class="gs">
+    <details class="gi" open><summary><span class="gi-ic" aria-hidden="true">▶</span><span class="gi-t"><b>다시보기 열기</b><small>카드나 다시보기 버튼을 누르면 카페 글이 열려요</small></span></summary><div class="gi-b"><ul><li>컴퓨터는 사이트 위 <b>팝업 창</b>, 휴대폰은 <b>네이버 카페 앱</b>으로 열려요.</li><li>팝업이 불편하면 설정에서 <b>카페 글 팝업 창으로</b>를 꺼서 새 탭으로 열 수 있어요.</li><li>영상을 보려면 <b>카페 가입과 올드팬 인증</b>이 필요해요. 방법은 <a href="https://cafe.naver.com/youtubecreateringyoe/2951" target="_blank" rel="noopener noreferrer">처음 오신 분을 위한 공지</a>와 <a href="https://cafe.naver.com/youtubecreateringyoe/2828" target="_blank" rel="noopener noreferrer">팬클럽 등업 가이드</a>에 있어요.</li></ul></div></details>
+    <details class="gi"><summary><span class="gi-ic" aria-hidden="true">🔎</span><span class="gi-t"><b>영상 찾기</b><small>검색창, 분류 버튼으로 찾아요</small></span></summary><div class="gi-b"><ul><li>맨 위 <b>검색창</b>에 제목 일부나 분류 이름을 적어요. 단어를 띄어 쓰면 모두 들어간 영상만 나와요.</li><li>첫 화면은 분류별로 한 줄씩 나와요. 옆으로 넘기거나 <b>전체 보기</b>·<b>분류 버튼</b>으로 그 분류만 볼 수 있어요.</li></ul></div></details>
+    <details class="gi"><summary><span class="gi-ic" aria-hidden="true">🏆</span><span class="gi-t"><b>인기 랭킹</b><small>카페 조회수·좋아요·사이트 별점으로 순위를 매겨요</small></span></summary><div class="gi-b"><ul><li>좋아요 1개는 조회수 50회로 쳐요. 분류 버튼을 누르면 그 분류 안의 순위가 나와요.</li><li>조회수와 좋아요 수는 목록을 정리한 때의 숫자라 지금 카페와 조금 다를 수 있어요.</li></ul></div></details>
+    <details class="gi"><summary><span class="gi-ic" aria-hidden="true">📚</span><span class="gi-t"><b>시리즈</b><small>같은 콘텐츠를 한데 모아 몰아봐요</small></span></summary><div class="gi-b"><ul><li>아오오니저택, 경찰과 도둑처럼 같은 콘텐츠가 모여요. 영상 아래 시리즈 이름을 눌러도 돼요.</li><li>제목으로 자동 분류해서 빠지거나 잘못 들어간 영상이 있을 수 있어요. 발견하면 디스코드로 알려 주세요.</li></ul></div></details>
   </div>
 
-  <div class="g-item"><h3>디스코드 참여하기</h3>
-    <p id="fbHelp">고쳤으면 하는 점이나 잘못된 시리즈 분류·영상 정보를 발견하면 화면 오른쪽 아래 <b>디스코드 참여하기</b> 버튼을 눌러 주세요. 네이버 카페 채팅방이 열려요. 네이버 로그인과 카페 가입이 필요할 수 있어요. 바로 열리지 않으면 카페의 <b>채팅</b>에서 <b>잉여맨추억자료실 (VOD 사이트)</b> 채팅방을 찾아 들어오시면 돼요.</p>
-    <p><a class="btn" data-feedback target="_blank" rel="noopener noreferrer">채팅방 열기</a></p></div>
+  <h2 class="gh">재미 요소</h2>
+  <div class="gs">
+    <details class="gi"><summary><span class="gi-ic" aria-hidden="true">☀</span><span class="gi-t"><b>오늘의 다시보기</b><small>첫 화면 큰 배너에서 매일 한 편 골라 드려요</small></span></summary><div class="gi-b"><p>배너를 누르면 바로 카페 글로 이동해요.</p></div></details>
+    <details class="gi"><summary><span class="gi-ic" aria-hidden="true">🎴</span><span class="gi-t"><b>랜덤 뽑기</b><small>뭘 볼지 모를 때 카드 한 장 뽑아요</small></span></summary><div class="gi-b"><ul><li>카드를 누르면 영상 하나가 뽑혀요. 분류나 시리즈를 고른 상태면 그 안에서만 뽑아요.</li><li>카페 좋아요 5개 이상은 <b>희귀</b>, 10개 이상은 <b>전설</b> 카드예요.</li><li>효과음은 뽑기 화면 왼쪽 위 버튼이나 설정에서 끌 수 있어요.</li></ul></div></details>
+    <details class="gi"><summary><span class="gi-ic" aria-hidden="true">🎯</span><span class="gi-t"><b>도전과제</b><small>하다 보면 저절로 달성돼요</small></span></summary><div class="gi-b"><ul><li>영상 열어보기, 즐겨찾기, 랜덤 뽑기를 하면 달성돼요. 달성하면 알림이 떠요.</li><li>맨 위 <b>트로피 버튼</b>에서 전체 목록과 진행 상황을 볼 수 있어요. 기록은 이 기기에만 저장돼요.</li></ul></div></details>
+  </div>
+
+  <h2 class="gh">내 기록</h2>
+  <div class="gs">
+    <details class="gi"><summary><span class="gi-ic" aria-hidden="true">♥</span><span class="gi-t"><b>즐겨찾기</b><small>영상의 하트를 누르면 모여요</small></span></summary><div class="gi-b"><p>지금 쓰는 기기와 브라우저에만 저장돼요. 인터넷 사용 기록을 지우면 함께 사라질 수 있어요.</p></div></details>
+    <details class="gi"><summary><span class="gi-ic" aria-hidden="true">🕘</span><span class="gi-t"><b>열어본 영상</b><small>누른 영상에 열어봄 표시가 붙어요</small></span></summary><div class="gi-b"><ul><li>한 번 누른 영상은 <b>열어본 영상</b>에 쌓여서 다시 찾기 쉬워요.</li><li>영상은 카페에서 재생돼서 끝까지 봤는지는 표시하지 않아요.</li><li>기록은 제목 옆 <b>점 세 개</b> 메뉴에서 지울 수 있어요.</li></ul></div></details>
+    <details class="gi"><summary><span class="gi-ic" aria-hidden="true">📱</span><span class="gi-t"><b>다른 기기로 옮기기</b><small>즐겨찾기와 기록을 휴대폰↔컴퓨터로 옮겨요</small></span></summary><div class="gi-b"><ul><li>설정 버튼의 <b>다른 기기로 옮기기</b>를 누르면 QR코드와 링크가 나와요.</li><li>다른 기기 카메라로 QR을 찍거나, 링크를 나에게 보내서 열면 기록이 합쳐져요.</li></ul></div></details>
+    <details class="gi"><summary><span class="gi-ic" aria-hidden="true">🌙</span><span class="gi-t"><b>화면 설정</b><small>어두운 화면, 움직임 줄이기 등</small></span></summary><div class="gi-b"><ul><li>맨 위 오른쪽 <b>설정 버튼</b>에서 <b>어두운 화면</b>, <b>움직임 줄이기</b>, <b>뽑기 소리</b>, <b>카페 글 팝업 창으로</b>를 켜고 끌 수 있어요.</li><li>움직임 줄이기를 켜면 랜덤 뽑기도 바로 결과가 나와요. 설정은 이 기기에 기억돼요.</li></ul></div></details>
+  </div>
+
+  <h2 class="gh">후기와 제보</h2>
+  <div class="gs">
+    <details class="gi"><summary><span class="gi-ic" aria-hidden="true">★</span><span class="gi-t"><b>별점·후기 남기기</b><small>카드를 눌러 ★ 별점 남기기</small></span></summary><div class="gi-b"><ul><li>영상 카드를 누르면 <b>다시보기 · 즐겨찾기 · 별점 남기기</b> 버튼이 있는 창이 열려요.</li><li><b>★ 별점 남기기</b>를 누르면 별점과 후기를 쓰는 곳으로 이동해요.</li><li>구글 로그인이 필요하고, 영상마다 한 번만 남길 수 있어요.</li></ul><p class="gwarn">⚠ 예전과 지금을 비교하는 후기는 금지예요. 적발되면 차단돼요.</p></div></details>
+    <details class="gi"><summary><span class="gi-ic" aria-hidden="true">🖼</span><span class="gi-t"><b>썸네일 제보 (GitHub 사용)</b><small>점 세 개 메뉴 → 썸네일 제보. GitHub 로그인이 필요해요</small></span></summary><div class="gi-b"><p>제보는 <b>GitHub</b>(코드 공유 사이트)의 <b>이슈</b>라는 게시판으로 받아요. 이 사이트의 파일이 GitHub에 있기 때문이에요.</p><ol class="gol"><li>영상 제목 옆 <b>점 세 개</b> → <b>썸네일 제보</b>를 눌러요.</li><li>새 창에서 <b>GitHub에 로그인</b>해요. 계정이 없으면 무료로 가입할 수 있어요.</li><li>영상 제목과 카페 글 주소는 미리 채워져 있어요.</li><li>썸네일 그림을 입력칸에 끌어다 놓거나 이미지 주소를 붙여넣어요.</li><li><b>Submit new issue</b> 버튼을 눌러요.</li></ol><p class="gwarn">⚠ GitHub 이슈는 <b>누구나 볼 수 있는 공개 글</b>이에요. 올린 그림과 GitHub 닉네임이 공개돼요.</p><p>제보가 들어온 영상에는 <b>썸네일 제보 몇 건</b>이 표시되고, 썸네일이 반영되면 표시가 사라져요.</p></div></details>
+    <details class="gi"><summary><span class="gi-ic" aria-hidden="true">💬</span><span class="gi-t"><b>디스코드 참여하기</b><small>불편한 점·잘못된 분류 제보, 후기 신고</small></span></summary><div class="gi-b"><p id="fbHelp">고쳤으면 하는 점이나 잘못된 시리즈 분류·영상 정보를 발견하면 화면 오른쪽 아래 <b>디스코드 참여하기</b> 버튼을 눌러 주세요. 네이버 카페 채팅방이 열려요. 네이버 로그인과 카페 가입이 필요할 수 있어요. 바로 열리지 않으면 카페의 <b>채팅</b>에서 <b>잉여맨추억자료실 (VOD 사이트)</b> 채팅방을 찾아 들어오시면 돼요.</p><p><a class="btn" data-feedback target="_blank" rel="noopener noreferrer">채팅방 열기</a></p></div></details>
+  </div>
 
   <h2>자주 묻는 질문</h2>
   <details><summary>영상이 안 열려요</summary><p>영상은 카페에 가입하고 올드팬 인증을 받은 분만 볼 수 있어요. 네이버에 로그인한 뒤 카페 가입과 올드팬 인증이 되어 있는지 확인해 주세요. 카페 글이 지워졌을 수도 있어요.</p></details>
@@ -349,7 +352,7 @@
 
 <div class="ach-pop" id="achPop" role="status" hidden><span class="ach-ic"><svg viewBox="0 0 24 24"><path d="M8 4h8v5a4 4 0 0 1-8 0zM8 6H5v1a3 3 0 0 0 3 3M16 6h3v1a3 3 0 0 1-3 3M12 13v4M8.5 20h7M10 17h4"/></svg></span><span class="ach-tx"><small>도전과제 달성!</small><b id="achPopT"></b><i id="achPopD"></i></span></div>
 <div id="toast" role="status"></div>
-<script src="config.js?v=76"></script>
-<script src="app.js?v=76"></script>
+<script src="config.js?v=77"></script>
+<script src="app.js?v=77"></script>
 </body>
 </html>
