@@ -644,3 +644,6 @@ html[data-motion="off"] .r-stars button { transition:none; }
 
 .r-warn { margin:22px 0 4px; padding:10px 12px; border-radius:12px; border:1px solid #e03131; background:#fff5f5; color:#c92a2a; font-size:13px; line-height:1.6; }
 [data-theme="dark"] .r-warn { background:#2a1517; border-color:#ff6b6b; color:#ffa8a8; }
+
+.rep-nocopy { color:#c92a2a; }
+[data-theme="dark"] .rep-nocopy { color:#ffa8a8; }
