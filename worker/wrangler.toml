@@ -3,6 +3,7 @@ main = "index.js"
 compatibility_date = "2025-01-01"
 
 [vars]
+RETENTION_DAYS = "180"
 ADMIN_EMAILS = "tq7532@gmail.com"
 GOOGLE_CLIENT_ID = "313175138585-0lj420uspicahtk0nutdpvlp8rgqk5mc.apps.googleusercontent.com"     # 구글 클라우드에서 만든 웹 클라이언트 ID
 SITE_ORIGIN = "https://sam7599.github.io"
