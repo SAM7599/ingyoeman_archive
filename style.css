@@ -874,3 +874,7 @@ html.consent-on body { overflow:hidden; }
 .cs-count b { display:inline-block; min-width:1.4em; font-size:30px; color:#d6455d; }
 .cs-bye .btn { height:48px; padding:0 20px; justify-content:center; }
 .cs-box[hidden] { display:none !important; }
+/* 1위 왕관과 숫자를 바로 붙여요 */
+.rk.t1 { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0; line-height:1; }
+.rk.t1 .crown { width:26px; height:20px; margin:0 0 1px; vertical-align:baseline; }
+@media (max-width:860px) { .rk.t1 .crown { width:22px; height:17px; } }
