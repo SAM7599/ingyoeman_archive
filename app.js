@@ -38,7 +38,7 @@
     age.addEventListener("change", sync); ok.addEventListener("change", sync);
     go.addEventListener("click", () => {
       if (go.disabled) return;
-      try { localStorage.setItem("consent1", JSON.stringify({ v: 1, t: Date.now(), adult: true })); } catch (e) {}
+      try { localStorage.setItem("consent1", JSON.stringify({ v: 2, t: Date.now(), adult: true })); } catch (e) {}
       root.classList.remove("consent-on"); lock(false);
     });
     no.addEventListener("click", () => { deny.hidden = false; deny.scrollIntoView({ block: "nearest" }); });
