@@ -99,7 +99,7 @@
     const id = vid(current), a = ravg[id], my = mine[id];
     const head = a ? `<b class="r-avg">★ ${a[0].toFixed(1)}</b><span>${a[1]}명이 남겼어요</span>` : `<span>아직 별점과 후기가 없어요</span>`;
     let body;
-    if (!rtok) body = `<div id="gbtn" class="r-g"></div><p class="r-note">구글 계정으로 로그인하면 별점과 후기를 남길 수 있어요. 한 계정당 영상마다 하나만 남길 수 있고, <b>별점과 후기를 모두</b> 써야 해요. 후기에는 이름 앞 2글자만 보여요.</p>`;
+    if (!rtok) body = `<div id="gbtn" class="r-g"></div><p class="r-note">구글 계정으로 로그인하면 별점과 후기를 남길 수 있어요. 한 계정당 영상마다 하나만 남길 수 있고, <b>별점과 후기를 모두</b> 써야 해요. 후기에는 이름 앞 2글자만 보여요. 로그인하면 <a href="privacy.html" target="_blank" rel="noopener">개인정보처리방침</a>을 확인한 것으로 봐요.</p>`;
     else body = `<div class="r-stars" role="group" aria-label="내 별점">${[1, 2, 3, 4, 5].map(n => `<button type="button" class="${n <= draft.stars ? "on" : ""}" data-star="${n}" aria-label="별 ${n}개" aria-pressed="${n === draft.stars}">★</button>`).join("")}</div>
       <textarea id="rtext" class="r-text" rows="3" maxlength="300" placeholder="후기를 남겨 주세요. 어떤 점이 좋았나요? (5자 이상)">${esc(draft.text)}</textarea>
       <div class="r-row"><span id="rhint" class="r-hint"></span><span id="rlen" class="r-len">0/300</span></div>
