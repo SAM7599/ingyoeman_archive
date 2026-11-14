@@ -537,3 +537,19 @@ html:not([data-motion="off"]) .ach-pop.show .ach-ic svg { animation:pop .6s .15s
 #notesLink.new::after { content:"NEW"; margin-left:8px; padding:1px 6px; border-radius:999px; font-size:10.5px; font-weight:800; background:var(--accent); color:var(--on-accent); }
 #set { position:relative; }
 #set.dot::after { content:""; position:absolute; top:4px; right:4px; width:9px; height:9px; border-radius:50%; background:var(--heart); border:2px solid var(--bg); }
+
+/* ── 별점 ── */
+.rate { margin-top:20px; padding-top:16px; border-top:1px solid var(--line); }
+.r-head { display:flex; align-items:baseline; gap:10px; margin-bottom:10px; color:var(--sub); font-size:14px; }
+.r-avg { color:var(--accent); font-size:22px; letter-spacing:-.5px; }
+.r-stars { display:flex; gap:4px; }
+.r-stars button { border:0; background:none; padding:2px 3px; font-size:32px; line-height:1; color:var(--line); cursor:pointer; transition:transform .12s, color .12s; }
+.r-stars button.on { color:var(--accent); }
+.r-stars:hover button { color:var(--accent); }
+.r-stars button:hover ~ button { color:var(--line); }
+.r-stars button:hover { transform:scale(1.15); }
+.r-stars button:focus-visible { outline:2px solid var(--accent); outline-offset:2px; border-radius:6px; }
+.r-note { margin:8px 0 0; font-size:13px; color:var(--sub); line-height:1.6; }
+.r-link { border:0; background:none; color:var(--tint); font:inherit; cursor:pointer; text-decoration:underline; padding:0 2px; }
+.meta .rt { color:var(--accent); font-weight:700; }
+html[data-motion="off"] .r-stars button { transition:none; }
