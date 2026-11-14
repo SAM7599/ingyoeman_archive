@@ -38,3 +38,7 @@ CREATE TABLE IF NOT EXISTS reports (
 CREATE INDEX IF NOT EXISTS reports_reporter ON reports (reporter, ts);
 
 CREATE TABLE IF NOT EXISTS banned (uid TEXT PRIMARY KEY, ts INTEGER NOT NULL);
+
+-- 접속 주소(IP)는 그대로 저장하지 않고 되돌릴 수 없는 코드로만 저장해요
+CREATE TABLE IF NOT EXISTS ip_seen (uid TEXT PRIMARY KEY, h TEXT NOT NULL, ts INTEGER NOT NULL);
+CREATE TABLE IF NOT EXISTS banned_ip (h TEXT PRIMARY KEY, ts INTEGER NOT NULL);
