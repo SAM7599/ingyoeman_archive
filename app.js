@@ -608,7 +608,7 @@
   }
   function shuffleDeck(ms) {   // 카드 뭉치를 좌우로 갈라 섞은 뒤 한 장으로 모아요
     const deck = $("gDeck"), card = $("gCard");
-    deck.innerHTML = Array.from({ length: 8 }, (_, i) => `<i class="g-dk" style="--i:${i};--d:${i % 2 ? -1 : 1}"></i>`).join("");
+    deck.innerHTML = Array.from({ length: 8 }, (_, i) => `<i class="g-dk" style="--i:${i};--d:${i % 2 ? -1 : 1}"><span class="logo-mark"></span><b>잉여맨 추억자료실</b></i>`).join("");
     card.classList.add("shuf"); deck.classList.add("on");
     for (let k = 0; k < 7; k++) whoosh(0.1 + k * 0.17, 0.12, 0.05);
     setTimeout(() => { deck.classList.remove("on"); deck.innerHTML = ""; card.classList.remove("shuf"); }, ms);
