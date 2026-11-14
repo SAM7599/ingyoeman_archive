@@ -642,5 +642,5 @@ html[data-motion="off"] .r-stars button { transition:none; }
 .adm-tabs button { height:36px; padding:0 16px; border-radius:99px; border:1px solid var(--line); background:transparent; color:inherit; font:inherit; cursor:pointer; }
 .adm-tabs button.on { background:var(--accent); color:var(--on-accent); border-color:var(--accent); }
 
-.r-warn { margin:10px 0 0; padding:10px 12px; border-radius:12px; border:1px solid #e03131; background:#fff5f5; color:#c92a2a; font-size:13px; line-height:1.6; }
+.r-warn { margin:22px 0 4px; padding:10px 12px; border-radius:12px; border:1px solid #e03131; background:#fff5f5; color:#c92a2a; font-size:13px; line-height:1.6; }
 [data-theme="dark"] .r-warn { background:#2a1517; border-color:#ff6b6b; color:#ffa8a8; }
