@@ -19,7 +19,8 @@ CREATE TABLE IF NOT EXISTS rating_history (
   text  TEXT    NOT NULL,
   ts    INTEGER NOT NULL,
   name  TEXT    NOT NULL DEFAULT '',
-  why   TEXT    NOT NULL DEFAULT 'edit'
+  why   TEXT    NOT NULL DEFAULT 'edit',
+  at    INTEGER NOT NULL DEFAULT 0   -- 보관한 시각 (자동 비우기 기준)
 );
 CREATE INDEX IF NOT EXISTS history_key ON rating_history (vid, uid);
 

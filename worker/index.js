@@ -54,7 +54,9 @@ function checkText(t) {   // 문제가 있으면 이유 코드를, 괜찮으면 
 }
 const mask = n => { const c = Array.from(String(n || "").trim()); if (!c.length) return "****"; return c.slice(0, c.length <= 2 ? 1 : 2).join("") + "****"; };   // 앞 2글자만 보이고 나머지는 ****
 // 고치기 전 / 지우기 전 모습을 보관함에 남겨요 (why: edit=고침, del=본인이 지움, mod=운영진이 지움, ban=차단으로 지워짐)
-const archive = (env, vid, uid, r, why) => env.DB.prepare("INSERT INTO rating_history (vid, uid, stars, text, ts, name, why) VALUES (?, ?, ?, ?, ?, ?, ?)").bind(vid, uid, r.stars, r.text, r.ts, r.name || "", why).run();
+// 보관함 자동 비우기: 보관한 지 RETENTION_DAYS(기본 180일 ≈ 6개월)가 지난 기록을 지워요. 별도 설정 없이 후기가 오갈 때·보관함을 열 때 알아서 정리돼요
+const sweep = (env) => env.DB.prepare("DELETE FROM rating_history WHERE (CASE WHEN at > 0 THEN at ELSE ts END) < ?").bind(Date.now() - (Number(env.RETENTION_DAYS) || 180) * 864e5).run();
+const archive = async (env, vid, uid, r, why) => { await env.DB.prepare("INSERT INTO rating_history (vid, uid, stars, text, ts, name, why, at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)").bind(vid, uid, r.stars, r.text, r.ts, r.name || "", why, Date.now()).run(); if (Math.random() < 0.05) await sweep(env).catch(() => {}); };
 const clean = t => String(t || "").replace(/\s+/g, " ").trim();
 const rid = (env, vid, uid) => hmac(env.SESSION_SECRET, "rid:" + vid + ":" + uid).then(h => h.slice(0, 16));
 const cut = (t, n) => { t = String(t || ""); return t.length > n ? t.slice(0, n - 1) + "…" : t; };
@@ -169,6 +171,7 @@ async function handle(req, env, ctx) {
 
   if (p === "/admin/history" && req.method === "GET") {   // 운영진: 보관함 (고치기 전·지우기 전 후기)
     const s = await getAuth(env, req); if (!isAdmin(env, s)) return json(env, { error: "forbidden" }, 403);
+    await sweep(env).catch(() => {});
     const before = Number(url.searchParams.get("before")) || 9e15;
     const rs = await env.DB.prepare("SELECT id, vid, uid, stars, text, ts, name, why FROM rating_history WHERE id < ? ORDER BY id DESC LIMIT 60").bind(before).all();
     const out = [];
