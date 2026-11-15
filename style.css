@@ -977,3 +977,8 @@ html[data-theme="dark"] .adm-srv[data-s="down"] { background:#3a1d22; color:#ffd
 .st svg .ch-ax { stroke:var(--line); stroke-width:1; }
 .st svg { overflow:visible; }
 #admBtn .srv { right:7px; bottom:7px; width:8px; height:8px; border-width:2px; }
+
+/* 상태 점은 버튼이 아니라 방패 아이콘 기준으로 붙여서, 버튼 크기가 달라져도 항상 아이콘 모서리에 걸쳐요 */
+#admBtn .adm-ic { position:relative; display:block; width:20px; height:20px; }
+#admBtn .adm-ic svg { display:block; }
+#admBtn .adm-ic .srv { right:-4px; bottom:-3px; width:8px; height:8px; }
