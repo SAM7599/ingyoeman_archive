@@ -211,7 +211,7 @@
     const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), 8000), t0 = performance.now();
     let s = "down", ms = 0;
     try { const r = await fetch(RATE + "/ratings", { cache: "no-store", signal: ctl.signal }); ms = Math.round(performance.now() - t0); s = r.ok ? (ms > 2000 ? "slow" : "ok") : "down"; } catch (e) { s = "down"; }
-    clearTimeout(to); srv = { s, ms, t: Date.now() }; srvDraw();
+    clearTimeout(to); srv = { s, ms, t: Date.now() }; { const L = store.get("srvlog", []); L.push({ t: srv.t, ms, s }); store.set("srvlog", L.slice(-60)); } srvDraw(); if (admTab === "srv" && !$("admModal").hidden) drawStatus();
   }
   function srvDraw() {
     if (!srv) return;
@@ -232,7 +232,36 @@
   const aAgo = ms => new Date(ms).toLocaleString("ko-KR");
   let admTab = "rep", arcRows = [];
   const WHY = { edit: "고침", del: "본인이 지움", mod: "운영진이 지움", ban: "차단으로 지워짐" };
-  function admSetTab(t) { admTab = t; document.querySelectorAll(".adm-tabs button").forEach(b => b.classList.toggle("on", b.dataset.tab === t)); $("admQ").hidden = t !== "arc"; $("admQ").value = ""; t === "arc" ? openArchive() : t === "ban" ? openBans() : openAdmin(); }
+  function admSetTab(t) { admTab = t; document.querySelectorAll(".adm-tabs button").forEach(b => b.classList.toggle("on", b.dataset.tab === t)); $("admQ").hidden = t !== "arc"; $("admQ").value = ""; t === "arc" ? openArchive() : t === "ban" ? openBans() : t === "srv" ? openStatus() : openAdmin(); }
+  let stData = null;
+  async function openStatus() {
+    $("admModal").hidden = false; $("admList").textContent = "불러오는 중…";
+    try { const r = await rApi("/admin/stats"); if (r.status === 404) { stData = null; return drawStatus("서버 코드를 새 버전으로 바꾸면 활동 그래프가 나와요."); } if (!r.ok) { $("admList").textContent = "운영진만 볼 수 있어요"; return; } stData = await r.json(); }
+    catch (e) { stData = null; }
+    drawStatus();
+  }
+  function lineChart(L) {
+    if (L.length < 2) return `<p class="ch-empty">확인 기록이 쌓이면 그래프가 나와요. (1분마다 자동으로 확인해요)</p>`;
+    const W = 600, H = 170, P = { l: 56, r: 14, t: 14, b: 26 }, ok = L.filter(x => x.s !== "down"), top = Math.max(500, ...ok.map(x => x.ms)) * 1.1;
+    const X = i => P.l + (W - P.l - P.r) * i / (L.length - 1), Y = ms => P.t + (H - P.t - P.b) * (1 - Math.min(ms, top) / top);
+    let d = "", pen = false; L.forEach((x, i) => { if (x.s === "down") { pen = false; return; } d += (pen ? "L" : "M") + X(i).toFixed(1) + " " + Y(x.ms).toFixed(1); pen = true; });
+    const dots = L.map((x, i) => x.s === "down" ? `<circle cx="${X(i).toFixed(1)}" cy="${P.t + 6}" r="4.5" class="ch-bad"/>` : "").join("");
+    const hm = t => { const z = new Date(t); return String(z.getHours()).padStart(2, "0") + ":" + String(z.getMinutes()).padStart(2, "0"); };
+    return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="서버 응답 속도 그래프"><line x1="${P.l}" x2="${W - P.r}" y1="${Y(2000)}" y2="${Y(2000)}" class="ch-warn"/><text x="${P.l - 6}" y="${Y(0) + 4}" class="ch-t" text-anchor="end">0</text><text x="${P.l - 6}" y="${P.t + 8}" class="ch-t" text-anchor="end">${Math.round(top)}ms</text><path d="${d}" class="ch-line"/>${dots}<text x="${P.l}" y="${H - 6}" class="ch-t">${hm(L[0].t)}</text><text x="${W - P.r}" y="${H - 6}" class="ch-t" text-anchor="end">${hm(L[L.length - 1].t)}</text></svg>`;
+  }
+  function barChart(days) {
+    const W = 600, H = 190, P = { l: 36, r: 8, t: 14, b: 28 }, max = Math.max(4, ...days.flatMap(x => [x.rev, x.rep])), bw = (W - P.l - P.r) / days.length;
+    const Y = n => P.t + (H - P.t - P.b) * (1 - n / max), h = n => (H - P.t - P.b) * n / max;
+    const bars = days.map((x, i) => { const x0 = P.l + bw * i + bw * .12, w = bw * .38; return `<rect x="${x0.toFixed(1)}" y="${Y(x.rev).toFixed(1)}" width="${w.toFixed(1)}" height="${h(x.rev).toFixed(1)}" class="ch-b1"><title>${x.day} 후기 ${x.rev}개</title></rect><rect x="${(x0 + w + 2).toFixed(1)}" y="${Y(x.rep).toFixed(1)}" width="${w.toFixed(1)}" height="${h(x.rep).toFixed(1)}" class="ch-b2"><title>${x.day} 신고 ${x.rep}건</title></rect>`; }).join("");
+    const lab = days.map((x, i) => i % 3 === 0 || i === days.length - 1 ? `<text x="${(P.l + bw * (i + .5)).toFixed(1)}" y="${H - 8}" class="ch-t" text-anchor="middle">${x.day.replace("-", "/")}</text>` : "").join("");
+    return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="최근 14일 후기와 신고 막대 그래프"><line x1="${P.l}" x2="${W - P.r}" y1="${Y(0)}" y2="${Y(0)}" class="ch-ax"/><text x="${P.l - 6}" y="${Y(0) + 4}" class="ch-t" text-anchor="end">0</text><text x="${P.l - 6}" y="${P.t + 8}" class="ch-t" text-anchor="end">${max}</text>${bars}${lab}</svg>`;
+  }
+  function drawStatus(note) {
+    const L = store.get("srvlog", []), okN = L.filter(x => x.s !== "down"), avg = okN.length ? Math.round(okN.reduce((s, x) => s + x.ms, 0) / okN.length) : 0, bad = L.length - okN.length;
+    const T = stData && stData.totals, card = (n, l) => `<div class="st-c"><b>${n}</b><span>${l}</span></div>`;
+    $("admList").innerHTML = `<section class="st"><h3>서버 응답 속도</h3>${lineChart(L)}<p class="st-h">선이 <b>낮을수록 빨라요</b>. 점선(2초)을 넘으면 느린 거예요. 위쪽 <span class="st-red">빨간 점</span>은 연결이 안 됐던 때예요.${L.length ? ` 평균 ${avg}ms${bad ? ` · 안 된 적 ${bad}번` : ""} (이 기기에서 최근 ${L.length}번 확인 기준)` : ""}</p></section>`
+      + (T ? `<section class="st"><h3>최근 14일 활동</h3>${barChart(stData.days)}<p class="st-h"><span class="st-blue">■</span> 새로 올라오거나 고친 후기 <span class="st-red">■</span> 신고. 막대가 갑자기 높아지면 도배나 소동이 있을 수 있어요.</p><div class="st-cs">${card(T.reviews, "후기·별점")}${card(T.writers, "쓴 사람")}${card(T.reports, "신고")}${card(T.banned, "차단")}${card(T.archive, "보관함 기록")}</div></section>` : `<p class="ch-empty">${esc(note || "활동 그래프를 불러오지 못했어요")}</p>`);
+  }
   async function openBans() {
     $("admModal").hidden = false; $("admList").textContent = "불러오는 중…";
     try {

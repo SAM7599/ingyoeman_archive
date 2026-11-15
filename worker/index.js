@@ -221,6 +221,17 @@ async function handle(req, env, ctx) {
     return json(env, out, 200, { "Cache-Control": "no-store" });
   }
 
+  if (p === "/admin/stats" && req.method === "GET") {   // 운영진: 사용 현황 (최근 14일 그래프용)
+    const s = await getAuth(env, req); if (!isAdmin(env, s)) return json(env, { error: "forbidden" }, 403);
+    const KST = 9 * 3600000, D = 86400000, N = 14, today = Math.floor((Date.now() + KST) / D), from = (today - N + 1) * D - KST;
+    const per = async tbl => { const m = {}; for (const r of (await env.DB.prepare(`SELECT CAST((ts + ?) / ? AS INTEGER) AS d, COUNT(*) AS n FROM ${tbl} WHERE ts >= ? GROUP BY d`).bind(KST, D, from).all()).results) m[r.d] = r.n; return m; };
+    const [rv, rp, ar] = [await per("ratings"), await per("reports"), await per("rating_history")];
+    const days = []; for (let i = today - N + 1; i <= today; i++) days.push({ day: new Date(i * D).toISOString().slice(5, 10), rev: rv[i] || 0, rep: rp[i] || 0, arc: ar[i] || 0 });
+    const c = async q => (await env.DB.prepare(q).first()).n;
+    const totals = { reviews: await c("SELECT COUNT(*) AS n FROM ratings"), writers: await c("SELECT COUNT(DISTINCT uid) AS n FROM ratings"), reports: await c("SELECT COUNT(*) AS n FROM reports"), banned: await c("SELECT COUNT(*) AS n FROM banned"), archive: await c("SELECT COUNT(*) AS n FROM rating_history") };
+    return json(env, { days, totals }, 200, { "Cache-Control": "no-store" });
+  }
+
   if (p === "/admin/bans" && req.method === "GET") {   // 운영진: 차단 목록
     const s = await getAuth(env, req); if (!isAdmin(env, s)) return json(env, { error: "forbidden" }, 403);
     const rows = (await env.DB.prepare("SELECT uid, ts FROM banned ORDER BY ts DESC LIMIT 200").all()).results;
