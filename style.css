@@ -1044,5 +1044,7 @@ html[data-motion="off"] .chip-hint { animation:none; }
 details ul { margin:10px 0 0; padding-left:20px; color:var(--sub); line-height:1.8; word-break:keep-all; }
 details li + li { margin-top:4px; }
 
-.r-safe { margin:10px 0 0; padding:10px 12px; font-size:13px; line-height:1.65; color:var(--sub); background:var(--raise); border-radius:10px; word-break:keep-all; }
+.r-safe { margin:10px 0 0; padding:9px 12px; font-size:13px; line-height:1.6; color:var(--sub); background:var(--raise); border-radius:10px; word-break:keep-all; }
+.r-safe summary { cursor:pointer; font-weight:700; color:var(--ink); }
+.r-safe p { margin:8px 0 0; }
 .r-safe b { color:var(--ink); }
