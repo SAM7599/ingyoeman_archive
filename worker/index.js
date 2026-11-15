@@ -20,6 +20,7 @@ async function hmac(secret, data) {
   const k = await crypto.subtle.importKey("raw", enc.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
   return b64u(await crypto.subtle.sign("HMAC", k, enc.encode(data)));
 }
+const same = (a, b) => { a = String(a); b = String(b); let d = a.length ^ b.length; for (let i = 0; i < b.length; i++) d |= (a.charCodeAt(i) || 0) ^ b.charCodeAt(i); return d === 0; };
 async function sign(env, obj, ttl) {
   const body = b64uStr(JSON.stringify({ ...obj, exp: Math.floor(Date.now() / 1000) + ttl }));
   return body + "." + await hmac(env.SESSION_SECRET, body);
@@ -27,7 +28,7 @@ async function sign(env, obj, ttl) {
 async function verify(env, tok) {
   try {
     const [body, sig] = String(tok || "").split(".");
-    if (!body || !sig || sig !== await hmac(env.SESSION_SECRET, body)) return null;
+    if (!body || !sig || !same(sig, await hmac(env.SESSION_SECRET, body))) return null;   // 서명 비교는 시간 차이로 알아내지 못하게 끝까지 비교해요
     const o = JSON.parse(unb64uStr(body));
     return o.exp > Date.now() / 1000 ? o : null;
   } catch (e) { return null; }
