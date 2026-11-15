@@ -97,7 +97,7 @@
       if (r.status === 403) { const j = await r.json().catch(() => ({})); setBan(true, j.ban); drawRate(); return toast("이용이 제한되어 로그인할 수 없어요"); }
       if (r.status === 400) { const j = await r.json().catch(() => ({})); if (j.error === "adult") return toast("만 19세 이상만 로그인할 수 있어요. 새로고침해서 동의 화면에서 확인해 주세요"); }
       if (!r.ok) return toast("로그인하지 못했어요. 잠시 후 다시 해 주세요");
-      const d = await r.json(); rtok = { t: d.token, name: d.name || "" }; isAdm = !!d.admin; store.set("dtok", rtok); setBan(false);
+      const d = await r.json(); rtok = { t: d.token, name: d.name || "" }; isAdm = !!d.admin; syncAdm(); store.set("dtok", rtok); setBan(false);
       toast("구글로 로그인했어요"); loadRatings(); drawRate();
     } catch (e) { toast("로그인하지 못했어요. 잠시 후 다시 해 주세요"); }
   }
@@ -111,11 +111,11 @@
   const rApi = (path, opt) => fetch(RATE + path, { ...(opt || {}), headers: { ...(rtok ? { Authorization: "Bearer " + rtok.t } : {}), "Content-Type": "application/json" } });
   let meI = null;
   const refreshMe = () => { if (rtok) rApi("/me").then(r => r.ok ? r.json() : null).then(d => { if (d && d.name) { meI = { name: d.name, cnt: d.cnt || 0, title: d.title || "", next: d.next || null }; drawRate(); } }).catch(() => {}); };
-  function rLogout() { meI = null; rtok = null; isAdm = false; mine = {}; store.set("dtok", null); drawRate(); }
+  function rLogout() { meI = null; rtok = null; isAdm = false; syncAdm(); mine = {}; store.set("dtok", null); drawRate(); }
   function loadRatings() {
     if (!RATE) return;
     fetch(RATE + "/ratings").then(r => r.json()).then(d => { ravg = d || {}; render(); if (current) drawRate(); }).catch(() => {});
-    if (rtok) rApi("/me").then(r => r.status === 401 ? Promise.reject("login") : r.json()).then(d => { mine = d.mine || {}; rtok.name = d.name || ""; meI = { name: d.name || "", cnt: d.cnt || 0, title: d.title || "", next: d.next || null }; isAdm = !!d.admin; if (d.member === false) { setBan(true, d.ban); toast("차단된 계정이라 별점을 줄 수 없어요"); } else setBan(false); if (current) { resetDraft(); drawRate(); loadReviews(); } }).catch(e => { if (e === "login") rLogout(); });
+    if (rtok) rApi("/me").then(r => r.status === 401 ? Promise.reject("login") : r.json()).then(d => { mine = d.mine || {}; rtok.name = d.name || ""; meI = { name: d.name || "", cnt: d.cnt || 0, title: d.title || "", next: d.next || null }; isAdm = !!d.admin; syncAdm(); if (d.member === false) { setBan(true, d.ban); toast("차단된 계정이라 별점을 줄 수 없어요"); } else setBan(false); if (current) { resetDraft(); drawRate(); loadReviews(); } }).catch(e => { if (e === "login") rLogout(); });
   }
   /* 후기(평점)는 꼭 써야 해요. 신고 번호는 디스코드 채널에 직접 올려요. */
   let draft = { stars: 0, text: "" }, reviews = [], repTarget = null;
@@ -153,7 +153,7 @@
     else body = (meI ? `<p class="r-meinfo">내 별명 <b>${esc(meI.name)}</b>${meI.title ? ` · 칭호 <i class="r-t">${esc(meI.title)}</i>` : ""}<small>${meI.next ? `후기를 쓴 영상 ${meI.cnt}개 · 다음 칭호 ‘${esc(meI.next.title)}’까지 ${meI.next.need}개` : `후기를 쓴 영상 ${meI.cnt}개 · 가장 높은 칭호예요`}</small></p>` : "") + `<div class="r-stars" role="group" aria-label="내 별점">${[1, 2, 3, 4, 5].map(n => `<button type="button" class="${n <= draft.stars ? "on" : ""}" data-star="${n}" aria-label="별 ${n}개" aria-pressed="${n === draft.stars}">★</button>`).join("")}</div>
       <textarea id="rtext" class="r-text" rows="3" maxlength="300" placeholder="후기를 남겨 주세요. 어떤 점이 좋았나요? (5자 이상)">${esc(draft.text)}</textarea>
       <div class="r-row"><span id="rhint" class="r-hint"></span><span id="rlen" class="r-len">0/300</span></div>
-      <div class="r-row"><button type="button" class="btn primary" id="rsend" disabled>${my ? "수정하기" : "등록하기"}</button><span class="r-note">${my ? `<button type="button" class="r-link" data-del>내 별점·후기 지우기</button> ` : ""}<button type="button" class="r-link" data-rout>로그아웃</button> <button type="button" class="r-link" data-delall>내 정보 전부 삭제</button>${isAdm ? ` <button type="button" class="r-link" data-adm>운영진 신고함</button>` : ""}</span></div>
+      <div class="r-row"><button type="button" class="btn primary" id="rsend" disabled>${my ? "수정하기" : "등록하기"}</button><span class="r-note">${my ? `<button type="button" class="r-link" data-del>내 별점·후기 지우기</button> ` : ""}<button type="button" class="r-link" data-rout>로그아웃</button> <button type="button" class="r-link" data-delall>내 정보 전부 삭제</button></span></div>
       <p class="r-note">광고, 스팸, 욕설, 링크, 점(.)만 올린 후기, 정치 이야기, 영상과 관계없는 내용은 신고되거나 지워질 수 있어요. 영상을 본 느낌만 남겨 주세요.</p>`;
     const list = reviews.length ? `<ul class="r-list">${reviews.map(r => `<li class="${r.me ? "mine" : ""}"><div class="r-h"><b>${esc(r.name)}</b>${r.title ? `<i class="r-t lv${r.lv}">${esc(r.title)}</i>` : ""}${r.me ? `<i class="r-me">내 후기</i>` : ""}<span class="r-s" aria-label="별 ${r.stars}개">${"★".repeat(r.stars)}${"☆".repeat(5 - r.stars)}</span><time>${rAgo(r.ts)}</time>${r.me ? "" : `<button type="button" class="r-link r-rep" data-rep="${esc(r.id)}">신고</button>`}</div><p>${esc(r.text)}</p></li>`).join("")}</ul>` : "";
     el.innerHTML = `<div class="r-head">${head}</div>${body}${WARN}${list}`;
@@ -194,6 +194,18 @@
     } catch (e) { toast("지금은 지울 수 없어요. 잠시 후 다시 해 주세요"); }
   }
 
+  /* ── 운영진 대시보드 (지정한 구글 계정만) ── */
+  const admCnt = { rep: 0, arc: 0, ban: 0 };
+  function admBadge() {
+    const n = admCnt.rep; $("admN").textContent = n > 0 ? (n > 99 ? "99+" : n) : "";
+    document.querySelectorAll(".adm-tabs button").forEach(b => { const c = admCnt[b.dataset.tab]; b.dataset.n = c > 0 ? c : ""; });
+  }
+  async function admCounts(all) {
+    const get = async (p, k) => { try { const r = await rApi(p); if (r.ok) admCnt[k] = (await r.json()).length; } catch (e) {} };
+    await Promise.all([get("/admin/reports", "rep"), ...(all ? [get("/admin/history", "arc"), get("/admin/bans", "ban")] : [])]); admBadge();
+  }
+  function syncAdm() { $("admBtn").hidden = !isAdm; if (isAdm) admCounts(false); else { admCnt.rep = admCnt.arc = admCnt.ban = 0; admBadge(); } }
+  function openDash() { if (!isAdm) return; admSetTab("rep"); admCounts(true); }
   /* ── 운영진 신고함 (지정한 구글 계정만) ── */
   let tmap = null;
   const vTitle = id => { if (!tmap) { tmap = {}; all.forEach(v => { tmap[vid(v)] = v.title || ""; }); } return tmap[id] || "(목록에서 사라진 영상)"; };
@@ -212,7 +224,7 @@
   }
   async function admUnban(uid) {
     if (!confirm("이 사람의 차단을 풀까요?\n(계정과 접속 환경 차단이 함께 풀려요. 지워진 후기는 돌아오지 않아요.)")) return;
-    try { const r = await rApi("/admin/unban", { method: "POST", body: JSON.stringify({ uid }) }); if (!r.ok) return toast("처리하지 못했어요"); toast("차단을 풀었어요"); openBans(); } catch (e) { toast("처리하지 못했어요"); }
+    try { const r = await rApi("/admin/unban", { method: "POST", body: JSON.stringify({ uid }) }); if (!r.ok) return toast("처리하지 못했어요"); toast("차단을 풀었어요"); openBans(); admCounts(true); } catch (e) { toast("처리하지 못했어요"); }
   }
   async function openArchive() {
     $("admList").textContent = "불러오는 중…";
@@ -236,7 +248,7 @@
   }
   async function admAct(id, act) {
     if (!confirm(act === "ban" ? "작성자를 차단하고 그 사람의 모든 후기를 지울까요? 되돌릴 수 없어요." : "이 후기를 삭제할까요? 되돌릴 수 없어요.")) return;
-    try { const r = await rApi("/admin/act", { method: "POST", body: JSON.stringify({ id: +id, act }) }); if (!r.ok) return toast("처리하지 못했어요"); toast("처리했어요"); admSetTab("rep"); loadRatings(); loadReviews(); } catch (e) { toast("처리하지 못했어요"); }
+    try { const r = await rApi("/admin/act", { method: "POST", body: JSON.stringify({ id: +id, act }) }); if (!r.ok) return toast("처리하지 못했어요"); toast("처리했어요"); admSetTab("rep"); admCounts(true); loadRatings(); loadReviews(); } catch (e) { toast("처리하지 못했어요"); }
   }
   async function admPurge(k, v) {
     if (!confirm(k === "uid" ? "이 사람의 보관 기록을 전부 영구 삭제할까요? 되돌릴 수 없어요." : "이 보관 기록을 영구 삭제할까요? 되돌릴 수 없어요.")) return;
@@ -917,7 +929,6 @@
     if (b.dataset.del !== undefined) return doDelete();
     if (b.dataset.delall !== undefined) return doDeleteAll();
     if (b.dataset.rep) return openReport(b.dataset.rep);
-    if (b.dataset.adm !== undefined) { admTab = "rep"; document.querySelectorAll(".adm-tabs button").forEach(x => x.classList.toggle("on", x.dataset.tab === "rep")); $("admQ").hidden = true; return openAdmin(); }
     if (b.dataset.star) { draft.stars = +b.dataset.star; const t = $("rtext"); if (t) draft.text = t.value; drawRate(); const t2 = $("rtext"); if (t2) t2.focus(); return; }
     if (b.id === "rsend") doSubmit();
   });
@@ -927,6 +938,7 @@
   $("admList").addEventListener("click", e => { const b = e.target.closest("button[data-a]"); if (b) return admAct(b.dataset.id, b.dataset.a); const u = e.target.closest("button[data-u]"); if (u) return admUnban(u.dataset.u); const c = e.target.closest("button[data-p]"); if (c) admPurge(c.dataset.p, c.dataset.id); });
   document.querySelector(".adm-tabs").addEventListener("click", e => { const b = e.target.closest("button[data-tab]"); if (b) admSetTab(b.dataset.tab); });
   $("admQ").addEventListener("input", drawArchive);
+  $("admBtn").addEventListener("click", openDash);
   $("admClose").addEventListener("click", () => { $("admModal").hidden = true; });
   $("admModal").addEventListener("click", e => { if (e.target === $("admModal") && downT === e.target) $("admModal").hidden = true; });
   $("repSave").addEventListener("click", saveShot);
