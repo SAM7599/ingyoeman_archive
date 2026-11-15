@@ -24,7 +24,7 @@
   if (m !== "on" && m !== "off") m = (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) ? "off" : "on";
   document.documentElement.setAttribute("data-motion", m); })();
 </script>
-<link rel="stylesheet" href="style.css?v=124">
+<link rel="stylesheet" href="style.css?v=125">
 </head>
 <body>
 <div id="intro" role="dialog" aria-label="잉여맨 추억자료실 소개 화면">
@@ -42,21 +42,36 @@
 </div>
 <div id="consent" role="dialog" aria-modal="true" aria-labelledby="csT">
   <div class="cs-box">
-    <h2 id="csT">입장하기 전에 확인해 주세요</h2>
-    <p class="cs-lead">잉여맨 추억자료실은 2011~2016년 방송 영상(최신 영상은 2017년부터)의 <b>제목을 모아 둔 목록</b> 사이트예요.</p>
+    <div class="cs-hd">
+      <span class="logo-mark" aria-hidden="true"></span>
+      <h2 id="csT">어서 오세요, 잉여맨 추억자료실이에요</h2>
+      <p class="cs-lead">2011~2016년 그 시절 방송 영상을 한눈에 찾아보는 곳이에요. 최신 영상은 2017년부터 있어요.</p>
+    </div>
+    <div class="cs-sec">이곳은 이런 곳이에요</div>
     <ul class="cs-list">
-      <li><b>영상을 바로 재생하는 사이트가 아니에요.</b> 여기는 영상 목록이고, 영상은 <b>네이버 카페</b>에서 열려요. 보려면 <b>카페 가입(1980~2004년생만 가능)과 올드팬 인증</b>이 필요해요. (일부 유튜브 영상만 이 사이트에서 바로 재생돼요.)</li>
-      <li><b>부적절한 표현이 있을 수 있어요.</b> 2011~2016년 영상은 욕설·비속어·드립이 흔했던 시절이라, 영상 제목에 지금 기준으로는 맞지 않는 표현이 일부 들어 있어요. 당시 제목을 그대로 두었어요.</li>
-      <li><b>만 19세 이상만 이용해야 해요.</b> 미성년자는 이용하면 안 되고, 별점·후기도 만 19세 이상만 남길 수 있어요. 나이는 직접 체크하는 방식이라, 체크한 내용은 본인이 책임져야 해요.</li>
-      <li class="cs-warn"><b>⚠ 금지: 과거와 현재를 비교하는 후기</b><br>예전과 지금을 비교하거나 깎아내리는 후기는 <b>적발되면 바로 삭제하고 작성자를 차단</b>해요. 차단되면 별점·후기·신고를 모두 쓸 수 없어요. 영상 자체에 대한 감상만 남겨 주세요.</li>
-      <li><b>동의한 뒤에는 운영진이 책임지지 않아요.</b> 동의하고 입장한 뒤에 영상 제목의 부적절한 표현이나 이용자가 쓴 글 때문에 생기는 불쾌감·피해 등에 대해 사이트 운영진은 책임지지 않아요. 다만 후기 칸에는 <b>모든 이용자에게 똑같이 보이는 글</b>이 올라와요. 욕설·비방·음란·혐오·정치처럼 <b>누가 봐도 부적절한 내용</b>이 화면에 보이면 후기 옆 <b>“신고”</b> 버튼으로 신고해 주세요. 개인 취향에 안 맞는다는 이유가 아니라, 모두가 보는 화면에 올라온 내용을 기준으로 운영진이 확인해서 지우거나 작성자를 차단해요.</li>
-      <li>별점·후기를 남기려면 구글 로그인이 필요해요. 개인정보는 <a href="privacy.html" target="_blank" rel="noopener noreferrer">개인정보처리방침</a>에 따라 다뤄요.</li>
+      <li><i class="cs-ic">📼</i><div><b>영상 목록 사이트예요</b><span>영상은 <b>네이버 카페</b>에서 열려요. 카페 가입(1980~2004년생)과 올드팬 인증이 필요해요. 일부 유튜브 영상은 여기서 바로 볼 수 있어요.</span></div></li>
+      <li><i class="cs-ic">🕰️</i><div><b>그 시절 제목 그대로예요</b><span>욕설·드립이 흔했던 때라 지금 기준에 맞지 않는 표현이 일부 있어요.</span></div></li>
+      <li><i class="cs-ic">⭐</i><div><b>별점·후기를 남길 수 있어요</b><span>구글 로그인만 하면 돼요. 이름 대신 <b>랜덤 별명</b>이 보여서 안심이에요.</span></div></li>
     </ul>
+    <div class="cs-sec">같이 지켜 주세요</div>
+    <ul class="cs-list">
+      <li><i class="cs-ic">🔞</i><div><b>만 19세 이상만 이용해요</b><span>나이는 직접 체크하는 방식이에요.</span></div></li>
+      <li class="cs-warn"><i class="cs-ic">🚫</i><div><b>과거와 현재를 비교하는 후기는 금지예요</b><span>적발되면 <b>바로 삭제하고 작성자를 차단</b>해요. 차단되면 별점·후기·신고를 쓸 수 없어요. 영상 자체에 대한 감상만 남겨 주세요.</span></div></li>
+      <li><i class="cs-ic">🚩</i><div><b>모두가 불편할 글은 신고해 주세요</b><span>욕설·비방·음란·혐오·정치처럼 누가 봐도 부적절한 글은 후기 옆 “신고”로 알려 주세요. 운영진이 확인해요.</span></div></li>
+    </ul>
+    <p class="cs-resp"><b>동의한 뒤에는 운영진이 책임지지 않아요.</b> 영상 제목의 부적절한 표현이나 이용자가 쓴 글로 생기는 불쾌감·피해에 대해서요.</p>
+    <details class="cs-more">
+      <summary>자세한 내용 보기</summary>
+      <p>동의하고 입장한 뒤에 영상 제목의 부적절한 표현이나 이용자가 쓴 글 때문에 생기는 불쾌감·피해 등에 대해 사이트 운영진은 책임지지 않아요. 다만 후기 칸에는 <b>모든 이용자에게 똑같이 보이는 글</b>이 올라와요. 욕설·비방·음란·혐오·정치처럼 <b>누가 봐도 부적절한 내용</b>이 화면에 보이면 후기 옆 <b>“신고”</b> 버튼으로 신고해 주세요. 개인 취향에 안 맞는다는 이유가 아니라, 모두가 보는 화면에 올라온 내용을 기준으로 운영진이 확인해서 지우거나 작성자를 차단해요.</p>
+      <p>미성년자는 이용하면 안 되고, 별점·후기도 만 19세 이상만 남길 수 있어요. 체크한 내용은 본인이 책임져야 해요. 개인정보는 <a href="privacy.html" target="_blank" rel="noopener noreferrer">개인정보처리방침</a>에 따라 다뤄요.</p>
+    </details>
+    <div class="cs-foot">
     <label class="cs-ck"><input type="checkbox" id="csAge"><span><b>(필수)</b> 저는 만 19세 이상이에요</span></label>
-    <label class="cs-ck"><input type="checkbox" id="csOk"><span><b>(필수)</b> 운영진의 책임 면제를 포함한 위 내용을 확인했고 동의해요</span></label>
+    <label class="cs-ck"><input type="checkbox" id="csOk"><span><b>(필수)</b> 위 내용을 확인했고 동의해요 (운영진 책임 면제 포함)</span></label>
     <div class="cs-act">
-      <button type="button" class="btn primary" id="csGo" disabled>동의하고 입장하기</button>
-      <button type="button" class="btn" id="csNo">동의하지 않아요</button>
+      <button type="button" class="btn primary" id="csGo" disabled>입장하기</button>
+      <button type="button" class="btn cs-no" id="csNo">동의하지 않아요</button>
+    </div>
     </div>
   </div>
   <div class="cs-box cs-bye" id="csBye" role="alert" hidden>
@@ -392,7 +407,7 @@
 
 <div class="ach-pop" id="achPop" role="status" hidden><span class="ach-ic"><svg viewBox="0 0 24 24"><path d="M8 4h8v5a4 4 0 0 1-8 0zM8 6H5v1a3 3 0 0 0 3 3M16 6h3v1a3 3 0 0 1-3 3M12 13v4M8.5 20h7M10 17h4"/></svg></span><span class="ach-tx"><small>도전과제 달성!</small><b id="achPopT"></b><i id="achPopD"></i></span></div>
 <div id="toast" role="status"></div>
-<script src="config.js?v=124"></script>
-<script src="app.js?v=124"></script>
+<script src="config.js?v=125"></script>
+<script src="app.js?v=125"></script>
 </body>
 </html>
