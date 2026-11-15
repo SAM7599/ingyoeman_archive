@@ -882,7 +882,7 @@ html.consent-on body { overflow:hidden; }
 
 /* 이용 가이드 등을 연 채로 새로고침할 때, 불러오는 동안 홈 화면이 잠깐 보이지 않게 해요 */
 html.pre-guide #viewList, html.pre-about #viewList, html.pre-notes #viewList, html.pre-ach #viewList { display:none !important; }
-html.pre-rank #viewList, html.pre-series #viewList, html.pre-fav #viewList, html.pre-recent #viewList { visibility:hidden; }
+html.pre-rank #viewList, html.pre-series #viewList, html.pre-fav #viewList, html.pre-recent #viewList, html.pre-nothumb #viewList { visibility:hidden; }
 html.pre-guide #viewGuide[hidden], html.pre-about #viewAbout[hidden], html.pre-notes #viewNotes[hidden] { display:block !important; }
 .cs-list li.cs-warn { background:#fdeaea; border:1px solid #e8a3a3; color:#7a1f1f; }
 .cs-list li.cs-warn b { color:#b42318; }
@@ -1025,3 +1025,9 @@ html[data-theme="dark"] .adm-srv[data-s="down"] { background:#3a1d22; color:#ffd
   .chips { flex-wrap:nowrap; overflow-x:auto; overscroll-behavior-x:contain; scrollbar-width:none; margin-left:-16px; margin-right:-16px; padding:2px 16px 4px; margin-bottom:14px; -webkit-overflow-scrolling:touch; }
   .chips .chip { flex:none; white-space:nowrap; }
 }
+
+/* 팝업 끌기 */
+#tnPop .tnp { touch-action:none; user-select:none; -webkit-user-select:none; cursor:grab; }
+#tnPop .tnp .tn-poster { cursor:grab; }
+#tnPop .tnp.dragging, #tnPop .tnp.dragging .tn-poster { cursor:grabbing; }
+#tnPop .tn-bar button { cursor:pointer; }

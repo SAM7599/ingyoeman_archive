@@ -364,6 +364,7 @@
   function pool() {
     if (tab === "fav") return all.filter(v => favs.has(key(v)));
     if (tab === "recent") return recent.map(byKey).filter(Boolean);
+    if (tab === "nothumb") return all.filter(v => !v.thumb);
     if (tab === "rank") return ranked(all);
     if (tab === "series") return ser ? all.filter(v => v._s.includes(ser)) : [];
     return all;
@@ -378,7 +379,7 @@
   function filtered() {
     const w = words(), s = $("sort").value;
     const list = pool().filter(v => {
-      if (cat === "!thumb") { if (v.thumb) return false; } else if (cat && cat !== "*" && v.category !== cat) return false;
+      if (cat && cat !== "*" && v.category !== cat) return false;
       const hay = ((v.title || "") + " " + (v.category || "")).toLowerCase();
       return w.every(x => hay.includes(x));
     });
@@ -430,9 +431,9 @@
     const p = pool(), n = {}, home = tab === "all";
     p.forEach(v => { n[v.category] = (n[v.category] || 0) + 1; });
     const extra = Object.keys(n).filter(c => c && c !== "undefined" && !CATS.includes(c)).sort();
-    const chip = (c, label, cnt, zero) => `<button class="chip ${c === cat ? "on" : ""} ${zero ? "zero" : ""}" type="button" data-c="${esc(c)}">${c && c !== "*" && c !== "!thumb" ? `<i style="--c:${dot(c)}"></i>` : ""}${c === "!thumb" ? IMG : ""}${esc(label)}${cnt == null ? "" : `<em>${cnt}</em>`}</button>`;
+    const chip = (c, label, cnt, zero) => `<button class="chip ${c === cat ? "on" : ""} ${zero ? "zero" : ""}" type="button" data-c="${esc(c)}">${c && c !== "*" ? `<i style="--c:${dot(c)}"></i>` : ""}${esc(label)}${cnt == null ? "" : `<em>${cnt}</em>`}</button>`;
     const cbox = $("chips"), sx = cbox.scrollLeft;
-    $("chips").innerHTML = (all.length > 1 && tab !== "fav" && tab !== "recent" ? `<button class="chip draw" type="button" data-draw>${CARD}랜덤 뽑기</button>` : "") + (home ? chip("", "홈") + chip("*", "전체 영상", p.length) : chip("", "전체", p.length)) + (cat === "!thumb" ? chip("!thumb", "썸네일 없는 영상", p.filter(v => !v.thumb).length) : "") +
+    $("chips").innerHTML = (all.length > 1 && tab !== "fav" && tab !== "recent" ? `<button class="chip draw" type="button" data-draw>${CARD}랜덤 뽑기</button>` : "") + (home ? chip("", "홈") + chip("*", "전체 영상", p.length) : chip("", "전체", p.length)) + 
       [...CATS, ...extra].map(c => chip(c, c, n[c] || 0, !n[c] && c !== cat)).join("");
     cbox.scrollLeft = sx;   // 가로로 넘겨 둔 위치를 유지 (휴대폰)
     const on = cbox.querySelector(".chip.on"); if (on && cbox.scrollWidth > cbox.clientWidth + 4) { const l = on.offsetLeft - cbox.offsetLeft, r = l + on.offsetWidth; if (l < cbox.scrollLeft + 8 || r > cbox.scrollLeft + cbox.clientWidth - 8) cbox.scrollLeft = Math.max(0, l - (cbox.clientWidth - on.offsetWidth) / 2); }
@@ -489,13 +490,13 @@
     document.querySelectorAll(".nFav").forEach(el => { el.textContent = favs.size || ""; });
     $("home").hidden = !home; $("browse").hidden = home;
     renderChips(); renderToday();
-    $("chips").hidden = tiles;
+    $("chips").hidden = tiles || tab === "nothumb";
     if (home) { renderHome(); return playIn($("home")); }
-    $("pageH").textContent = tiles ? "시리즈" : rank ? "인기 랭킹" : tab === "series" && ser ? ser : q ? "검색 결과" : tab === "fav" ? "즐겨찾기" : tab === "recent" ? "열어본 영상" : cat === "!thumb" ? "썸네일 없는 영상" : cat && cat !== "*" ? cat : "전체 영상";
+    $("pageH").textContent = tiles ? "시리즈" : rank ? "인기 랭킹" : tab === "series" && ser ? ser : q ? "검색 결과" : tab === "fav" ? "즐겨찾기" : tab === "recent" ? "열어본 영상" : tab === "nothumb" ? "썸네일 없는 영상" : cat && cat !== "*" ? cat : "전체 영상";
     $("count").textContent = tiles ? SERIES.length + "개" : list.length + (tab === "series" ? "편" : "개");
-    $("back").hidden = !(tab === "series" && ser);
+    { const bk = $("back"); bk.hidden = !((tab === "series" && ser) || tab === "nothumb"); bk.setAttribute("href", tab === "nothumb" ? "#" : "#series"); bk.textContent = tab === "nothumb" ? "홈으로" : "시리즈 목록"; }
     $("sort").hidden = tiles || rank; document.querySelector(".seg").hidden = tiles || rank;
-    const note = tiles ? "같은 콘텐츠끼리 묶었어요. 제목으로 자동 분류해서 빠지거나 잘못 들어간 영상이 있을 수 있어요."
+    const note = tab === "nothumb" ? "아직 썸네일이 없는 영상이에요. 영상 제목 옆 점 세 개(⋮) 메뉴에서 “썸네일 제보”를 눌러 주세요. 여러분의 제보로 목록이 채워져요." : tiles ? "같은 콘텐츠끼리 묶었어요. 제목으로 자동 분류해서 빠지거나 잘못 들어간 영상이 있을 수 있어요."
       : rank ? "네이버 카페 조회수와 좋아요를 합친 점수 순서예요. 좋아요 1개를 조회수 " + LIKE_W + "회로 쳤어요." + (RATE ? " 사이트 별점도 반영해요. 별 한 표는 (점수 − 3) × " + RATE_W + "점이라 5점이면 +" + 2 * RATE_W + ", 1점이면 −" + 2 * RATE_W + "점이에요." : "") + " 카페 숫자는 목록을 정리한 때 기준이라 지금과 조금 다를 수 있어요." : "";
     $("pageNote").hidden = !note; $("pageNote").textContent = note;
     $("favXferBox").hidden = tab !== "fav";
@@ -516,7 +517,7 @@
   /* ── 화면 바꾸기 ── */
   function route() {
     let h = location.hash.replace("#", ""); try { h = decodeURIComponent(h); } catch (e) {}
-    const next = ["fav", "recent", "guide", "about", "notes", "ach", "rank", "series"].includes(h) ? h : h.startsWith("series=") ? "series" : "all";
+    const next = ["fav", "recent", "guide", "about", "notes", "ach", "rank", "series", "nothumb"].includes(h) ? h : h.startsWith("series=") ? "series" : "all";
     const nextSer = h.startsWith("series=") ? h.slice(7) : "";
     const moved = next !== tab || nextSer !== ser;   // 화면(탭)이 실제로 바뀔 때만 전환 효과
     if (moved) { const h0 = document.documentElement; h0.style.scrollBehavior = "auto"; window.scrollTo(0, 0); h0.style.scrollBehavior = ""; }   // 새 화면을 훑으며 올라가지 않고 바로 맨 위에서 시작
@@ -524,11 +525,11 @@
     if (nextSer !== ser) $("q").value = "";
     tab = next; ser = nextSer;
     $("viewGuide").hidden = tab !== "guide"; $("viewAbout").hidden = tab !== "about"; $("viewNotes").hidden = tab !== "notes"; if (tab === "notes") showNotes(); $("viewAch").hidden = tab !== "ach"; if (tab === "ach") renderAch(); $("viewList").hidden = isInfo();
-    document.querySelectorAll(".tab").forEach(a => a.classList.toggle("on", a.dataset.tab === (tab === "ach" ? "ach" : isInfo() ? "info" : tab)));
+    document.querySelectorAll(".tab").forEach(a => a.classList.toggle("on", a.dataset.tab === (tab === "ach" ? "ach" : isInfo() ? "info" : tab === "nothumb" ? "all" : tab)));
     const pg = tab === "guide" ? $("viewGuide") : tab === "about" ? $("viewAbout") : tab === "notes" ? $("viewNotes") : tab === "ach" ? $("viewAch") : $("viewList"); pg.classList.remove("enter"); if (moved && !document.documentElement.classList.contains("vt")) { void pg.offsetWidth; pg.classList.add("enter"); }
     if (!$("gacha").hidden) closeGacha();
     closeMenu();
-    document.documentElement.classList.remove("pre-guide", "pre-about", "pre-notes", "pre-ach", "pre-rank", "pre-series", "pre-fav", "pre-recent");
+    document.documentElement.classList.remove("pre-guide", "pre-about", "pre-notes", "pre-ach", "pre-rank", "pre-series", "pre-fav", "pre-recent", "pre-nothumb");
     if (!isInfo()) reset();
     if (h.startsWith("import=")) { askImport(h.slice(7)); }
     else if (h.startsWith("v=")) { const v = all.find(x => vid(x) === h.slice(2)); if (v) openModal(v); else if (all.length) toast("영상을 찾지 못했어요"); }
@@ -657,7 +658,7 @@
   function drawPool() { const l = isHome() || isInfo() ? all : filtered(); return l.length > 1 ? l : all; }
   function drawLabel() {
     if (drawPool() === all || isHome()) return "전체 영상";
-    return tab === "series" && ser ? ser : tab === "rank" ? "인기 랭킹" : tab === "fav" ? "즐겨찾기" : tab === "recent" ? "열어본 영상" : words().length ? "검색 결과" : cat === "!thumb" ? "썸네일 없는 영상" : cat && cat !== "*" ? cat : "전체 영상";
+    return tab === "series" && ser ? ser : tab === "rank" ? "인기 랭킹" : tab === "fav" ? "즐겨찾기" : tab === "recent" ? "열어본 영상" : tab === "nothumb" ? "썸네일 없는 영상" : words().length ? "검색 결과" : cat && cat !== "*" ? cat : "전체 영상";
   }
   function gachaPick() {
     const p = drawPool().filter(v => !gv || key(v) !== key(gv));
@@ -1142,7 +1143,23 @@
       clearInterval(t); if (!$("modal").hidden || /^#(v|import)=/.test(location.hash)) return; setTimeout(tnOpen, 700);
     }, 500);
   }
-  $("tnGo").addEventListener("click", () => { tnClose(); $("q").value = ""; cat = "!thumb"; if (tab !== "all" || location.hash.replace("#", "")) { location.hash = ""; } reset(); window.scrollTo({ top: 0, behavior: "auto" }); setTimeout(() => { const c = $("chips"); if (c) c.scrollIntoView({ block: "start", behavior: calm() ? "auto" : "smooth" }); }, 60); });
+  $("tnGo").addEventListener("click", () => { tnClose(); if (!$("modal").hidden) closeModal(true); location.hash = "nothumb"; });
+  { /* 팝업을 끌어서 사이트 어디로든 옮길 수 있어요 */
+    const pop = $("tnPop"), box = pop.querySelector(".tnp"); let st = null, drag = false;
+    box.addEventListener("pointerdown", e => {
+      if ((e.pointerType === "mouse" && e.button !== 0) || e.target.closest(".tn-bar button")) return;
+      const r = pop.getBoundingClientRect(); st = { x: e.clientX, y: e.clientY, l: r.left, t: r.top }; drag = false;
+    });
+    document.addEventListener("pointermove", e => {
+      if (!st) return; const dx = e.clientX - st.x, dy = e.clientY - st.y;
+      if (!drag && Math.hypot(dx, dy) < 6) return; drag = true; box.classList.add("dragging");
+      const W = innerWidth - box.offsetWidth, H = innerHeight - box.offsetHeight;
+      pop.style.left = Math.min(Math.max(0, st.l + dx), Math.max(0, W)) + "px"; pop.style.top = Math.min(Math.max(0, st.t + dy), Math.max(0, H)) + "px";
+    });
+    const end = () => { if (st) { st = null; box.classList.remove("dragging"); setTimeout(() => { drag = false; }, 0); } };
+    document.addEventListener("pointerup", end); document.addEventListener("pointercancel", end);
+    box.addEventListener("click", e => { if (drag) { e.preventDefault(); e.stopPropagation(); } }, true);   // 끌고 놓았을 때는 '이동' 버튼이 눌리지 않게
+  }
   $("tnHide").addEventListener("click", () => { store.set("tnHide", tnDay()); tnClose(); toast("오늘은 다시 안 보여드릴게요"); });
   $("tnX").addEventListener("click", tnClose);
 
