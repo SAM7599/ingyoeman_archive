@@ -1048,3 +1048,6 @@ details li + li { margin-top:4px; }
 .r-safe summary { cursor:pointer; font-weight:700; color:var(--ink); }
 .r-safe p { margin:8px 0 0; }
 .r-safe b { color:var(--ink); }
+
+.r-safe summary .r-more { display:inline-block; margin-left:4px; padding:1px 8px; border-radius:99px; font-size:12px; font-weight:700; color:var(--accent); border:1px solid currentColor; white-space:nowrap; }
+.r-safe[open] summary .r-more { display:none; }
