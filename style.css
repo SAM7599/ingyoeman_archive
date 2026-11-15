@@ -1019,3 +1019,9 @@ html[data-theme="dark"] .adm-srv[data-s="down"] { background:#3a1d22; color:#ffd
 @media (max-width:520px) { #tnPop.modal { left:12px; top:76px; } .tnp { width:min(300px, calc(100vw - 24px)); } .tn-poster { min-height:min(430px, calc(100dvh - 190px)); padding:28px 20px 24px; } }
 #tnPop .tnp { width:340px; max-width:calc(100vw - 24px); }
 @media (max-width:520px) { #tnPop .tnp { width:300px; } }
+
+/* 휴대폰: 분류 태그를 한 줄로 두고 옆으로 넘겨요 (화면을 덜 차지해요) */
+@media (max-width:860px) {
+  .chips { flex-wrap:nowrap; overflow-x:auto; overscroll-behavior-x:contain; scrollbar-width:none; margin-left:-16px; margin-right:-16px; padding:2px 16px 4px; margin-bottom:14px; -webkit-overflow-scrolling:touch; }
+  .chips .chip { flex:none; white-space:nowrap; }
+}
