@@ -934,3 +934,5 @@ html:not([data-motion="off"]) .cs-box:not(.cs-bye) { animation:zoom .35s cubic-b
 .cs-box:not(.cs-bye) { padding-bottom:0; }
 .cs-foot { margin:10px 0 0 !important; }
 @media (max-width:520px) { .cs-foot { margin-bottom:0 !important; } }
+
+footer .copy { margin-top:10px; font-size:12px; opacity:.7; line-height:1.6; word-break:keep-all; }
