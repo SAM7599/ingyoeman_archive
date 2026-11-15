@@ -982,3 +982,7 @@ html[data-theme="dark"] .adm-srv[data-s="down"] { background:#3a1d22; color:#ffd
 #admBtn .adm-ic { position:relative; display:block; width:20px; height:20px; }
 #admBtn .adm-ic svg { display:block; }
 #admBtn .adm-ic .srv { right:-4px; bottom:-3px; width:8px; height:8px; }
+#admBtn { display:grid; place-items:center; }
+#admBtn[hidden] { display:none; }
+#admBtn b:empty { display:none; }
+.ach-btn b:empty { display:none; }
