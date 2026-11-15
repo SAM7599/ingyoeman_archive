@@ -168,6 +168,7 @@
       if (r.status === 401) { rLogout(); return toast("다시 로그인해 주세요"); }
       if (r.status === 403) { mine = {}; const j = await r.json().catch(() => ({})); setBan(true, j.ban); drawRate(); return toast("차단된 계정이라 남길 수 없어요"); }
       if (r.status === 400) { const d = await r.json().catch(() => ({})); formState(); return toast(TEXT_MSG[d.code] || "내용을 확인해 주세요"); }
+      if (r.status === 429) { formState(); return toast("오늘은 후기를 너무 많이 남기셨어요. 내일 다시 남겨 주세요"); }
       if (!r.ok) { formState(); return toast("지금은 남길 수 없어요. 잠시 후 다시 해 주세요"); }
       const d = await r.json(); mine[id] = [n, text]; ravg[id] = [d.avg, d.n];
       toast("후기를 남겼어요"); loadReviews(); drawRate(); render(); refreshMe();

@@ -152,6 +152,11 @@ async function handle(req, env, ctx) {
       await env.DB.prepare("DELETE FROM ratings WHERE vid = ? AND uid = ?").bind(vid, s.uid).run();
     } else {
       const old = await env.DB.prepare("SELECT stars, text, name, ts FROM ratings WHERE vid = ? AND uid = ?").bind(vid, s.uid).first();
+      if (!old && !isAdmin(env, s)) {   // 하루에 새 후기를 쓸 수 있는 개수 제한 (한국시간 0시 기준, 기본 10개)
+        const d0 = Math.floor((Date.now() + 324e5) / 864e5) * 864e5 - 324e5;
+        const n = (await env.DB.prepare("SELECT (SELECT COUNT(*) FROM ratings WHERE uid = ?1 AND ts >= ?2) + (SELECT COUNT(*) FROM rating_history WHERE uid = ?1 AND why = 'del' AND at >= ?2) AS n").bind(s.uid, d0).first()).n;
+        if (n >= (Number(env.DAILY_REVIEWS) || 10)) return json(env, { error: "daily" }, 429);
+      }
       if (old && (old.text !== text || old.stars !== stars)) await archive(env, vid, s.uid, old, "edit");   // 고치기 전 모습 보관
       await env.DB.prepare("INSERT INTO ratings (vid, uid, stars, text, name, ts) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(vid, uid) DO UPDATE SET stars = excluded.stars, text = excluded.text, name = excluded.name, ts = excluded.ts").bind(vid, s.uid, stars, text, keep(s.name), Date.now()).run();
     }
