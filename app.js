@@ -665,7 +665,7 @@
   $("gFav").addEventListener("click", () => gv && toggleFav(key(gv)));
   $("gGo").addEventListener("click", e => { if (gv) { const v = gv; if (ytId(v)) closeGacha(); follow(e, v, $("gGo").href); } });
   $("gClose").addEventListener("click", closeGacha);
-  $("gacha").addEventListener("click", e => { if (e.target === $("gacha")) closeGacha(); });
+  $("gacha").addEventListener("click", e => { if (e.target === $("gacha") && downT === e.target) closeGacha(); });
 
   /* ── 도전과제 (이 기기에만 기록돼요) ── */
   const st = Object.assign({ opened: [], draws: 0, rare: 0, legends: [], days: [], flags: {} }, store.get("stat", {}));
@@ -810,7 +810,7 @@
   function closeXfer() { $("xfer").hidden = true; document.body.style.overflow = ""; }
   $("favXfer").addEventListener("click", openXfer);
   $("xClose").addEventListener("click", closeXfer);
-  $("xfer").addEventListener("click", e => { if (e.target === $("xfer")) closeXfer(); });
+  $("xfer").addEventListener("click", e => { if (e.target === $("xfer") && downT === e.target) closeXfer(); });
   $("xLink").addEventListener("focus", () => $("xLink").select());
   $("xCopy").addEventListener("click", () => {
     const link = $("xLink").value, done = () => toast("링크를 복사했어요. 다른 기기에서 열어 주세요"), fail = () => { $("xLink").focus(); toast("위 칸의 링크를 직접 복사해 주세요"); };
@@ -928,12 +928,18 @@
   document.querySelector(".adm-tabs").addEventListener("click", e => { const b = e.target.closest("button[data-tab]"); if (b) admSetTab(b.dataset.tab); });
   $("admQ").addEventListener("input", drawArchive);
   $("admClose").addEventListener("click", () => { $("admModal").hidden = true; });
-  $("admModal").addEventListener("click", e => { if (e.target === $("admModal")) $("admModal").hidden = true; });
+  $("admModal").addEventListener("click", e => { if (e.target === $("admModal") && downT === e.target) $("admModal").hidden = true; });
   $("repSave").addEventListener("click", saveShot);
   $("repCancel").addEventListener("click", closeReport); $("repClose2").addEventListener("click", closeReport);
-  $("repModal").addEventListener("click", e => { if (e.target === $("repModal")) closeReport(); });
+  $("repModal").addEventListener("click", e => { if (e.target === $("repModal") && downT === e.target) closeReport(); });
   $("mClose").addEventListener("click", () => closeModal());
-  $("modal").addEventListener("click", e => { if (e.target === $("modal")) closeModal(); });
+  let downT = null;   // 마지막으로 누른 곳 (창 바깥을 눌렀다 뗄 때만 닫기 위해)
+  document.addEventListener("mousedown", e => { downT = e.target; }, true);
+  document.addEventListener("touchstart", e => { downT = e.target; }, { capture: true, passive: true });
+  let mDown = false;   // 글을 드래그해 지우다가 바깥에서 손을 떼도 창이 닫히지 않게: 누른 곳도 바깥일 때만 닫기
+  $("modal").addEventListener("mousedown", e => { mDown = e.target === $("modal"); });
+  $("modal").addEventListener("touchstart", e => { mDown = e.target === $("modal"); }, { passive: true });
+  $("modal").addEventListener("click", e => { if (e.target === $("modal") && mDown) closeModal(); mDown = false; });
   $("totop").addEventListener("click", () => window.scrollTo({ top: 0, behavior: calm() ? "auto" : "smooth" }));
   document.addEventListener("click", e => { if (!$("menu").hidden && !e.target.closest(".menu")) closeMenu(); if (!$("setMenu").hidden && !e.target.closest(".menu")) closeSet(); });
   document.addEventListener("keydown", e => {
@@ -1016,7 +1022,7 @@
   $("dcX").addEventListener("click", closeDc);
   $("dcNo").addEventListener("click", () => dcAnswer("다음에 할게요", "알겠어요! 필요할 때 언제든 다시 눌러 주세요 👋", 1500));
   $("dcJoin").addEventListener("click", () => dcAnswer("네, 참여할래요!", "좋아요! 🎉 새 탭에서 디스코드가 열려요. 곧 만나요!", 2200));
-  $("dcChat").addEventListener("click", e => { if (e.target === $("dcChat")) closeDc(); });
+  $("dcChat").addEventListener("click", e => { if (e.target === $("dcChat") && downT === e.target) closeDc(); });
   document.querySelectorAll("[data-cafe]").forEach(a => { if (/^https?:\/\//i.test(SITE.cafe || "")) a.href = SITE.cafe; else a.hidden = true; });
 
   /* ── 화면 설정 (어두운 화면 / 움직임 줄이기) ── */
