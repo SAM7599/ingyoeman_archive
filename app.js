@@ -378,7 +378,7 @@
   function filtered() {
     const w = words(), s = $("sort").value;
     const list = pool().filter(v => {
-      if (cat && cat !== "*" && v.category !== cat) return false;
+      if (cat === "!thumb") { if (v.thumb) return false; } else if (cat && cat !== "*" && v.category !== cat) return false;
       const hay = ((v.title || "") + " " + (v.category || "")).toLowerCase();
       return w.every(x => hay.includes(x));
     });
@@ -406,8 +406,7 @@
     const k = key(v), on = favs.has(k), seen = recent.includes(k) && tab !== "recent" && !shelf, rows = (view === "rows" || tab === "rank") && !shelf;
     const sn = v._s && v._s.find(n => n !== ser), showLikes = pop(v) > 0 && (rank || $("sort").value === "likes" && !shelf);
     const meta = `<div class="meta"><span class="cat-dot" style="--c:${dot(v.category)}">${esc(v.category || "기타")}</span>${RATE && ravg[vid(v)] ? `<span class="rt" title="별점 ${ravg[vid(v)][0].toFixed(1)} (${ravg[vid(v)][1]}명)">${ravg[vid(v)][0].toFixed(1)}<small>(${ravg[vid(v)][1]})</small></span>` : ""}${showLikes ? `<span class="vw">조회 ${nf(v.views)}</span><span class="lk">♥ ${v.likes || 0}</span>` : ""}${repCount(v) ? `<span class="rp">썸네일 제보 ${repCount(v)}건</span>` : ""}${sn ? `<span class="ser" role="link" tabindex="0" data-ser="${esc(sn)}">${esc(sn)}</span>` : ""}</div>`;
-    const trb = !v.thumb && SITE.repo ? `<span class="trb" role="button" tabindex="0" data-trb>${IMG}썸네일 제보하기</span>` : "";   // 썸네일이 없는 영상에는 제보 버튼을 바로 보여줘요
-    const info = `<div class="t"><h3>${shelf ? esc(v.title) : mark(v.title)}</h3>${meta}${trb}</div>`;
+    const info = `<div class="t"><h3>${shelf ? esc(v.title) : mark(v.title)}</h3>${meta}</div>`;
     const dots = `<button class="dots" type="button" aria-label="더 보기 메뉴" aria-haspopup="menu">${DOTS}</button>`;
     const heart = `<button class="heart ${on ? "on" : ""} ${k === popKey ? "pop" : ""}" type="button" aria-label="${on ? "즐겨찾기에서 빼기" : "즐겨찾기에 담기"}" title="즐겨찾기">${HEART}</button>`;
     const thumb = `<div class="thumb" style="--g:${grad(v.category)}">${picHtml(v, !shelf)}${rank && !rows ? `<span class="rkb">${rank === 1 ? CROWN : ""}${rank}</span>` : seen ? `<span class="seen">열어봄</span>` : ""}${v.duration ? `<span class="dur">${esc(v.duration)}</span>` : ""}</div>`;
@@ -431,8 +430,8 @@
     const p = pool(), n = {}, home = tab === "all";
     p.forEach(v => { n[v.category] = (n[v.category] || 0) + 1; });
     const extra = Object.keys(n).filter(c => c && c !== "undefined" && !CATS.includes(c)).sort();
-    const chip = (c, label, cnt, zero) => `<button class="chip ${c === cat ? "on" : ""} ${zero ? "zero" : ""}" type="button" data-c="${esc(c)}">${c && c !== "*" ? `<i style="--c:${dot(c)}"></i>` : ""}${esc(label)}${cnt == null ? "" : `<em>${cnt}</em>`}</button>`;
-    $("chips").innerHTML = (all.length > 1 && tab !== "fav" && tab !== "recent" ? `<button class="chip draw" type="button" data-draw>${CARD}랜덤 뽑기</button>` : "") + (home ? chip("", "홈") + chip("*", "전체 영상", p.length) : chip("", "전체", p.length)) +
+    const chip = (c, label, cnt, zero) => `<button class="chip ${c === cat ? "on" : ""} ${zero ? "zero" : ""}" type="button" data-c="${esc(c)}">${c && c !== "*" && c !== "!thumb" ? `<i style="--c:${dot(c)}"></i>` : ""}${c === "!thumb" ? IMG : ""}${esc(label)}${cnt == null ? "" : `<em>${cnt}</em>`}</button>`;
+    $("chips").innerHTML = (all.length > 1 && tab !== "fav" && tab !== "recent" ? `<button class="chip draw" type="button" data-draw>${CARD}랜덤 뽑기</button>` : "") + (home ? chip("", "홈") + chip("*", "전체 영상", p.length) : chip("", "전체", p.length)) + (tab === "all" || tab === "series" ? chip("!thumb", "썸네일 없는 영상", p.filter(v => !v.thumb).length) : "") +
       [...CATS, ...extra].map(c => chip(c, c, n[c] || 0, !n[c] && c !== cat)).join("");
   }
   function renderToday() {
@@ -489,7 +488,7 @@
     renderChips(); renderToday();
     $("chips").hidden = tiles;
     if (home) { renderHome(); return playIn($("home")); }
-    $("pageH").textContent = tiles ? "시리즈" : rank ? "인기 랭킹" : tab === "series" && ser ? ser : q ? "검색 결과" : tab === "fav" ? "즐겨찾기" : tab === "recent" ? "열어본 영상" : cat && cat !== "*" ? cat : "전체 영상";
+    $("pageH").textContent = tiles ? "시리즈" : rank ? "인기 랭킹" : tab === "series" && ser ? ser : q ? "검색 결과" : tab === "fav" ? "즐겨찾기" : tab === "recent" ? "열어본 영상" : cat === "!thumb" ? "썸네일 없는 영상" : cat && cat !== "*" ? cat : "전체 영상";
     $("count").textContent = tiles ? SERIES.length + "개" : list.length + (tab === "series" ? "편" : "개");
     $("back").hidden = !(tab === "series" && ser);
     $("sort").hidden = tiles || rank; document.querySelector(".seg").hidden = tiles || rank;
@@ -655,7 +654,7 @@
   function drawPool() { const l = isHome() || isInfo() ? all : filtered(); return l.length > 1 ? l : all; }
   function drawLabel() {
     if (drawPool() === all || isHome()) return "전체 영상";
-    return tab === "series" && ser ? ser : tab === "rank" ? "인기 랭킹" : tab === "fav" ? "즐겨찾기" : tab === "recent" ? "열어본 영상" : words().length ? "검색 결과" : cat && cat !== "*" ? cat : "전체 영상";
+    return tab === "series" && ser ? ser : tab === "rank" ? "인기 랭킹" : tab === "fav" ? "즐겨찾기" : tab === "recent" ? "열어본 영상" : words().length ? "검색 결과" : cat === "!thumb" ? "썸네일 없는 영상" : cat && cat !== "*" ? cat : "전체 영상";
   }
   function gachaPick() {
     const p = drawPool().filter(v => !gv || key(v) !== key(gv));
@@ -936,14 +935,12 @@
   });
 
   /* ── 누르기 ── */
-  document.addEventListener("keydown", e => { if ((e.key === "Enter" || e.key === " ") && e.target.matches && e.target.matches("[data-trb]")) { e.preventDefault(); e.target.click(); } });
   function onCards(e) {
     if (e.target.closest("[data-reset]")) { $("q").value = ""; cat = ""; return reset(); }
     const sr = e.target.closest("[data-ser]"); if (sr) { e.preventDefault(); location.hash = "series=" + encodeURIComponent(sr.dataset.ser); return; }
     const card = e.target.closest(".card"); if (!card) return;
     const v = byKey(card.dataset.k); if (!v) return;
     if (e.target.closest(".heart")) return toggleFav(key(v));
-    if (e.target.closest("[data-trb]")) { e.preventDefault(); e.stopPropagation(); return report(v); }
     const d = e.target.closest(".dots");
     if (d) { e.stopPropagation(); return menuFor === v ? closeMenu() : openMenu(d, v); }
     const link = e.target.closest("a"); if (link) { if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return follow(e, v, link.href); e.preventDefault(); openModal(v); }
@@ -1011,6 +1008,7 @@
     if (e.key === "Escape" && document.getElementById("intro")) { introEnd(true); return; }
     if (e.key === "Escape" && !$("dcChat").hidden) { closeDc(); return; }
     if (e.key === "Escape" && !$("repModal").hidden) { closeReport(); return; }
+    if (e.key === "Escape" && !$("tnPop").hidden) { tnClose(); return; }
     if (e.key === "Escape") {
       if (!$("setMenu").hidden) closeSet(); else if (!$("menu").hidden) closeMenu(); else if (!$("modal").hidden) closeModal(); else if (!$("gacha").hidden) closeGacha(); else if (!$("xfer").hidden) closeXfer(); else if (!$("imp").hidden) closeImp();
       else if (document.activeElement === $("q")) { $("q").value = ""; $("q").blur(); reset(); }
@@ -1126,6 +1124,26 @@
   $("setMenu").addEventListener("click", e => { if (e.target.closest("a")) closeSet(); });
 
 
+  /* ── 접속할 때 뜨는 썸네일 제보 안내 창 ── */
+  const tnDay = () => { const d = new Date(); return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate(); };
+  function tnClose() { $("tnPop").hidden = true; }
+  function tnOpen() {
+    if (!SITE.repo || store.get("tnHide", "") === tnDay()) return;
+    const n = all.filter(v => !v.thumb).length; if (!n) return;
+    $("tnN").textContent = nf(n); $("tnPop").hidden = false; $("tnGo").focus();
+  }
+  function tnWait() {   // 동의 화면·인트로가 끝난 뒤에 보여줘요
+    let tries = 0; const t = setInterval(() => {
+      const de = document.documentElement; if (++tries > 240) return clearInterval(t);
+      if (de.classList.contains("consent-on") || de.classList.contains("intro-on")) return;
+      clearInterval(t); if (!$("modal").hidden || /^#(v|import)=/.test(location.hash)) return; setTimeout(tnOpen, 700);
+    }, 500);
+  }
+  $("tnGo").addEventListener("click", () => { tnClose(); $("q").value = ""; cat = "!thumb"; if (tab !== "all" || location.hash.replace("#", "")) { location.hash = ""; } reset(); window.scrollTo({ top: 0, behavior: "auto" }); setTimeout(() => { const c = $("chips"); if (c) c.scrollIntoView({ block: "start", behavior: calm() ? "auto" : "smooth" }); }, 60); });
+  $("tnHide").addEventListener("click", () => { store.set("tnHide", tnDay()); tnClose(); toast("오늘은 다시 안 보여드릴게요"); });
+  $("tnX").addEventListener("click", tnClose);
+  $("tnPop").addEventListener("click", e => { if (e.target === $("tnPop") && downT === e.target) tnClose(); });
+
   /* ── 패치노트 (patchnotes.json) ── */
   let notes = null;
   const NOTE_TAG = { "신규": "new", "개선": "up", "수정": "fix" };
@@ -1176,7 +1194,7 @@
       const ok = new Set(SERIES.map(x => x.name)); all.forEach(v => { v._s = v._s.filter(n => ok.has(n)); });
       $("abN").textContent = nf(all.length); $("abC").textContent = new Set(all.map(v => v.category).filter(Boolean)).size; $("abS").textContent = SERIES.length;
       let sv = null; try { if (((performance.getEntriesByType("navigation")[0] || {}).type) === "reload") sv = JSON.parse(sessionStorage.getItem("view1")); } catch (e) {}
-      route(); achStart();
+      route(); achStart(); tnWait();
       if (sv && sv.h === location.hash && !location.hash.startsWith("#v=") && !location.hash.startsWith("#import=")) {   // 새로고침하면 보던 분류·검색·위치를 그대로 이어서 보여줘요
         if (typeof sv.cat === "string" && sv.cat) cat = sv.cat;
         if (typeof sv.q === "string" && sv.q) $("q").value = sv.q.slice(0, 80);

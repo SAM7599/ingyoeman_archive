@@ -24,7 +24,7 @@
   if (m !== "on" && m !== "off") m = (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) ? "off" : "on";
   document.documentElement.setAttribute("data-motion", m); })();
 </script>
-<link rel="stylesheet" href="style.css?v=137">
+<link rel="stylesheet" href="style.css?v=138">
 </head>
 <body>
 <div id="intro" role="dialog" aria-label="잉여맨 추억자료실 소개 화면">
@@ -185,7 +185,7 @@
   </div>
 
   <h2>함께 만들어 가요</h2>
-  <p>영상 썸네일은 여러분의 제보로 채우고 있어요. 썸네일이 없는 영상 아래의 “썸네일 제보하기” 버튼이나 점 세 개 메뉴에서 보내 주세요. 불편한 점이나 넣었으면 하는 기능은 채팅방으로 알려 주시면 계속 다듬을게요.</p>
+  <p>영상 썸네일은 여러분의 제보로 채우고 있어요. 위쪽 “썸네일 없는 영상” 버튼으로 모아 보고, 영상 제목 옆 점 세 개 메뉴에서 보내 주세요. 불편한 점이나 넣었으면 하는 기능은 채팅방으로 알려 주시면 계속 다듬을게요.</p>
   <p><a class="btn primary" data-feedback target="_blank" rel="noopener noreferrer">디스코드 참여하기</a> <a class="btn" data-cafe target="_blank" rel="noopener noreferrer">네이버 카페 가기</a></p>
 
   <p class="fine">비공식 팬 자료실이에요. 영상은 모두 네이버 카페에 있고, 이 사이트는 영상 파일을 담고 있지 않아요.</p>
@@ -282,6 +282,21 @@
 <div class="modal" id="admModal" hidden>
   <div class="sheet rep adm" role="dialog" aria-modal="true" aria-labelledby="admT">
     <div class="m-body"><h2 id="admT">운영진 대시보드</h2><div class="adm-srv" id="admSrv"><i></i><span id="admSrvT">서버 상태 확인 중…</span><button type="button" class="r-link" id="admSrvGo">다시 확인</button></div><div class="adm-tabs"><button type="button" class="on" data-tab="rep">신고함</button><button type="button" data-tab="arc">보관함</button><button type="button" data-tab="ban">차단 목록</button><button type="button" data-tab="srv">서버 상태</button></div><input id="admQ" class="rep-note" type="search" placeholder="이름·내용으로 찾기" hidden><div id="admList"></div><div class="m-acts"><button class="btn" type="button" id="admClose">닫기</button></div></div>
+  </div>
+</div>
+
+<div class="modal" id="tnPop" hidden>
+  <div class="sheet rep tnp" role="dialog" aria-modal="true" aria-labelledby="tnT">
+    <div class="m-body">
+      <div class="tn-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="14" rx="2.5"/><circle cx="9" cy="10.5" r="1.6"/><path d="M4 17l5-4.5 3.5 3 3-2.5 4.5 4"/></svg></div>
+      <h2 id="tnT">썸네일을 제보해 주세요!</h2>
+      <p><b>사이트를 같이 만들어가요.</b> 아직 썸네일이 없는 영상이 <b><span id="tnN">0</span>개</b> 있어요.</p>
+      <p>영상 제목 옆 점 세 개(⋮) 메뉴에서 <b>썸네일 제보</b>를 누르면 돼요. 여러분의 제보로 목록이 채워져요.</p>
+      <div class="tn-acts">
+        <button type="button" class="btn primary" id="tnGo">썸네일 없는 영상 보러 가기</button>
+        <div class="tn-sub"><button type="button" class="btn" id="tnHide">오늘 하루 보지 않기</button><button type="button" class="btn" id="tnX">닫기</button></div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -409,7 +424,7 @@
 
 <div class="ach-pop" id="achPop" role="status" hidden><span class="ach-ic"><svg viewBox="0 0 24 24"><path d="M8 4h8v5a4 4 0 0 1-8 0zM8 6H5v1a3 3 0 0 0 3 3M16 6h3v1a3 3 0 0 1-3 3M12 13v4M8.5 20h7M10 17h4"/></svg></span><span class="ach-tx"><small>도전과제 달성!</small><b id="achPopT"></b><i id="achPopD"></i></span></div>
 <div id="toast" role="status"></div>
-<script src="config.js?v=137"></script>
-<script src="app.js?v=137"></script>
+<script src="config.js?v=138"></script>
+<script src="app.js?v=138"></script>
 </body>
 </html>
