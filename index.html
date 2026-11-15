@@ -14,6 +14,10 @@
 <script>try{var _c=JSON.parse(localStorage.getItem("consent1")||"null");if((!_c||_c.v!==3)&&!/bot|crawl|spider|yeti|daum|slurp|bing/i.test(navigator.userAgent))document.documentElement.classList.add("consent-on");}catch(e){if(!/bot|crawl|spider|yeti|daum|slurp|bing/i.test(navigator.userAgent))document.documentElement.classList.add("consent-on");}</script>
 <script>try{if(!localStorage.getItem("intro1")&&!location.hash&&localStorage.getItem("motion")!=="off"&&!matchMedia("(prefers-reduced-motion:reduce)").matches){document.documentElement.classList.add("intro-on");localStorage.setItem("intro1","1");}}catch(e){}</script>
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2032%2032'%3E%3Crect%20width='32'%20height='32'%20rx='9'%20fill='%234347d9'/%3E%3Cg%20transform='translate%283%206.9%29%20scale%28.65%29'%20stroke='%23ffb347'%20stroke-width='3.4'%20fill='none'%20stroke-linecap='round'%3E%3Ccircle%20cx='11.5'%20cy='12'%20r='8'/%3E%3Ccircle%20cx='28.5'%20cy='12'%20r='8'/%3E%3Cpath%20d='M11.5%2024.6h17'/%3E%3Cpath%20d='M26.3%208.6l5%203.4-5%203.4z'%20fill='%23ffb347'%20stroke-width='1.2'%20stroke-linejoin='round'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#4347d9">
+<meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="잉여맨"><meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <script>
@@ -24,7 +28,7 @@
   if (m !== "on" && m !== "off") m = (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) ? "off" : "on";
   document.documentElement.setAttribute("data-motion", m); })();
 </script>
-<link rel="stylesheet" href="style.css?v=144">
+<link rel="stylesheet" href="style.css?v=145">
 </head>
 <body>
 <div id="intro" role="dialog" aria-label="잉여맨 추억자료실 소개 화면">
@@ -231,6 +235,7 @@
     <details class="gi"><summary><span class="gi-ic" aria-hidden="true">♥</span><span class="gi-t"><b>즐겨찾기</b><small>영상의 하트를 누르면 모여요</small></span></summary><div class="gi-b"><p>지금 쓰는 기기와 브라우저에만 저장돼요. 인터넷 사용 기록을 지우면 함께 사라질 수 있어요.</p></div></details>
     <details class="gi"><summary><span class="gi-ic" aria-hidden="true">🕘</span><span class="gi-t"><b>열어본 영상</b><small>누른 영상에 열어봄 표시가 붙어요</small></span></summary><div class="gi-b"><ul><li>한 번 누른 영상은 <b>열어본 영상</b>에 쌓여서 다시 찾기 쉬워요.</li><li>영상은 카페에서 재생돼서 끝까지 봤는지는 표시하지 않아요.</li><li>기록은 제목 옆 <b>점 세 개</b> 메뉴에서 지울 수 있어요.</li></ul></div></details>
     <details class="gi"><summary><span class="gi-ic" aria-hidden="true">📱</span><span class="gi-t"><b>다른 기기로 옮기기</b><small>즐겨찾기와 기록을 휴대폰↔컴퓨터로 옮겨요</small></span></summary><div class="gi-b"><ul><li><b>즐겨찾기</b> 탭의 <b>다른 기기로 옮기기</b> 버튼을 누르면 QR코드와 링크가 나와요.</li><li>다른 기기 카메라로 QR을 찍거나, 링크를 나에게 보내서 열면 기록이 합쳐져요.</li></ul></div></details>
+    <details class="gi"><summary><span class="gi-ic" aria-hidden="true">📲</span><span class="gi-t"><b>앱처럼 설치하기</b><small>홈 화면에 아이콘을 만들어요</small></span></summary><div class="gi-b"><ul><li><b>안드로이드(크롬):</b> 맨 위 오른쪽 <b>설정 버튼</b> → <b>앱으로 설치하기</b>를 누르세요. 안 보이면 크롬 오른쪽 위 점 세 개 → <b>홈 화면에 추가</b>(또는 앱 설치)를 누르면 돼요.</li><li><b>아이폰(사파리):</b> 아래쪽 <b>공유 버튼</b> → <b>홈 화면에 추가</b>를 누르세요.</li><li>설치하면 주소창 없이 앱처럼 전체 화면으로 열려요. 사이트가 바뀌면 앱도 같이 바뀌어요.</li></ul></div></details>
     <details class="gi"><summary><span class="gi-ic" aria-hidden="true">🌙</span><span class="gi-t"><b>화면 설정</b><small>어두운 화면, 움직임 줄이기 등</small></span></summary><div class="gi-b"><ul><li>맨 위 오른쪽 <b>설정 버튼</b>에서 <b>어두운 화면</b>, <b>움직임 줄이기</b>, <b>뽑기 소리</b>, <b>카페 글 팝업 창으로</b>를 켜고 끌 수 있어요.</li><li>움직임 줄이기를 켜면 랜덤 뽑기도 바로 결과가 나와요. 설정은 이 기기에 기억돼요.</li></ul></div></details>
   </div>
 
@@ -268,6 +273,7 @@
 <button class="totop" id="totop" type="button" aria-label="맨 위로" hidden><svg viewBox="0 0 24 24"><path d="M6 14l6-6 6 6"/></svg></button>
 
 <div class="menu set" id="setMenu" hidden role="menu">
+  <button type="button" id="install" role="menuitem" hidden>📲 앱으로 설치하기</button>
   <button type="button" id="theme" role="menuitemcheckbox"><span>어두운 화면</span><i class="sw"></i></button>
   <button type="button" id="motion" role="menuitemcheckbox"><span>움직임 줄이기</span><i class="sw"></i></button>
   <button type="button" id="sound" role="menuitemcheckbox"><span>뽑기 소리</span><i class="sw"></i></button>
@@ -425,7 +431,7 @@
 
 <div class="ach-pop" id="achPop" role="status" hidden><span class="ach-ic"><svg viewBox="0 0 24 24"><path d="M8 4h8v5a4 4 0 0 1-8 0zM8 6H5v1a3 3 0 0 0 3 3M16 6h3v1a3 3 0 0 1-3 3M12 13v4M8.5 20h7M10 17h4"/></svg></span><span class="ach-tx"><small>도전과제 달성!</small><b id="achPopT"></b><i id="achPopD"></i></span></div>
 <div id="toast" role="status"></div>
-<script src="config.js?v=144"></script>
-<script src="app.js?v=144"></script>
+<script src="config.js?v=145"></script>
+<script src="app.js?v=145"></script>
 </body>
 </html>

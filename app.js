@@ -1122,6 +1122,21 @@
     root.setAttribute("data-motion", m); try { localStorage.setItem("motion", m); } catch (e) {} syncSet();
     toast(m === "off" ? "움직임 줄이기를 켰어요" : "움직임 줄이기를 껐어요");
   });
+  /* ── 앱으로 설치 (홈 화면에 추가) ── */
+  if ("serviceWorker" in navigator) window.addEventListener("load", () => { navigator.serviceWorker.register("sw.js").catch(() => {}); });
+  { let dip = null;
+    const standalone = () => matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+    const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    const show = () => { $("install").hidden = standalone() || !(dip || ios); };
+    window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); dip = e; show(); });
+    window.addEventListener("appinstalled", () => { dip = null; show(); toast("설치했어요. 홈 화면에서 열어 보세요"); });
+    $("install").addEventListener("click", async () => {
+      closeSet();
+      if (dip) { dip.prompt(); try { await dip.userChoice; } catch (e) {} dip = null; show(); }
+      else if (ios) { alert("아이폰에서는 사파리 아래쪽 공유 버튼(네모에 화살표)을 누르고\n‘홈 화면에 추가’를 선택하세요."); }
+    });
+    show();
+  }
   function closeSet() { $("setMenu").hidden = true; $("set").setAttribute("aria-expanded", "false"); }
   $("set").addEventListener("click", e => {
     e.stopPropagation();
