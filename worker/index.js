@@ -331,7 +331,8 @@ async function handle(req, env, ctx) {
     } else if (b.act === "warn") {
       await warnTable(env);
       await env.DB.prepare("INSERT INTO warns (uid, vid, reason, ts) VALUES (?, ?, ?, ?)").bind(row.uid, row.vid, String(REASONS[row.reason] || ""), Date.now()).run();
-    } else if (b.act === "del") {
+    } else if (b.act === "del" || b.act === "delwarn") {
+      if (b.act === "delwarn") { await warnTable(env); await env.DB.prepare("INSERT INTO warns (uid, vid, reason, ts) VALUES (?, ?, ?, ?)").bind(row.uid, row.vid, String(REASONS[row.reason] || ""), Date.now()).run(); }
       const old = await env.DB.prepare("SELECT stars, text, name, ts FROM ratings WHERE vid = ? AND uid = ?").bind(row.vid, row.uid).first();
       if (old) await archive(env, row.vid, row.uid, old, "mod");
       await env.DB.prepare("DELETE FROM ratings WHERE vid = ? AND uid = ?").bind(row.vid, row.uid).run();
