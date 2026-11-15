@@ -976,3 +976,4 @@ html[data-theme="dark"] .adm-srv[data-s="down"] { background:#3a1d22; color:#ffd
 .st svg .ch-warn { stroke:#f0a020; stroke-width:1; }
 .st svg .ch-ax { stroke:var(--line); stroke-width:1; }
 .st svg { overflow:visible; }
+#admBtn .srv { right:7px; bottom:7px; width:8px; height:8px; border-width:2px; }
