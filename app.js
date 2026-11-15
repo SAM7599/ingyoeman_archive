@@ -1016,6 +1016,12 @@
   });
   window.addEventListener("scroll", () => { $("totop").hidden = window.scrollY < 700; if (!$("menu").hidden && Math.abs(window.scrollY - openMenu.y) > 60) closeMenu(); }, { passive: true });
   window.addEventListener("resize", () => { closeMenu(); closeSet(); $("home").querySelectorAll(".rail-wrap").forEach(syncArrows); });
+  document.querySelector(".logo").addEventListener("click", e => {   // 로고·이름을 누르면 어디서든 처음 화면(홈)으로
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return;
+    e.preventDefault(); $("q").value = ""; cat = "";
+    if (tab === "all" && !ser && !location.hash.replace("#", "")) { if (!$("modal").hidden) closeModal(); reset(); window.scrollTo({ top: 0, behavior: calm() ? "auto" : "smooth" }); }
+    else location.hash = "";
+  });
   window.addEventListener("hashchange", () => {   // 탭 이동은 이전 화면이 부드럽게 사라지며 새 화면으로 바뀌어요
     const h = location.hash.replace("#", "");
     const sameView = h.startsWith("v=") || h.startsWith("import=");
