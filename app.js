@@ -175,13 +175,13 @@
   }
   const my0 = () => true;
   async function doDeleteAll() {
-    if (!rtok || !confirm("내 별점·후기와 보관 기록, 접속 기록을 모두 지울까요?\n\n지우면 되돌릴 수 없고, 칭호도 처음부터 다시 시작해요.")) return;
+    if (!rtok || !confirm("내 별점·후기와 보관 기록, 접속 기록을 모두 지울까요?\n\n지우면 되돌릴 수 없고, 칭호는 처음부터 다시 시작해요.\n별명은 그대로 남고, 지운 뒤에는 자동으로 로그아웃돼요.")) return;
     try {
       const r = await rApi("/account/delete", { method: "POST", body: "{}" });
       if (r.status === 409) return toast("신고가 접수된 후기가 있어 지금은 지울 수 없어요. 운영진 확인 뒤에 다시 해 주세요");
       if (r.status === 403) return toast("이용이 제한된 계정은 지울 수 없어요. 디스코드로 문의해 주세요");
       if (!r.ok) return toast("지금은 지울 수 없어요. 잠시 후 다시 해 주세요");
-      rLogout(); draft = { stars: 0, text: "" }; toast("내 정보를 모두 지웠어요"); loadRatings(); loadReviews(); render();
+      rLogout(); draft = { stars: 0, text: "" }; toast("내 정보를 모두 지우고 로그아웃했어요"); loadRatings(); loadReviews(); render();
     } catch (e) { toast("지금은 지울 수 없어요. 잠시 후 다시 해 주세요"); }
   }
   async function doDelete() {
