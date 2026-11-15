@@ -413,7 +413,8 @@ html[data-motion="off"] *, html[data-motion="off"] *::before, html[data-motion="
   @keyframes halo { 0%,100% { box-shadow:0 0 34px 2px var(--tc), 0 24px 60px rgba(0,0,0,.5); } 50% { box-shadow:0 0 64px 12px var(--tc), 0 24px 60px rgba(0,0,0,.5); } }
 
   body { transition:background-color .3s, color .3s; }
-  .page.enter, .guide.enter { animation:fade .3s both; }
+  .page.enter, .guide.enter { animation:tabin .3s cubic-bezier(.2,.7,.2,1) both; }
+  @keyframes tabin { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:none; } }
   .hero.anim .hero-in > * { animation:up .5s both; }
   .hero.anim .hero-in > :nth-child(2) { animation-delay:.07s; }
   .hero.anim .hero-in > :nth-child(3) { animation-delay:.14s; }
@@ -887,3 +888,10 @@ html.pre-guide #viewGuide[hidden], html.pre-about #viewAbout[hidden], html.pre-n
 .cs-list li.cs-warn b { color:#b42318; }
 html[data-theme="dark"] .cs-list li.cs-warn { background:#3a1d22; border-color:#a5424a; color:#ffd3d6; }
 html[data-theme="dark"] .cs-list li.cs-warn b { color:#ff9aa2; }
+
+/* 탭 이동 전환: 헤더·하단바는 그대로 두고 본문만 부드럽게 교차 */
+.top { view-transition-name:topbar; }
+.bottom { view-transition-name:botbar; }
+::view-transition-old(root), ::view-transition-new(root) { animation-duration:.24s; animation-timing-function:ease; }
+html[data-motion="off"]::view-transition-group(*), html[data-motion="off"]::view-transition-old(*), html[data-motion="off"]::view-transition-new(*) { animation:none !important; }
+@media (prefers-reduced-motion:reduce) { ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation:none !important; } }
