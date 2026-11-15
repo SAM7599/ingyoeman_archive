@@ -295,11 +295,11 @@
     try {
       const r = await rApi("/admin/reports"); if (!r.ok) { $("admList").textContent = "운영진만 볼 수 있어요"; return; }
       const l = await r.json();
-      $("admList").innerHTML = l.length ? l.map(x => `<section class="adm-it"><b>#${x.id}</b> · ${esc(x.reason)} · 누적 ${x.cnt}건 · ${aAgo(x.ts)}${x.note ? `<br>신고자 메모: ${esc(x.note)}` : ""}<br>${vLink(x.vid)} · 작성자 ${esc(x.cur ? x.cur.name : "(이미 삭제됨)")} (${esc(x.uid)})${x.banned ? " · <b>차단됨</b>" : ""}${x.cur ? `<blockquote>${"★".repeat(x.cur.stars)} ${esc(x.cur.text)}</blockquote>` : ""}${x.hist.length ? `<div class="adm-h">이전 후기(고치기 전)<br>${x.hist.map(h => `• ${aAgo(h.ts)} ★${h.stars} ${esc(h.text)}`).join("<br>")}</div>` : ""}<div class="adm-b">${x.cur ? `<button type="button" class="btn" data-a="del" data-id="${x.id}">이 후기만 삭제</button>` : ""}${x.banned ? "" : `<button type="button" class="btn adm-ban" data-a="ban" data-id="${x.id}">삭제 + 작성자 차단</button>`}</div></section>`).join("") : "아직 신고가 없어요";
+      $("admList").innerHTML = l.length ? l.map(x => `<section class="adm-it"><b>#${x.id}</b> · ${esc(x.reason)} · 누적 ${x.cnt}건 · ${aAgo(x.ts)}${x.note ? `<br>신고자 메모: ${esc(x.note)}` : ""}<br>${vLink(x.vid)} · 작성자 ${esc(x.cur ? x.cur.name : "(이미 삭제됨)")} (${esc(x.uid)})${x.banned ? " · <b>차단됨</b>" : ""}<br><span class="adm-h">이 작성자 기록: 운영진이 후기를 지운 횟수 <b>${x.mods || 0}번</b> · 경고 <b>${x.warns || 0}번</b></span>${x.cur ? `<blockquote>${"★".repeat(x.cur.stars)} ${esc(x.cur.text)}</blockquote>` : ""}${x.hist.length ? `<div class="adm-h">이전 후기(고치기 전)<br>${x.hist.map(h => `• ${aAgo(h.ts)} ★${h.stars} ${esc(h.text)}`).join("<br>")}</div>` : ""}<div class="adm-b"><button type="button" class="btn" data-a="warn" data-id="${x.id}">경고 기록하기</button>${x.cur ? `<button type="button" class="btn" data-a="del" data-id="${x.id}">이 후기만 삭제</button>` : ""}${x.banned ? "" : `<button type="button" class="btn adm-ban" data-a="ban" data-id="${x.id}">삭제 + 작성자 차단</button>`}</div></section>`).join("") : "아직 신고가 없어요";
     } catch (e) { $("admList").textContent = "불러오지 못했어요"; }
   }
   async function admAct(id, act) {
-    if (!confirm(act === "ban" ? "작성자를 차단하고 그 사람의 모든 후기를 지울까요? 되돌릴 수 없어요." : "이 후기를 삭제할까요? 되돌릴 수 없어요.")) return;
+    if (!confirm(act === "ban" ? "작성자를 차단하고 그 사람의 모든 후기를 지울까요? 되돌릴 수 없어요." : act === "warn" ? "이 작성자에게 경고 1번을 기록할까요?\n(후기는 그대로 두고, 운영진만 보는 기록이에요.)" : "이 후기를 삭제할까요? 되돌릴 수 없어요.")) return;
     try { const r = await rApi("/admin/act", { method: "POST", body: JSON.stringify({ id: +id, act }) }); if (!r.ok) return toast("처리하지 못했어요"); toast("처리했어요"); admSetTab("rep"); admCounts(true); loadRatings(); loadReviews(); } catch (e) { toast("처리하지 못했어요"); }
   }
   async function admPurge(k, v) {

@@ -97,8 +97,17 @@ const nick = async (env, uid) => { const h = await hmac(env.SESSION_SECRET, "nic
 // 보관함 자동 비우기: 보관한 지 RETENTION_DAYS(기본 180일 ≈ 6개월)가 지난 기록을 지워요. 별도 설정 없이 후기가 오갈 때·보관함을 열 때 알아서 정리돼요
 const TITLES = [[100, "추억 지킴이"], [30, "다시보기 평론가"], [10, "열혈 팬"], [3, "단골 시청자"], [1, "새내기"]];   // 후기 글을 쓴 영상 수 → 칭호 (위에서부터 먼저 맞는 것)
 const titleOf = (n) => { const i = TITLES.findIndex(t => n >= t[0]); return i < 0 ? null : { lv: TITLES.length - i, title: TITLES[i][1] }; };
-const sweep = (env) => env.DB.prepare("DELETE FROM rating_history WHERE (CASE WHEN at > 0 THEN at ELSE ts END) < ?").bind(Date.now() - (Number(env.RETENTION_DAYS) || 180) * 864e5).run().then(() => env.DB.batch([env.DB.prepare("DELETE FROM ip_seen WHERE ts < ?").bind(Date.now() - IPDAYS(env)), env.DB.prepare("DELETE FROM banned_ip WHERE ts < ?").bind(Date.now() - IPDAYS(env)), env.DB.prepare("UPDATE ratings SET name = '' WHERE name != ''"), env.DB.prepare("UPDATE rating_history SET name = '' WHERE name != ''")]));
+const sweep = (env) => env.DB.prepare("DELETE FROM rating_history WHERE (CASE WHEN at > 0 THEN at ELSE ts END) < ?").bind(Date.now() - (Number(env.RETENTION_DAYS) || 180) * 864e5).run().then(() => env.DB.batch([env.DB.prepare("DELETE FROM ip_seen WHERE ts < ?").bind(Date.now() - IPDAYS(env)), env.DB.prepare("DELETE FROM banned_ip WHERE ts < ?").bind(Date.now() - IPDAYS(env)), env.DB.prepare("UPDATE ratings SET name = '' WHERE name != ''"), env.DB.prepare("UPDATE rating_history SET name = '' WHERE name != ''")])).then(() => warnTable(env)).then(() => env.DB.prepare("DELETE FROM warns WHERE ts < ?").bind(Date.now() - (Number(env.RETENTION_DAYS) || 180) * 864e5).run());
 const archive = async (env, vid, uid, r, why) => { await env.DB.prepare("INSERT INTO rating_history (vid, uid, stars, text, ts, name, why, at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)").bind(vid, uid, r.stars, r.text, r.ts, keep(r.name), why, Date.now()).run(); if (Math.random() < 0.05) await sweep(env).catch(() => {}); };
+// 운영진 경고 기록 (운영진만 볼 수 있는 메모예요. 보관 기간이 지나면 자동으로 지워져요)
+let warnReady = false;
+const warnTable = async (env) => { if (!warnReady) { await env.DB.prepare("CREATE TABLE IF NOT EXISTS warns (id INTEGER PRIMARY KEY AUTOINCREMENT, uid TEXT NOT NULL, vid TEXT, reason TEXT, ts INTEGER NOT NULL)").run(); warnReady = true; } };
+const strikes = async (env, uid) => {   // 운영진이 후기를 지운 횟수 / 경고 횟수
+  let warns = 0, mods = 0;
+  try { await warnTable(env); warns = (await env.DB.prepare("SELECT COUNT(*) AS n FROM warns WHERE uid = ?").bind(uid).first()).n; } catch (e) {}
+  try { mods = (await env.DB.prepare("SELECT COUNT(*) AS n FROM rating_history WHERE uid = ? AND why = 'mod'").bind(uid).first()).n; } catch (e) {}
+  return { warns, mods };
+};
 const clean = t => String(t || "").replace(/\s+/g, " ").trim();
 const rid = (env, vid, uid) => hmac(env.SESSION_SECRET, "rid:" + vid + ":" + uid).then(h => h.slice(0, 16));
 const cut = (t, n) => { t = String(t || ""); return t.length > n ? t.slice(0, n - 1) + "…" : t; };
@@ -244,7 +253,7 @@ async function handle(req, env, ctx) {
       const cur = await env.DB.prepare("SELECT name, stars, text, ts FROM ratings WHERE vid = ? AND uid = ?").bind(r.vid, r.uid).first();
       const cnt = (await env.DB.prepare("SELECT COUNT(*) AS n FROM reports WHERE vid = ? AND uid = ?").bind(r.vid, r.uid).first()).n;
       const hist = await env.DB.prepare("SELECT stars, text, ts FROM rating_history WHERE vid = ? AND uid = ? ORDER BY id DESC LIMIT 3").bind(r.vid, r.uid).all();
-      out.push({ id: r.id, vid: r.vid, uid: r.uid, reason: REASONS[r.reason] || r.reason, note: r.note, ts: r.ts, cnt, cur: cur ? { ...cur, name: await nick(env, r.uid) } : null, hist: hist.results, banned: await isBanned(env, r.uid) });
+      out.push({ id: r.id, vid: r.vid, uid: r.uid, reason: REASONS[r.reason] || r.reason, note: r.note, ts: r.ts, cnt, cur: cur ? { ...cur, name: await nick(env, r.uid) } : null, hist: hist.results, banned: await isBanned(env, r.uid), ...await strikes(env, r.uid) });
     }
     return json(env, out, 200, { "Cache-Control": "no-store" });
   }
@@ -319,6 +328,9 @@ async function handle(req, env, ctx) {
       const all = await env.DB.prepare("SELECT vid, stars, text, name, ts FROM ratings WHERE uid = ?").bind(row.uid).all();
       for (const r of all.results) await archive(env, r.vid, row.uid, r, "ban");
       await env.DB.prepare("DELETE FROM ratings WHERE uid = ?").bind(row.uid).run();
+    } else if (b.act === "warn") {
+      await warnTable(env);
+      await env.DB.prepare("INSERT INTO warns (uid, vid, reason, ts) VALUES (?, ?, ?, ?)").bind(row.uid, row.vid, String(REASONS[row.reason] || ""), Date.now()).run();
     } else if (b.act === "del") {
       const old = await env.DB.prepare("SELECT stars, text, name, ts FROM ratings WHERE vid = ? AND uid = ?").bind(row.vid, row.uid).first();
       if (old) await archive(env, row.vid, row.uid, old, "mod");
