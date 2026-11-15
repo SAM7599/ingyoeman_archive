@@ -51,6 +51,21 @@ const tooFast = async (env, req, key, max, secs) => {
   } catch (e) { return false; }   // 속도 제한 장치가 고장나도 사이트는 계속 돼요
 };
 const slow = env => json(env, { error: "slow" }, 429);
+// "내 정보 전부 삭제" 뒤 24시간 동안은 다시 로그인·후기 작성을 할 수 없어요 (삭제·재가입을 반복해서 서버에 부담을 주는 것을 막아요)
+// 계정 코드(되돌릴 수 없는 코드)와 삭제한 시각만 24시간 보관하고 자동으로 지워요
+const LOCK_MS = 864e5;
+let lockReady = false;
+const lockLeft = async (env, uid) => {
+  try {
+    if (!lockReady) { await env.DB.prepare("CREATE TABLE IF NOT EXISTS delete_lock (uid TEXT PRIMARY KEY, ts INTEGER NOT NULL)").run(); lockReady = true; }
+    const r = await env.DB.prepare("SELECT ts FROM delete_lock WHERE uid = ?").bind(uid).first();
+    if (!r) return 0;
+    const left = r.ts + LOCK_MS - Date.now();
+    if (left <= 0) { await env.DB.prepare("DELETE FROM delete_lock WHERE uid = ?").bind(uid).run().catch(() => {}); return 0; }
+    return left;
+  } catch (e) { return 0; }   // 장치가 고장나도 사이트는 계속 돼요
+};
+const coolBody = (env, left) => json(env, { error: "cooldown", hours: Math.max(1, Math.ceil(left / 36e5)) }, 403);
 const isAdmin = (env, s) => !!s && !!s.em && String(env.ADMIN_EMAILS || "").toLowerCase().split(",").map(x => x.trim()).filter(Boolean).includes(s.em);
 // 차단된 계정인지
 // 접속 주소(IP)는 그대로 저장하지 않고, 되돌릴 수 없는 짧은 코드로 바꿔서만 저장해요
@@ -113,6 +128,7 @@ async function handle(req, env, ctx) {
     const g = await r.json();
     if (g.aud !== env.GOOGLE_CLIENT_ID || !/^\d{5,30}$/.test(String(g.sub || "")) || !(g.exp > Date.now() / 1000)) return json(env, { error: "login" }, 401);
     const uid = await newUid(env, g.sub);   // 구글 고유 번호는 저장하지 않고, 되돌릴 수 없는 코드만 써요
+    { const em1 = g.email_verified === "true" || g.email_verified === true ? String(g.email || "").toLowerCase() : ""; const left = isAdmin(env, { em: em1 }) ? 0 : await lockLeft(env, uid); if (left) return coolBody(env, left); }   // 내 정보를 지운 뒤 24시간 동안은 다시 로그인할 수 없어요
     const em0 = g.email_verified === "true" || g.email_verified === true ? String(g.email || "").toLowerCase() : "";
     await migrateUid(env, "g" + g.sub, uid).catch(() => {});   // 예전 방식(g+번호)으로 저장된 기록을 새 코드로 옮겨요 (이전 이용자 전용)
     if (await isBanned(env, uid)) return json(env, await banBody(env, uid), 403);
@@ -162,6 +178,7 @@ async function handle(req, env, ctx) {
     if (!/^[A-Za-z0-9_-]{1,40}$/.test(vid) || !Number.isInteger(stars) || stars < 0 || stars > 5) return json(env, { error: "bad" }, 400);
     if (stars > 0) { const bad = checkText(text); if (bad) return json(env, { error: "text", code: bad }, 400); }   // 후기는 꼭 필요해요
     { const bn = await isBanned(env, s.uid); if (bn || (!isAdmin(env, s) && await ipBanned(env, req))) return json(env, await banBody(env, s.uid, !bn), 403); }   // 차단된 계정·주소는 막아요
+    if (!isAdmin(env, s)) { const left = await lockLeft(env, s.uid); if (left) return coolBody(env, left); }
     if (stars === 0) {
       const old = await env.DB.prepare("SELECT stars, text, name, ts FROM ratings WHERE vid = ? AND uid = ?").bind(vid, s.uid).first();
       if (old) await archive(env, vid, s.uid, old, "del");   // 지우기 전 모습 보관
@@ -192,7 +209,8 @@ async function handle(req, env, ctx) {
       env.DB.prepare("DELETE FROM reports WHERE uid = ? OR reporter = ?").bind(s.uid, s.uid),
       env.DB.prepare("DELETE FROM ip_seen WHERE uid = ?").bind(s.uid),
     ]);
-    return json(env, { ok: true });
+    if (!isAdmin(env, s)) { await lockLeft(env, s.uid); await env.DB.prepare("INSERT INTO delete_lock (uid, ts) VALUES (?, ?) ON CONFLICT(uid) DO UPDATE SET ts = excluded.ts").bind(s.uid, Date.now()).run(); await env.DB.prepare("DELETE FROM delete_lock WHERE ts < ?").bind(Date.now() - LOCK_MS).run().catch(() => {}); }   // 24시간 동안 다시 로그인할 수 없어요
+    return json(env, { ok: true, hours: 24 });
   }
 
   if (p === "/report" && req.method === "POST") {   // 후기 신고 → 운영진 디스코드 채널
@@ -203,6 +221,7 @@ async function handle(req, env, ctx) {
     const vid = String(b.vid || ""), reason = String(b.reason || ""), note = clean(b.note).slice(0, 200), id = String(b.id || "");
     if (!/^[A-Za-z0-9_-]{1,40}$/.test(vid) || !REASONS[reason] || !/^[A-Za-z0-9_-]{6,40}$/.test(id)) return json(env, { error: "bad" }, 400);
     { const bn = await isBanned(env, s.uid); if (bn || (!isAdmin(env, s) && await ipBanned(env, req))) return json(env, await banBody(env, s.uid, !bn), 403); }
+    if (!isAdmin(env, s)) { const left = await lockLeft(env, s.uid); if (left) return coolBody(env, left); }
     const all = await env.DB.prepare("SELECT uid, name, stars, text, ts FROM ratings WHERE vid = ?").bind(vid).all();
     let target = null; for (const r of all.results) if (await rid(env, vid, r.uid) === id) { target = r; break; }
     if (!target) return json(env, { error: "gone" }, 404);   // 이미 지워졌거나 없는 후기

@@ -94,7 +94,7 @@
   async function onGoogle(resp) {
     try {
       const r = await fetch(RATE + "/google", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ credential: resp.credential, adult: (() => { try { return JSON.parse(localStorage.getItem("consent1")).adult === true; } catch (e) { return false; } })() }) });
-      if (r.status === 403) { const j = await r.json().catch(() => ({})); setBan(true, j.ban); drawRate(); return toast("이용이 제한되어 로그인할 수 없어요"); }
+      if (r.status === 403) { const j = await r.json().catch(() => ({})); if (j.error === "cooldown") return toast("내 정보를 삭제한 뒤 24시간 동안은 다시 로그인할 수 없어요. 약 " + (j.hours || 24) + "시간 뒤에 해 주세요"); setBan(true, j.ban); drawRate(); return toast("이용이 제한되어 로그인할 수 없어요"); }
       if (r.status === 400) { const j = await r.json().catch(() => ({})); if (j.error === "adult") return toast("만 19세 이상만 로그인할 수 있어요. 새로고침해서 동의 화면에서 확인해 주세요"); }
       if (!r.ok) return toast("로그인하지 못했어요. 잠시 후 다시 해 주세요");
       const d = await r.json(); rtok = { t: d.token, name: d.name || "" }; isAdm = !!d.admin; syncAdm(); store.set("dtok", rtok); setBan(false);
@@ -169,7 +169,7 @@
     try {
       const r = await rApi("/rate", { method: "POST", body: JSON.stringify({ vid: id, stars: n, text }) });
       if (r.status === 401) { rLogout(); return toast("다시 로그인해 주세요"); }
-      if (r.status === 403) { mine = {}; const j = await r.json().catch(() => ({})); setBan(true, j.ban); drawRate(); return toast("차단된 계정이라 남길 수 없어요"); }
+      if (r.status === 403) { mine = {}; const j = await r.json().catch(() => ({})); if (j.error === "cooldown") { rLogout(); return toast("내 정보를 삭제한 뒤 24시간 동안은 이용할 수 없어요. 약 " + (j.hours || 24) + "시간 뒤에 다시 로그인해 주세요"); } setBan(true, j.ban); drawRate(); return toast("차단된 계정이라 남길 수 없어요"); }
       if (r.status === 400) { const d = await r.json().catch(() => ({})); formState(); return toast(TEXT_MSG[d.code] || "내용을 확인해 주세요"); }
       if (r.status === 429) { const d = await r.json().catch(() => ({})); formState(); return toast(d.error === "slow" ? "너무 빨라요. 잠시 뒤에 다시 해 주세요" : "오늘은 후기를 너무 많이 남기셨어요. 내일 다시 남겨 주세요"); }
       if (!r.ok) { formState(); return toast("지금은 남길 수 없어요. 잠시 후 다시 해 주세요"); }
@@ -179,13 +179,13 @@
   }
   const my0 = () => true;
   async function doDeleteAll() {
-    if (!rtok || !confirm("내 별점·후기와 보관 기록, 접속 기록을 모두 지울까요?\n\n지우면 되돌릴 수 없고, 칭호는 처음부터 다시 시작해요.\n별명은 그대로 남고, 지운 뒤에는 자동으로 로그아웃돼요.")) return;
+    if (!rtok || !confirm("내 별점·후기와 보관 기록, 접속 기록을 모두 지울까요?\n\n지우면 되돌릴 수 없고, 칭호는 처음부터 다시 시작해요.\n별명은 그대로 남고, 지운 뒤에는 자동으로 로그아웃돼요.\n\n서버 부담을 줄이기 위해 지운 뒤 24시간 동안은 다시 로그인할 수 없어요.")) return;
     try {
       const r = await rApi("/account/delete", { method: "POST", body: "{}" });
       if (r.status === 409) return toast("신고가 접수된 후기가 있어 지금은 지울 수 없어요. 운영진 확인 뒤에 다시 해 주세요");
       if (r.status === 403) return toast("이용이 제한된 계정은 지울 수 없어요. 디스코드로 문의해 주세요");
       if (!r.ok) return toast("지금은 지울 수 없어요. 잠시 후 다시 해 주세요");
-      rLogout(); draft = { stars: 0, text: "" }; toast("내 정보를 모두 지우고 로그아웃했어요"); loadRatings(); loadReviews(); render();
+      rLogout(); draft = { stars: 0, text: "" }; toast("내 정보를 모두 지우고 로그아웃했어요. 24시간 뒤에 다시 로그인할 수 있어요"); loadRatings(); loadReviews(); render();
     } catch (e) { toast("지금은 지울 수 없어요. 잠시 후 다시 해 주세요"); }
   }
   async function doDelete() {
