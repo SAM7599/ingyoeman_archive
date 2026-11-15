@@ -1031,3 +1031,12 @@ html[data-theme="dark"] .adm-srv[data-s="down"] { background:#3a1d22; color:#ffd
 #tnPop .tnp .tn-poster { cursor:grab; }
 #tnPop .tnp.dragging, #tnPop .tnp.dragging .tn-poster { cursor:grabbing; }
 #tnPop .tn-bar button { cursor:pointer; }
+
+/* 휴대폰: 분류를 옆으로 밀 수 있다는 안내 + 오른쪽 끝이 잘려 보이게 */
+.chip-hint { display:none; }
+@media (max-width:860px) {
+  .chip-hint:not([hidden]) { display:block; margin:-6px 0 14px; font-size:12.5px; color:var(--sub); text-align:right; animation:chipnudge 1.6s ease-in-out 3; }
+  .chip-hint b { color:var(--accent); }
+}
+@keyframes chipnudge { 0%,100% { transform:translateX(0); } 50% { transform:translateX(-6px); } }
+html[data-motion="off"] .chip-hint { animation:none; }

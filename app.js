@@ -427,6 +427,11 @@
     if (tab === "recent" && !recent.length) return `<div class="empty"><b>아직 열어본 영상이 없어요</b>영상을 눌러 보면 여기에 차례로 쌓여요.<br><a class="btn" href="#">다시보기 목록으로</a></div>`;
     return `<div class="empty"><b>${q ? "‘" + esc(q) + "’ 검색 결과가 없어요" : "조건에 맞는 영상이 없어요"}</b>검색어를 줄이거나 분류를 바꿔 보세요.<br><button class="btn" type="button" data-reset>조건 모두 풀기</button></div>`;
   }
+  function chipHint() {   // 휴대폰: 분류를 옆으로 밀 수 있다는 안내 (한 번 밀어 보면 사라져요)
+    const hint = $("chipHint"), cb = $("chips"); if (!hint) return;
+    hint.hidden = !!store.get("chipHint1", false) || cb.hidden || cb.scrollWidth <= cb.clientWidth + 4;
+  }
+  $("chips").addEventListener("scroll", () => { if ($("chips").scrollLeft > 24 && !store.get("chipHint1", false)) { store.set("chipHint1", true); $("chipHint").hidden = true; } }, { passive: true });
   function renderChips() {
     const p = pool(), n = {}, home = tab === "all";
     p.forEach(v => { n[v.category] = (n[v.category] || 0) + 1; });
@@ -436,6 +441,7 @@
     $("chips").innerHTML = (all.length > 1 && tab !== "fav" && tab !== "recent" ? `<button class="chip draw" type="button" data-draw>${CARD}랜덤 뽑기</button>` : "") + (home ? chip("", "홈") + chip("*", "전체 영상", p.length) : chip("", "전체", p.length)) + 
       [...CATS, ...extra].map(c => chip(c, c, n[c] || 0, !n[c] && c !== cat)).join("");
     cbox.scrollLeft = sx;   // 가로로 넘겨 둔 위치를 유지 (휴대폰)
+    chipHint();
     const on = cbox.querySelector(".chip.on"); if (on && cbox.scrollWidth > cbox.clientWidth + 4) { const l = on.offsetLeft - cbox.offsetLeft, r = l + on.offsetWidth; if (l < cbox.scrollLeft + 8 || r > cbox.scrollLeft + cbox.clientWidth - 8) cbox.scrollLeft = Math.max(0, l - (cbox.clientWidth - on.offsetWidth) / 2); }
   }
   function renderToday() {
