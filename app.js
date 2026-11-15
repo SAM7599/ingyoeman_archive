@@ -204,8 +204,27 @@
     const get = async (p, k) => { try { const r = await rApi(p); if (r.ok) admCnt[k] = (await r.json()).length; } catch (e) {} };
     await Promise.all([get("/admin/reports", "rep"), ...(all ? [get("/admin/history", "arc"), get("/admin/bans", "ban")] : [])]); admBadge();
   }
-  function syncAdm() { $("admBtn").hidden = !isAdm; if (isAdm) admCounts(false); else { admCnt.rep = admCnt.arc = admCnt.ban = 0; admBadge(); } }
-  function openDash() { if (!isAdm) return; admSetTab("rep"); admCounts(true); }
+  /* 별점·후기 서버 상태 (운영진에게만 보여요) */
+  let srv = null, srvTimer = null;
+  async function srvCheck() {
+    if (!RATE) return;
+    const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), 8000), t0 = performance.now();
+    let s = "down", ms = 0;
+    try { const r = await fetch(RATE + "/ratings", { cache: "no-store", signal: ctl.signal }); ms = Math.round(performance.now() - t0); s = r.ok ? (ms > 2000 ? "slow" : "ok") : "down"; } catch (e) { s = "down"; }
+    clearTimeout(to); srv = { s, ms, t: Date.now() }; srvDraw();
+  }
+  function srvDraw() {
+    if (!srv) return;
+    $("admDot").dataset.s = srv.s;
+    const msg = { ok: "정상", slow: "느려요", down: "연결 안 됨" }[srv.s];
+    const d = new Date(srv.t), hm = String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0") + ":" + String(d.getSeconds()).padStart(2, "0");
+    $("admSrv").dataset.s = srv.s;
+    $("admSrvT").textContent = `별점·후기 서버: ${msg}` + (srv.s === "down" ? "" : ` · 응답 ${srv.ms}ms`) + ` · ${hm} 확인`;
+    $("admBtn").title = "운영진 대시보드 · 서버 " + msg;
+  }
+  function srvWatch(on) { clearInterval(srvTimer); srvTimer = null; if (on) { srvCheck(); srvTimer = setInterval(() => { if (!document.hidden) srvCheck(); }, 60000); } else srv = null; }
+  function syncAdm() { $("admBtn").hidden = !isAdm; srvWatch(isAdm); if (isAdm) admCounts(false); else { admCnt.rep = admCnt.arc = admCnt.ban = 0; admBadge(); } }
+  function openDash() { if (!isAdm) return; admSetTab("rep"); admCounts(true); srvCheck(); }
   /* ── 운영진 신고함 (지정한 구글 계정만) ── */
   let tmap = null;
   const vTitle = id => { if (!tmap) { tmap = {}; all.forEach(v => { tmap[vid(v)] = v.title || ""; }); } return tmap[id] || "(목록에서 사라진 영상)"; };
@@ -939,6 +958,7 @@
   document.querySelector(".adm-tabs").addEventListener("click", e => { const b = e.target.closest("button[data-tab]"); if (b) admSetTab(b.dataset.tab); });
   $("admQ").addEventListener("input", drawArchive);
   $("admBtn").addEventListener("click", openDash);
+  $("admSrvGo").addEventListener("click", () => { $("admSrvT").textContent = "확인하는 중…"; srvCheck(); });
   $("admClose").addEventListener("click", () => { $("admModal").hidden = true; });
   $("admModal").addEventListener("click", e => { if (e.target === $("admModal") && downT === e.target) $("admModal").hidden = true; });
   $("repSave").addEventListener("click", saveShot);

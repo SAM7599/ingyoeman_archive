@@ -942,3 +942,13 @@ footer .copy { margin-top:10px; font-size:12px; opacity:.7; line-height:1.6; wor
 #admBtn { border-color:var(--accent); color:var(--accent); }
 .adm-tabs button[data-n]:not([data-n=""])::after { content:attr(data-n); margin-left:6px; padding:1px 7px; border-radius:99px; background:var(--accent); color:var(--on-accent); font-size:11.5px; font-weight:800; }
 .adm-tabs button.on[data-n]:not([data-n=""])::after { background:var(--on-accent); color:var(--accent); }
+
+#admBtn .srv { position:absolute; right:3px; bottom:3px; width:9px; height:9px; border-radius:50%; background:#98a2b3; border:2px solid var(--surface); box-sizing:content-box; }
+#admBtn .srv[data-s="ok"], .adm-srv[data-s="ok"] i { background:#2fb86b; }
+#admBtn .srv[data-s="slow"], .adm-srv[data-s="slow"] i { background:#f0a020; }
+#admBtn .srv[data-s="down"], .adm-srv[data-s="down"] i { background:#e5484d; }
+.adm-srv { display:flex; align-items:center; gap:8px; margin:0 0 12px; padding:9px 12px; border-radius:12px; background:var(--raise); font-size:13.5px; flex-wrap:wrap; }
+.adm-srv i { width:10px; height:10px; border-radius:50%; background:#98a2b3; flex:none; }
+.adm-srv span { flex:1 1 auto; }
+.adm-srv[data-s="down"] { background:#fdeaea; color:#7a1f1f; }
+html[data-theme="dark"] .adm-srv[data-s="down"] { background:#3a1d22; color:#ffd3d6; }
