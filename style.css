@@ -986,3 +986,10 @@ html[data-theme="dark"] .adm-srv[data-s="down"] { background:#3a1d22; color:#ffd
 #admBtn[hidden] { display:none; }
 #admBtn b:empty { display:none; }
 .ach-btn b:empty { display:none; }
+
+/* 썸네일 없는 영상: 제보 버튼 */
+.trb { display:inline-flex; align-items:center; gap:5px; margin-top:6px; padding:4px 10px; border-radius:99px; border:1px dashed var(--accent); color:var(--accent); font-size:12.5px; font-weight:700; cursor:pointer; white-space:nowrap; }
+.trb svg { width:14px; height:14px; }
+.trb:hover { background:var(--accent); color:var(--on-accent); border-style:solid; }
+.trb:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+.grid:not(.rows) .no-thumb .t, .rail .no-thumb .t { display:flex; flex-direction:column; align-items:flex-start; }
