@@ -38,6 +38,19 @@ const cors = env => ({ "Access-Control-Allow-Origin": env.SITE_ORIGIN, "Access-C
 const json = (env, data, status = 200, extra = {}) => new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json; charset=utf-8", ...cors(env), ...extra } });
 const siteUrl = (env, hash) => env.SITE_ORIGIN + (env.SITE_PATH || "/") + "#" + hash;
 
+// 같은 접속 주소(IP 코드)가 짧은 시간에 너무 자주 요청하면 막아요 (서버 한도를 지키기 위한 속도 제한)
+let rlReady = false;
+const tooFast = async (env, req, key, max, secs) => {
+  try {
+    const h = await ipHash(env, req); if (!h) return false;
+    if (!rlReady) { await env.DB.prepare("CREATE TABLE IF NOT EXISTS rate_hit (k TEXT PRIMARY KEY, win INTEGER NOT NULL, n INTEGER NOT NULL, ts INTEGER NOT NULL)").run(); rlReady = true; }
+    const now = Date.now(), win = Math.floor(now / (secs * 1000));
+    const r = await env.DB.prepare("INSERT INTO rate_hit (k, win, n, ts) VALUES (?1, ?2, 1, ?3) ON CONFLICT(k) DO UPDATE SET n = CASE WHEN win = excluded.win THEN n + 1 ELSE 1 END, win = excluded.win, ts = excluded.ts RETURNING n").bind(key + ":" + h, win, now).first();
+    if (Math.random() < 0.02) await env.DB.prepare("DELETE FROM rate_hit WHERE ts < ?").bind(now - 864e5).run().catch(() => {});
+    return !!r && r.n > max;
+  } catch (e) { return false; }   // 속도 제한 장치가 고장나도 사이트는 계속 돼요
+};
+const slow = env => json(env, { error: "slow" }, 429);
 const isAdmin = (env, s) => !!s && !!s.em && String(env.ADMIN_EMAILS || "").toLowerCase().split(",").map(x => x.trim()).filter(Boolean).includes(s.em);
 // 차단된 계정인지
 // 접속 주소(IP)는 그대로 저장하지 않고, 되돌릴 수 없는 짧은 코드로 바꿔서만 저장해요
@@ -90,6 +103,7 @@ async function handle(req, env, ctx) {
   const redirect = `${url.origin}/callback`;
 
   if (p === "/google" && req.method === "POST") {   // 구글 로그인 확인 → 우리 사이트용 로그인 토큰
+    if (await tooFast(env, req, "login", 20, 600)) return slow(env);
     let b; try { b = await req.json(); } catch (e) { return json(env, { error: "bad" }, 400); }
     const cred = String(b.credential || "");
     if (b.adult !== true) return json(env, { error: "adult" }, 400);   // 만 19세 이상 확인(본인 선언)을 하지 않으면 로그인할 수 없어요 — 이 값은 저장하지 않아요
@@ -143,6 +157,7 @@ async function handle(req, env, ctx) {
     const s = await getAuth(env, req);
     if (!s) return json(env, { error: "login" }, 401);
     let b; try { b = await req.json(); } catch (e) { return json(env, { error: "bad" }, 400); }
+    if (!isAdmin(env, s) && await tooFast(env, req, "rate", 40, 600)) return slow(env);
     const vid = String(b.vid || ""), stars = Number(b.stars), text = clean(b.text);
     if (!/^[A-Za-z0-9_-]{1,40}$/.test(vid) || !Number.isInteger(stars) || stars < 0 || stars > 5) return json(env, { error: "bad" }, 400);
     if (stars > 0) { const bad = checkText(text); if (bad) return json(env, { error: "text", code: bad }, 400); }   // 후기는 꼭 필요해요
@@ -184,6 +199,7 @@ async function handle(req, env, ctx) {
     const s = await getAuth(env, req);
     if (!s) return json(env, { error: "login" }, 401);
     let b; try { b = await req.json(); } catch (e) { return json(env, { error: "bad" }, 400); }
+    if (!isAdmin(env, s) && await tooFast(env, req, "report", 30, 600)) return slow(env);
     const vid = String(b.vid || ""), reason = String(b.reason || ""), note = clean(b.note).slice(0, 200), id = String(b.id || "");
     if (!/^[A-Za-z0-9_-]{1,40}$/.test(vid) || !REASONS[reason] || !/^[A-Za-z0-9_-]{6,40}$/.test(id)) return json(env, { error: "bad" }, 400);
     { const bn = await isBanned(env, s.uid); if (bn || (!isAdmin(env, s) && await ipBanned(env, req))) return json(env, await banBody(env, s.uid, !bn), 403); }

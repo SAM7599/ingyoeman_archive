@@ -114,7 +114,10 @@
   function rLogout() { meI = null; rtok = null; isAdm = false; syncAdm(); mine = {}; store.set("dtok", null); drawRate(); }
   function loadRatings() {
     if (!RATE) return;
-    fetch(RATE + "/ratings").then(r => r.json()).then(d => { ravg = d || {}; render(); if (current) drawRate(); }).catch(() => {});
+    // 별점 평균은 5분 동안 기기에 저장해 두고 다시 쓰고, 서버가 바쁘면 저장해 둔 값을 보여줘요 (방문자가 몰려도 서버 부담이 적도록)
+    let hit = null; try { hit = JSON.parse(localStorage.getItem("ravg1")); } catch (e) {}
+    if (hit && hit.d) { ravg = hit.d; render(); if (current) drawRate(); }
+    if (!(hit && hit.d && Date.now() - hit.t < 3e5)) fetch(RATE + "/ratings").then(r => r.ok ? r.json() : Promise.reject()).then(d => { ravg = d || {}; try { localStorage.setItem("ravg1", JSON.stringify({ t: Date.now(), d: ravg })); } catch (e) {} render(); if (current) drawRate(); }).catch(() => {});
     if (rtok) rApi("/me").then(r => r.status === 401 ? Promise.reject("login") : r.json()).then(d => { mine = d.mine || {}; rtok.name = d.name || ""; meI = { name: d.name || "", cnt: d.cnt || 0, title: d.title || "", next: d.next || null }; isAdm = !!d.admin; syncAdm(); if (d.member === false) { setBan(true, d.ban); toast("차단된 계정이라 별점을 줄 수 없어요"); } else setBan(false); if (current) { resetDraft(); drawRate(); loadReviews(); } }).catch(e => { if (e === "login") rLogout(); });
   }
   /* 후기(평점)는 꼭 써야 해요. 신고 번호는 디스코드 채널에 직접 올려요. */
@@ -168,9 +171,9 @@
       if (r.status === 401) { rLogout(); return toast("다시 로그인해 주세요"); }
       if (r.status === 403) { mine = {}; const j = await r.json().catch(() => ({})); setBan(true, j.ban); drawRate(); return toast("차단된 계정이라 남길 수 없어요"); }
       if (r.status === 400) { const d = await r.json().catch(() => ({})); formState(); return toast(TEXT_MSG[d.code] || "내용을 확인해 주세요"); }
-      if (r.status === 429) { formState(); return toast("오늘은 후기를 너무 많이 남기셨어요. 내일 다시 남겨 주세요"); }
+      if (r.status === 429) { const d = await r.json().catch(() => ({})); formState(); return toast(d.error === "slow" ? "너무 빨라요. 잠시 뒤에 다시 해 주세요" : "오늘은 후기를 너무 많이 남기셨어요. 내일 다시 남겨 주세요"); }
       if (!r.ok) { formState(); return toast("지금은 남길 수 없어요. 잠시 후 다시 해 주세요"); }
-      const d = await r.json(); mine[id] = [n, text]; ravg[id] = [d.avg, d.n];
+      const d = await r.json(); mine[id] = [n, text]; ravg[id] = [d.avg, d.n]; try { localStorage.removeItem("ravg1"); } catch (e) {}
       toast("후기를 남겼어요"); loadReviews(); drawRate(); render(); refreshMe();
     } catch (e) { formState(); toast("지금은 남길 수 없어요. 잠시 후 다시 해 주세요"); }
   }
@@ -190,7 +193,7 @@
     try {
       const r = await rApi("/rate", { method: "POST", body: JSON.stringify({ vid: id, stars: 0 }) });
       if (!r.ok) return toast("지금은 지울 수 없어요. 잠시 후 다시 해 주세요");
-      const d = await r.json(); delete mine[id]; if (d.n) ravg[id] = [d.avg, d.n]; else delete ravg[id];
+      const d = await r.json(); delete mine[id]; if (d.n) ravg[id] = [d.avg, d.n]; else delete ravg[id]; try { localStorage.removeItem("ravg1"); } catch (e) {}
       draft = { stars: 0, text: "" }; toast("지웠어요"); loadReviews(); drawRate(); render(); refreshMe();
     } catch (e) { toast("지금은 지울 수 없어요. 잠시 후 다시 해 주세요"); }
   }
