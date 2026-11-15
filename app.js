@@ -1130,7 +1130,7 @@
   function tnOpen() {
     if (!SITE.repo || store.get("tnHide", "") === tnDay()) return;
     const n = all.filter(v => !v.thumb).length; if (!n) return;
-    $("tnN").textContent = nf(n); $("tnPop").hidden = false; $("tnGo").focus();
+    $("tnN").textContent = nf(n); $("tnPop").hidden = false;
   }
   function tnWait() {   // 동의 화면·인트로가 끝난 뒤에 보여줘요
     let tries = 0; const t = setInterval(() => {
@@ -1142,7 +1142,6 @@
   $("tnGo").addEventListener("click", () => { tnClose(); $("q").value = ""; cat = "!thumb"; if (tab !== "all" || location.hash.replace("#", "")) { location.hash = ""; } reset(); window.scrollTo({ top: 0, behavior: "auto" }); setTimeout(() => { const c = $("chips"); if (c) c.scrollIntoView({ block: "start", behavior: calm() ? "auto" : "smooth" }); }, 60); });
   $("tnHide").addEventListener("click", () => { store.set("tnHide", tnDay()); tnClose(); toast("오늘은 다시 안 보여드릴게요"); });
   $("tnX").addEventListener("click", tnClose);
-  $("tnPop").addEventListener("click", e => { if (e.target === $("tnPop") && downT === e.target) tnClose(); });
 
   /* ── 패치노트 (patchnotes.json) ── */
   let notes = null;

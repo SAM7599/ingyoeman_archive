@@ -1009,3 +1009,13 @@ html[data-theme="dark"] .adm-srv[data-s="down"] { background:#3a1d22; color:#ffd
 .tn-bar button + button { border-left:1px solid rgba(255,255,255,.14); }
 .tn-bar button:hover { color:#fff; background:rgba(255,255,255,.06); }
 .chip svg { width:14px; height:14px; margin-right:5px; vertical-align:-2px; }
+
+/* 안내 창은 뒤 화면을 가리지 않고, 왼쪽 위에 떠 있어요 (뒤 사이트를 그대로 쓸 수 있어요) */
+#tnPop.modal { inset:auto; left:20px; top:84px; width:auto; padding:0; background:none; display:block; pointer-events:none; z-index:35; }
+#tnPop[hidden] { display:none; }
+#tnPop .tnp { pointer-events:auto; }
+.tn-poster, .tn-poster:hover, .tn-poster:focus, .tn-poster:focus-visible, .tn-poster:active, .tn-bar button, .tn-bar button:focus, .tn-bar button:focus-visible { outline:none !important; }
+.tn-poster { -webkit-tap-highlight-color:transparent; }
+@media (max-width:520px) { #tnPop.modal { left:12px; top:76px; } .tnp { width:min(300px, calc(100vw - 24px)); } .tn-poster { min-height:min(430px, calc(100dvh - 190px)); padding:28px 20px 24px; } }
+#tnPop .tnp { width:340px; max-width:calc(100vw - 24px); }
+@media (max-width:520px) { #tnPop .tnp { width:300px; } }
