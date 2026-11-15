@@ -1066,14 +1066,14 @@
   const AVSVG = '<span class="av"><svg viewBox="0 0 24 24"><path d="M5 5h14v10H10l-5 4z"/></svg></span>';
   let dcRun = 0, dcFirst = true;
   const dcNow = () => new Date().toLocaleTimeString("ko-KR", { hour: "numeric", minute: "2-digit" });
-  const dcScroll = () => { const b = $("dcBody"); b.scrollTo({ top: b.scrollHeight, behavior: calm() ? "auto" : "smooth" }); };
+  const dcScroll = () => { const b = $("dcBody"); b.scrollTo({ top: b.scrollHeight, behavior: calm() || dcFast ? "auto" : "smooth" }); };
   function dcAdd(html, cls, me) {
     const row = document.createElement("div"); row.className = "dc-r" + (me ? " me" : "") + (!me && !dcFirst ? " sp" : "");
     row.innerHTML = (me ? "" : AVSVG) + `<div class="dc-col"><div class="dc-m ${cls || ""}${me ? " me" : ""}">${html}</div><span class="dc-t">${dcNow()}</span></div>`;
     $("dcBody").appendChild(row); dcFirst = !!me; dcScroll();
   }
   async function dcTyping(run, ms) {   // 입력 중 … 말풍선과 윗줄 "입력 중"
-    if (calm()) return;
+    if (calm() || dcFast) return;
     const row = document.createElement("div"); row.className = "dc-r" + (dcFirst ? "" : " sp");
     row.innerHTML = AVSVG + '<div class="dc-typing"><i></i><i></i><i></i></div>';
     $("dcBody").appendChild(row); dcScroll();
@@ -1081,16 +1081,20 @@
     await SLEEP(ms); row.remove(); st.classList.remove("typing"); st.lastChild.textContent = "자동 안내예요 · 실제 채팅이 아니에요";
   }
   const dcMs = html => Math.min(2300, 650 + html.replace(/<[^>]+>/g, "").length * 24);   // 글이 길수록 오래 입력해요
+  let dcFast = false;   // 처음이 아니면 입력 애니메이션 없이 바로 보여줘요
   async function dcSay(run, m) {
     const warn = Array.isArray(m), html = warn ? m[1] : m;
+    if (dcFast) { dcAdd(html, warn ? "warn" : ""); return run === dcRun; }
     await dcTyping(run, dcMs(html)); if (run !== dcRun) return false;
     dcAdd(html, warn ? "warn" : ""); await (calm() ? 0 : SLEEP(420)); return run === dcRun;
   }
   async function openDc() {
     const run = ++dcRun; dcFirst = true;
+    dcFast = store.get("dcSeen1", false) === true;   // 한 번이라도 봤으면 바로 보여줘요
+    if (!dcFast) store.set("dcSeen1", true);
     $("dcBody").innerHTML = ""; $("dcAsk").hidden = true; $("dcJoin").href = SITE.discord;
     $("dcChat").hidden = false; document.body.style.overflow = "hidden";
-    await (calm() ? 0 : SLEEP(500));
+    await (calm() || dcFast ? 0 : SLEEP(500));
     for (const m of DC) if (!await dcSay(run, m)) return;
     $("dcAsk").hidden = false; $("dcJoin").focus({ preventScroll: true });
   }
