@@ -1121,3 +1121,12 @@ body { padding-left:env(safe-area-inset-left); padding-right:env(safe-area-inset
 .menu.set .mf { display:flex; gap:4px; margin-top:6px; padding-top:6px; border-top:1px solid var(--line); }
 .menu.set { min-width:230px; }
 .menu.set .mf a { flex:1; justify-content:center; padding:9px 4px; font-size:12px; white-space:nowrap; color:var(--sub); text-align:center; }
+
+/* 썸네일 제보 배너 (유튜브 배너와 같은 모양, 색만 다르게) */
+.promo.tn { background:linear-gradient(110deg,#4347d9,#6a3fc4 55%,#a03a8f); }
+.promo.tn .promo-ic::after { display:none; }
+.promo.tn .promo-ic svg { width:28px; height:28px; color:#fff; }
+.promo.tn .promo-t i { white-space:normal; overflow:visible; }
+.promo.tn .promo-go { color:#3a3fb8; }
+.promo.tn:hover .promo-go { background:#e8e9ff; }
+.promo.tn:hover { box-shadow:0 0 0 2px var(--bg), 0 0 0 4px #7a7df0; }

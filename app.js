@@ -474,7 +474,7 @@
     $("home").innerHTML =
       (top.length ? `<section class="row"><div class="row-h"><h2>인기 영상</h2><a class="more" href="#rank">랭킹 전체 보기</a></div>
         <div class="rail-wrap">${ARR(-1)}<div class="rail">${top.map((v, i) => cardHtml(v, true, i + 1)).join("")}</div>${ARR(1)}</div></section>` : "") +
-      promoHtml() +
+      promoHtml() + thumbPromoHtml() +
       rowHtml("최근 열어본 영상", recent.map(byKey).filter(Boolean), `<a class="more" href="#recent">전체 보기</a>`) +
       rowHtml("즐겨찾기", sorted.filter(v => favs.has(key(v))), `<a class="more" href="#fav">전체 보기</a>`) +
       [...CATS, ...extra].map(c => rowHtml(c, sorted.filter(v => v.category === c), `<button class="more" type="button" data-cat="${esc(c)}">전체 보기</button>`, c)).join("") ||
@@ -488,6 +488,13 @@
       <span class="promo-ic" aria-hidden="true"></span>
       <span class="promo-t"><small>잉여맨 유튜브 채널</small><b>잉여맨을 유튜브에서도 만나 보세요</b><i>${esc(decodeURI(SITE.youtube).replace(/^https?:\/\/(www\.)?/, ""))}</i></span>
       <span class="btn promo-go">채널 보러 가기${OUT}</span></a>`;
+  }
+  function thumbPromoHtml() {   // 썸네일 제보 배너 (유튜브 배너와 같은 모양)
+    const n = SITE.repo ? all.filter(v => !v.thumb).length : 0; if (!n) return "";
+    return `<a class="promo tn" href="#nothumb">
+      <span class="promo-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="14" rx="2.5"/><circle cx="9" cy="10.5" r="1.6"/><path d="M4 17l5-4.5 3.5 3 3-2.5 4.5 4"/></svg></span>
+      <span class="promo-t"><small>사이트를 같이 만들어가요</small><b>썸네일을 제보해 주세요!</b><i>썸네일 없는 영상 ${nf(n)}개 · 영상 제목 옆 ⋮ 메뉴에서 "썸네일 제보"를 눌러 주세요</i></span>
+      <span class="btn promo-go">썸네일 없는 영상 보기</span></a>`;
   }
   function syncArrows(w) {
     const r = w.querySelector(".rail");
@@ -1276,7 +1283,7 @@
       const ok = new Set(SERIES.map(x => x.name)); all.forEach(v => { v._s = v._s.filter(n => ok.has(n)); });
       $("abN").textContent = nf(all.length); $("abC").textContent = new Set(all.map(v => v.category).filter(Boolean)).size; $("abS").textContent = SERIES.length;
       let sv = null; try { if (((performance.getEntriesByType("navigation")[0] || {}).type) === "reload") sv = JSON.parse(sessionStorage.getItem("view1")); } catch (e) {}
-      route(); achStart(); tnWait();
+      route(); achStart();
       if (sv && sv.h === location.hash && !location.hash.startsWith("#v=") && !location.hash.startsWith("#import=")) {   // 새로고침하면 보던 분류·검색·위치를 그대로 이어서 보여줘요
         if (typeof sv.cat === "string" && sv.cat) cat = sv.cat;
         if (typeof sv.q === "string" && sv.q) $("q").value = sv.q.slice(0, 80);
