@@ -1303,18 +1303,24 @@
     if (!n || !n.enabled || !text) return;
     const id = String(hash(title + text + (n.link || ""))), day = id + "|" + tnDay();
     const pop = $("noticePop"), de = document.documentElement;
-    const close = () => { pop.hidden = true; document.body.style.overflow = ""; };
+    const close = () => { pop.hidden = true; };
     $("npX").addEventListener("click", close);
     $("npGo").addEventListener("click", close);
     $("npHide").addEventListener("click", () => { store.set("notice_hide", day); close(); toast("오늘은 다시 안 보여드릴게요"); });
-    pop.addEventListener("click", e => { if (e.target === pop) close(); });
     window.closeNotice = close;
+    { const sh = pop.querySelector(".sheet"); let d = null;   // 공지창은 끌어서 옮길 수 있고, 뒤의 사이트도 그대로 쓸 수 있어요
+      const clamp = (l, t) => [Math.max(4, Math.min(innerWidth - sh.offsetWidth - 4, l)), Math.max(4, Math.min(innerHeight - 60, t))];
+      sh.addEventListener("pointerdown", e => { if (e.target.closest("button, a") || (e.pointerType === "mouse" && e.button !== 0)) return; const r = sh.getBoundingClientRect(); d = { x: e.clientX, y: e.clientY, l: r.left, t: r.top, id: e.pointerId }; try { sh.setPointerCapture(e.pointerId); } catch (x) {} sh.classList.add("drag"); });
+      sh.addEventListener("pointermove", e => { if (!d || e.pointerId !== d.id) return; const [l, t] = clamp(d.l + e.clientX - d.x, d.t + e.clientY - d.y); sh.style.left = l + "px"; sh.style.top = t + "px"; });
+      const end = () => { d = null; sh.classList.remove("drag"); };
+      sh.addEventListener("pointerup", end); sh.addEventListener("pointercancel", end);
+      window.addEventListener("resize", () => { if (pop.hidden) return; const [l, t] = clamp(sh.offsetLeft, sh.offsetTop); sh.style.left = l + "px"; sh.style.top = t + "px"; }); }
     const show = () => {
       $("npT").textContent = title;
       const box = $("npD"); box.textContent = "";
       text.split("\n").map(x => x.trim()).filter(Boolean).forEach(x => { const el = document.createElement(x.startsWith("•") ? "div" : "p"); el.className = x.startsWith("•") ? "np-li" : "np-p"; el.textContent = x.startsWith("•") ? x.slice(1).trim() : x; box.appendChild(el); });
       const go = $("npGo"); if (FB && /^https?:\/\//i.test(FB)) { go.href = FB; go.hidden = false; }
-      const open = () => { pop.hidden = false; document.body.style.overflow = "hidden"; $("npX").focus({ preventScroll: true }); };
+      const open = () => { const sh = pop.querySelector(".sheet"); pop.hidden = false; if (!sh.style.left) { const w = sh.offsetWidth, m = innerWidth <= 860; sh.style.left = Math.max(4, m ? (innerWidth - w) / 2 : innerWidth - w - 20) + "px"; sh.style.top = (m ? 56 : 84) + "px"; } };
       if (/^[\w./-]+\.(webp|png|jpe?g)$/i.test(n.image || "")) {   // 공지 이미지가 있으면 글 대신 이미지로 보여줘요 (이미지를 못 불러오면 글로 보여줘요)
         const im = new Image(), el = $("npImg");
         im.onload = () => { el.src = im.src; el.alt = title + ". " + text.replace(/\n+/g, " "); el.hidden = false; pop.querySelector(".sheet").classList.add("has-img"); open(); };

@@ -1150,10 +1150,16 @@ body { padding-left:env(safe-area-inset-left); padding-right:env(safe-area-inset
   .promos .promo-t b { font-size:15.5px; letter-spacing:-.4px; }
   .promos .promo::after { content:"›"; flex:none; font-size:24px; line-height:1; color:rgba(255,255,255,.85); }
 }
-}
 
 /* 공지 팝업 */
-#noticePop { z-index:50; }
+#noticePop.modal { inset:auto; left:0; top:0; width:0; height:0; padding:0; background:none; display:block; pointer-events:none; z-index:28; }
+#noticePop[hidden] { display:none; }
+#noticePop .sheet.np { position:fixed; pointer-events:auto; width:min(400px, calc(100vw - 24px)); max-width:none; max-height:none; box-shadow:0 18px 50px rgba(0,0,0,.5); cursor:grab; touch-action:none; }
+#noticePop .sheet.np.drag { cursor:grabbing; }
+#noticePop .sheet.np button, #noticePop .sheet.np a { touch-action:manipulation; cursor:pointer; }
+.np-grip { display:none; padding:7px 0 6px; text-align:center; font-size:12px; font-weight:600; color:#a3a8cf; background:#1b1e3a; user-select:none; }
+.np.has-img .np-grip { display:block; }
+@media (max-width:860px) { #noticePop .sheet.np { width:min(340px, calc(100vw - 24px)); } }
 .sheet.np { max-width:440px; }
 .np .m-body { padding:26px 24px 22px; }
 .np-k { display:inline-block; padding:3px 10px; border-radius:99px; background:var(--accent); color:var(--on-accent); font-size:12.5px; font-weight:800; }
@@ -1171,7 +1177,7 @@ body { padding-left:env(safe-area-inset-left); padding-right:env(safe-area-inset
 .sheet.np.has-img { overflow:hidden; }
 .np.has-img .np-k, .np.has-img h2, .np.has-img .np-d { display:none; }
 .np.has-img .m-body { padding:14px 16px 16px; }
-@media (max-height:760px) { .np.has-img .np-img { max-height:58dvh; object-fit:cover; object-position:top; } }
+
 
 /* 시리즈 편집 */
 #serEdit { z-index:46; }
