@@ -1231,3 +1231,16 @@ body.ser-on #serMode { display:none; }
   .rail { grid-auto-columns:36vw; }
   .hero { min-height:280px; }
 }
+
+/* 멀티뷰(분할 화면)·아주 좁은 창 */
+@media (max-width:350px) {
+  .top-in { gap:5px; padding-left:10px; padding-right:10px; }
+  .logo { font-size:14px; gap:5px; }
+  .logo-mark { width:26px; height:19px; }
+  .btn.cafe { height:34px; padding:0 8px; font-size:12.5px; }
+  .round { width:34px; height:34px; }
+}
+#noticePop .sheet.np, #noticePop .sheet.np.has-img { max-height:calc(100dvh - 76px); overflow-y:auto; overscroll-behavior:contain; }
+@media (max-height:560px) {
+  #noticePop .sheet.np .np-img { height:46dvh; width:100%; object-fit:contain; background:#14152b; }
+}
