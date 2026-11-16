@@ -75,6 +75,10 @@
   }
   window.startTour = start;
 
+  /* 튜토리얼이 나오기 전·나오는 동안에는 썸네일 제보 팝업이 뜨지 않게 해요 (내일부터 다시 나와요) */
+  var tnp = $("tnPop");
+  if (tnp && "MutationObserver" in window) new MutationObserver(function () { if (!tnp.hidden && (root || !seen())) tnp.hidden = true; }).observe(tnp, { attributes: true, attributeFilter: ["hidden"] });
+
   var rb = $("tour");
   if (rb) rb.addEventListener("click", function () {
     var m = $("setMenu"); if (m) m.hidden = true; var sb = $("set"); if (sb) sb.setAttribute("aria-expanded", "false");
