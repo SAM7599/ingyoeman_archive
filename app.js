@@ -1252,16 +1252,18 @@
   function showNotes() { drawNotes(); if (notes && notes.length) { store.set("notes_seen", notes[0].date); markNotes(); } }
   fetch("patchnotes.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).then(n => { notes = Array.isArray(n) ? n : []; if (tab === "notes") showNotes(); else markNotes(); }).catch(() => { notes = []; if (tab === "notes") drawNotes(); });
 
-  /* ── 공지 (notice.json): 팝업창으로 한 번만 보여 드려요. 글을 고치면 다시 나와요 ── */
+  /* ── 공지 (notice.json): 팝업창으로 보여 드려요. "오늘 하루 보지 않기"를 누르면 그날은 안 나와요 ── */
   fetch("notice.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).then(n => {
     const text = ((n && n.text) || "").trim(), title = ((n && n.title) || "공지").trim();
     if (!n || !n.enabled || !text) return;
-    const id = String(hash(title + text + (n.link || "")));
-    if (store.get("notice_seen", "") === id) return;
+    const id = String(hash(title + text + (n.link || ""))), day = id + "|" + tnDay();
+    let shut = false; try { shut = sessionStorage.getItem("notice_closed") === id; } catch (e) {}
+    if (shut || store.get("notice_hide", "") === day) return;
     const pop = $("noticePop"), de = document.documentElement; let tries = 0;
-    const close = () => { pop.hidden = true; document.body.style.overflow = ""; store.set("notice_seen", id); };
+    const close = () => { pop.hidden = true; document.body.style.overflow = ""; try { sessionStorage.setItem("notice_closed", id); } catch (e) {} };
     $("npX").addEventListener("click", close);
     $("npGo").addEventListener("click", close);
+    $("npHide").addEventListener("click", () => { store.set("notice_hide", day); close(); toast("오늘은 다시 안 보여드릴게요"); });
     pop.addEventListener("click", e => { if (e.target === pop) close(); });
     window.closeNotice = close;
     const t = setInterval(() => {   // 소개 화면·동의 창·사용법 안내가 모두 끝난 뒤에 보여줘요
@@ -1270,7 +1272,9 @@
       let toured = true; try { toured = !!localStorage.getItem("tour1"); } catch (e) {}
       if (!toured || document.querySelector(".modal:not([hidden]):not(#noticePop), .gacha:not([hidden])")) return;
       clearInterval(t);
-      $("npT").textContent = title; $("npD").textContent = text;
+      $("npT").textContent = title;
+      const box = $("npD"); box.textContent = "";
+      text.split("\n").map(x => x.trim()).filter(Boolean).forEach(x => { const el = document.createElement(x.startsWith("•") ? "div" : "p"); el.className = x.startsWith("•") ? "np-li" : "np-p"; el.textContent = x.startsWith("•") ? x.slice(1).trim() : x; box.appendChild(el); });
       const go = $("npGo"); if (FB && /^https?:\/\//i.test(FB)) { go.href = FB; go.hidden = false; }
       pop.hidden = false; document.body.style.overflow = "hidden"; $("npX").focus({ preventScroll: true });
     }, 600);
