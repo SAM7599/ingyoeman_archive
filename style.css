@@ -1141,11 +1141,21 @@ body { padding-left:env(safe-area-inset-left); padding-right:env(safe-area-inset
 .promos .promo-t i { font-size:12.5px; }
 @media (max-width:1080px) { .promos .promo-go { display:none; } }
 @media (max-width:860px) {
-  .promos { display:flex; gap:10px; margin:0 -16px 24px; padding:0 16px 2px; overflow-x:auto; scroll-snap-type:x mandatory; scroll-padding-left:16px; scrollbar-width:none; }
-  .promos::-webkit-scrollbar { display:none; }
-  .promos .promo { flex:0 0 86%; flex-wrap:nowrap; scroll-snap-align:start; padding:14px 16px; border-radius:16px; }
-  .promos > :only-child { flex-basis:100%; }
-  .promos .promo-ic { width:42px; height:42px; }
-  .promos .promo-t b { font-size:16.5px; }
-  .promos .promo.tn .promo-t i { display:none; }
+  .promos { display:grid; grid-template-columns:1fr; gap:8px; margin:0 0 22px; }
+  .promos .promo { flex-wrap:nowrap; padding:11px 14px; gap:12px; border-radius:14px; }
+  .promos .promo-ic { width:38px; height:38px; border-width:1.5px; }
+  .promos .promo-ic::after { border-left-width:11px; border-top-width:7px; border-bottom-width:7px; margin-left:3px; }
+  .promos .promo.tn .promo-ic svg { width:20px; height:20px; }
+  .promos .promo-t small, .promos .promo-t i { display:none; }
+  .promos .promo-t b { font-size:15.5px; letter-spacing:-.4px; }
+  .promos .promo::after { content:"›"; flex:none; font-size:24px; line-height:1; color:rgba(255,255,255,.85); }
 }
+}
+
+/* 공지 팝업 */
+#noticePop { z-index:50; }
+.sheet.np { max-width:440px; }
+.np .m-body { padding:26px 24px 22px; }
+.np-k { display:inline-block; padding:3px 10px; border-radius:99px; background:var(--accent); color:var(--on-accent); font-size:12.5px; font-weight:800; }
+.np h2 { margin:12px 0 10px; font-size:21px; letter-spacing:-.5px; line-height:1.35; word-break:keep-all; }
+.np-d { margin:0 0 18px; font-size:14.5px; line-height:1.7; color:var(--sub); white-space:pre-line; word-break:keep-all; }

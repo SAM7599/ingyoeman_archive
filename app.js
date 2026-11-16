@@ -1055,10 +1055,11 @@
   $("totop").addEventListener("click", () => window.scrollTo({ top: 0, behavior: calm() ? "auto" : "smooth" }));
   document.addEventListener("click", e => { if (!$("menu").hidden && !e.target.closest(".menu")) closeMenu(); if (!$("setMenu").hidden && !e.target.closest(".menu")) closeSet(); });
   document.addEventListener("ovback", () => {   // 휴대폰 뒤로가기: 열려 있는 창 중 맨 위 하나만 닫기
-    if (!$("dcChat").hidden) closeDc(); else if (!$("repModal").hidden) closeReport(); else if (!$("admModal").hidden && $("modal").hidden) $("admModal").hidden = true;
+    if (!$("noticePop").hidden && window.closeNotice) window.closeNotice(); else if (!$("dcChat").hidden) closeDc(); else if (!$("repModal").hidden) closeReport(); else if (!$("admModal").hidden && $("modal").hidden) $("admModal").hidden = true;
     else if (!$("setMenu").hidden) closeSet(); else if (!$("menu").hidden) closeMenu(); else if (!$("modal").hidden) closeModal(); else if (!$("gacha").hidden) closeGacha(); else if (!$("xfer").hidden) closeXfer(); else if (!$("imp").hidden) closeImp(); else if (!$("admModal").hidden) $("admModal").hidden = true;
   });
   document.addEventListener("keydown", e => {
+    if (e.key === "Escape" && !$("noticePop").hidden && window.closeNotice) { window.closeNotice(); return; }
     if (e.key === "Escape" && document.getElementById("intro")) { introEnd(true); return; }
     if (e.key === "Escape" && !$("dcChat").hidden) { closeDc(); return; }
     if (e.key === "Escape" && !$("repModal").hidden) { closeReport(); return; }
@@ -1251,17 +1252,28 @@
   function showNotes() { drawNotes(); if (notes && notes.length) { store.set("notes_seen", notes[0].date); markNotes(); } }
   fetch("patchnotes.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).then(n => { notes = Array.isArray(n) ? n : []; if (tab === "notes") showNotes(); else markNotes(); }).catch(() => { notes = []; if (tab === "notes") drawNotes(); });
 
-  /* ── 공지 (notice.json) ── */
+  /* ── 공지 (notice.json): 팝업창으로 한 번만 보여 드려요. 글을 고치면 다시 나와요 ── */
   fetch("notice.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).then(n => {
-    const text = ((n && n.text) || "").trim(), box = $("notice");
+    const text = ((n && n.text) || "").trim(), title = ((n && n.title) || "공지").trim();
     if (!n || !n.enabled || !text) return;
-    const id = String(hash(text + (n.link || ""))), closable = n.closable === true;
-    if (closable && store.get("notice_closed", "") === id) return;
-    const t = box.querySelector(".t"); t.textContent = text + " ";
-    if (/^https?:\/\//i.test(n.link || "")) { const a = document.createElement("a"); a.href = n.link; a.target = "_blank"; a.rel = "noopener noreferrer"; a.textContent = "자세히 보기"; t.appendChild(a); }
-    const x = box.querySelector(".x");
-    if (closable) x.onclick = () => { box.hidden = true; store.set("notice_closed", id); }; else x.remove();
-    box.hidden = false;
+    const id = String(hash(title + text + (n.link || "")));
+    if (store.get("notice_seen", "") === id) return;
+    const pop = $("noticePop"), de = document.documentElement; let tries = 0;
+    const close = () => { pop.hidden = true; document.body.style.overflow = ""; store.set("notice_seen", id); };
+    $("npX").addEventListener("click", close);
+    $("npGo").addEventListener("click", close);
+    pop.addEventListener("click", e => { if (e.target === pop) close(); });
+    window.closeNotice = close;
+    const t = setInterval(() => {   // 소개 화면·동의 창·사용법 안내가 모두 끝난 뒤에 보여줘요
+      if (++tries > 400) return clearInterval(t);
+      if (de.classList.contains("consent-on") || de.classList.contains("intro-on") || location.hash || document.getElementById("tourBox")) return;
+      let toured = true; try { toured = !!localStorage.getItem("tour1"); } catch (e) {}
+      if (!toured || document.querySelector(".modal:not([hidden]):not(#noticePop), .gacha:not([hidden])")) return;
+      clearInterval(t);
+      $("npT").textContent = title; $("npD").textContent = text;
+      const go = $("npGo"); if (FB && /^https?:\/\//i.test(FB)) { go.href = FB; go.hidden = false; }
+      pop.hidden = false; document.body.style.overflow = "hidden"; $("npX").focus({ preventScroll: true });
+    }, 600);
   }).catch(() => {});
 
   /* ── 글자 끌기·오른쪽 클릭 막기 (검색창은 그대로 사용 가능) ── */
