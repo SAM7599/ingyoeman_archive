@@ -7,7 +7,7 @@
   var $ = function (id) { return document.getElementById(id); };
 
   /* ── 1) 뒤로가기 ── */
-  var ids = ["modal", "gacha", "xfer", "imp", "dcChat", "repModal", "admModal", "noticePop"];
+  var ids = ["modal", "gacha", "xfer", "imp", "dcChat", "repModal", "admModal", "noticePop", "serEdit"];
   var els = ids.map($).filter(Boolean), pushed = 0, skip = 0, skipT = 0;
   var openN = function () { return els.filter(function (e) { return !e.hidden; }).length; };
   var onOv = function () { return !!(history.state && history.state.ov); };

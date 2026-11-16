@@ -1172,3 +1172,20 @@ body { padding-left:env(safe-area-inset-left); padding-right:env(safe-area-inset
 .np.has-img .np-k, .np.has-img h2, .np.has-img .np-d { display:none; }
 .np.has-img .m-body { padding:14px 16px 16px; }
 @media (max-height:760px) { .np.has-img .np-img { max-height:58dvh; object-fit:cover; object-position:top; } }
+
+/* 시리즈 편집 */
+#serEdit { z-index:46; }
+.sheet.se { max-width:460px; }
+.se h2 { margin:0 0 4px; font-size:19px; }
+.se-v { margin:0 0 8px; font-size:14px; font-weight:700; color:var(--tint); word-break:keep-all; }
+.se-n { margin:0 0 10px; font-size:13px; line-height:1.55; color:var(--sub); }
+.se-list { max-height:min(34vh,260px); overflow:auto; margin:0 0 10px; padding:4px; border:1px solid var(--line); border-radius:12px; background:var(--bg); }
+.se-r { display:flex; align-items:center; gap:10px; min-height:44px; padding:6px 10px; border-radius:8px; cursor:pointer; font-size:14.5px; }
+.se-r:hover { background:var(--raise); }
+.se-r input { width:20px; height:20px; accent-color:var(--accent); flex:none; }
+.se-add { display:flex; gap:8px; margin-bottom:12px; }
+.se-add input { flex:1; min-width:0; height:44px; padding:0 12px; border:1px solid var(--line); border-radius:12px; background:var(--surface); }
+.se-add input:focus { outline:0; border-color:var(--accent); }
+.se .m-acts { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+.se .m-acts .btn { flex:1 1 40%; justify-content:center; }
+.se-copy .btn { font-size:13px; }

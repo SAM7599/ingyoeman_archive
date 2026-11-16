@@ -421,6 +421,55 @@
       ? `${rank ? `<span class="rk ${rank <= 3 ? "hot t" + rank : ""}">${rank === 1 ? CROWN : ""}${rank}</span>` : ""}<a ${a}>${thumb}<div class="info">${info}</div><span class="go">${ytId(v) ? "바로 보기" : "다시보기" + OUT}</span></a>${heart}${dots}`
       : `<a ${a}>${thumb}</a><div class="info">${info}${dots}</div>${heart}`) + `</article>`;
   }
+  /* ── 시리즈: 자동 분류 + 이 기기에서 고친 내용 (localStorage "sov1") ── */
+  let SDEFS = [], baseOk = new Set();
+  const autoVis = v => v._a.filter(n => baseOk.has(n));
+  function buildSeries() {
+    const ov = store.get("sov1", {}), touched = new Set();
+    all.forEach(v => { const o = ov && ov[vid(v)]; if (Array.isArray(o)) { v._s = o.filter(x => typeof x === "string"); v._s.forEach(n => touched.add(n)); } else v._s = v._a.slice(); });
+    const cnt = {}; all.forEach(v => v._s.forEach(n => { cnt[n] = (cnt[n] || 0) + 1; }));
+    SERIES = [...new Set([...SDEFS.map(x => x.name), ...touched])].map(n => ({ name: n, n: cnt[n] || 0 })).filter(x => x.n >= (touched.has(x.name) ? 1 : 3)).sort((a, b) => b.n - a.n);
+    const ok = new Set(SERIES.map(x => x.name)); all.forEach(v => { v._s = v._s.filter(n => ok.has(n)); });
+  }
+  let seV = null;
+  const seNames = () => { const ov = store.get("sov1", {}), x = new Set(SDEFS.map(d => d.name)); Object.values(ov || {}).forEach(a => (Array.isArray(a) ? a : []).forEach(n => x.add(n))); return [...x]; };
+  function seDraw(sel) {
+    const names = [...new Set([...seNames(), ...sel])], shown = new Set(SERIES.map(x => x.name));
+    names.sort((a, b) => (sel.has(b) - sel.has(a)) || (shown.has(b) - shown.has(a)));
+    $("seList").innerHTML = names.map(n => `<label class="se-r"><input type="checkbox" value="${esc(n)}"${sel.has(n) ? " checked" : ""}><span>${esc(n)}</span></label>`).join("") || `<p class="se-n">아직 시리즈가 없어요. 아래에서 새로 만들어 보세요.</p>`;
+  }
+  const seSel = () => new Set([...$("seList").querySelectorAll("input:checked")].map(i => i.value));
+  function openSerEdit(v) { seV = v; $("seV").textContent = v.title || ""; $("seNew").value = ""; seDraw(new Set(v._s)); $("serEdit").hidden = false; document.body.style.overflow = "hidden"; }
+  function closeSerEdit() { $("serEdit").hidden = true; seV = null; if ($("modal").hidden) document.body.style.overflow = ""; }
+  function seApply(list) {
+    const ov = store.get("sov1", {}) || {}, k = vid(seV), same = list.length === autoVis(seV).length && list.every(n => autoVis(seV).includes(n));
+    if (same) delete ov[k]; else ov[k] = list;
+    store.set("sov1", ov); buildSeries(); $("abS").textContent = SERIES.length;
+    if (tab === "series" && ser && !SERIES.some(x => x.name === ser)) location.hash = "series"; else render();
+  }
+  function copyText(t, msg) {
+    const done = () => toast(msg), fail = () => toast("복사하지 못했어요");
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(done, fail);
+    else { const x = document.createElement("textarea"); x.value = t; document.body.appendChild(x); x.select(); try { document.execCommand("copy") ? done() : fail(); } catch (e) { fail(); } x.remove(); }
+  }
+  const seLine = (v, list) => `영상: ${v.title}\n주소: ${location.origin + location.pathname}#v=${vid(v)}\n지금 분류: ${autoVis(v).join(", ") || "없음"}\n바뀌었으면 하는 분류: ${list.join(", ") || "없음"}`;
+  $("seAdd").addEventListener("click", () => { const n = $("seNew").value.replace(/[,\n]/g, " ").trim().slice(0, 20); if (!n || !seV) return; const sel = seSel(); sel.add(n); seDraw(sel); $("seNew").value = ""; });
+  $("seNew").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); $("seAdd").click(); } });
+  $("seSave").addEventListener("click", () => { if (!seV) return; seApply([...seSel()]); closeSerEdit(); toast("이 기기에 저장했어요"); });
+  $("seReset").addEventListener("click", () => { if (!seV) return; seApply(autoVis(seV)); closeSerEdit(); toast("처음 분류로 되돌렸어요"); });
+  $("seCopy").addEventListener("click", () => { if (seV) copyText("[시리즈 분류 제보]\n" + seLine(seV, [...seSel()]), "제보 문구를 복사했어요. 디스코드에 붙여 넣어 주세요"); });
+  $("seCopyAll").addEventListener("click", () => {
+    const ov = store.get("sov1", {}) || {}, out = [];
+    all.forEach(v => { const o = ov[vid(v)]; if (Array.isArray(o)) out.push(seLine(v, v._s)); });
+    if (!out.length) return toast("고친 시리즈가 아직 없어요");
+    let t = "[시리즈 분류 제보 " + out.length + "건]", n = 0;
+    for (const x of out) { if ((t + "\n\n" + x).length > 1800) break; t += "\n\n" + x; n++; }
+    if (n < out.length) t += "\n\n…외 " + (out.length - n) + "건 (나눠서 올릴게요)";
+    copyText(t, n < out.length ? "길어서 " + n + "건만 복사했어요. 나머지는 고친 뒤 다시 복사해 주세요" : "고친 " + n + "건을 복사했어요. 디스코드에 붙여 넣어 주세요");
+  });
+  $("serEdit").addEventListener("click", e => { if (e.target === $("serEdit")) closeSerEdit(); });
+  $("seClose").addEventListener("click", closeSerEdit);
+  window.closeSerEdit = closeSerEdit;
   function tilesHtml() {   // 시리즈 목록
     return SERIES.map(x => `<a class="tile" href="#series=${encodeURIComponent(x.name)}" style="--g:linear-gradient(135deg,hsl(${hash(x.name) % 360} 46% 40%),hsl(${(hash(x.name) + 40) % 360} 46% 24%))"><b>${esc(x.name)}</b><span>${x.n}편</span></a>`).join("");
   }
@@ -946,6 +995,7 @@
     closeMenu();
     const k = key(v), a = b.dataset.act;
     if (a === "report") report(v);
+    else if (a === "series") openSerEdit(v);
     else if (a === "seen") {
       recent = recent.filter(x => x !== k); store.set("recent", recent); toast("열어본 기록에서 지웠어요"); render();
     }
@@ -1048,11 +1098,12 @@
   $("totop").addEventListener("click", () => window.scrollTo({ top: 0, behavior: calm() ? "auto" : "smooth" }));
   document.addEventListener("click", e => { if (!$("menu").hidden && !e.target.closest(".menu")) closeMenu(); if (!$("setMenu").hidden && !e.target.closest(".menu")) closeSet(); });
   document.addEventListener("ovback", () => {   // 휴대폰 뒤로가기: 열려 있는 창 중 맨 위 하나만 닫기
-    if (!$("noticePop").hidden && window.closeNotice) window.closeNotice(); else if (!$("dcChat").hidden) closeDc(); else if (!$("repModal").hidden) closeReport(); else if (!$("admModal").hidden && $("modal").hidden) $("admModal").hidden = true;
+    if (!$("noticePop").hidden && window.closeNotice) window.closeNotice(); else if (!$("serEdit").hidden) closeSerEdit(); else if (!$("dcChat").hidden) closeDc(); else if (!$("repModal").hidden) closeReport(); else if (!$("admModal").hidden && $("modal").hidden) $("admModal").hidden = true;
     else if (!$("setMenu").hidden) closeSet(); else if (!$("menu").hidden) closeMenu(); else if (!$("modal").hidden) closeModal(); else if (!$("gacha").hidden) closeGacha(); else if (!$("xfer").hidden) closeXfer(); else if (!$("imp").hidden) closeImp(); else if (!$("admModal").hidden) $("admModal").hidden = true;
   });
   document.addEventListener("keydown", e => {
     if (e.key === "Escape" && !$("noticePop").hidden && window.closeNotice) { window.closeNotice(); return; }
+    if (e.key === "Escape" && !$("serEdit").hidden) { closeSerEdit(); return; }
     if (e.key === "Escape" && document.getElementById("intro")) { introEnd(true); return; }
     if (e.key === "Escape" && !$("dcChat").hidden) { closeDc(); return; }
     if (e.key === "Escape" && !$("repModal").hidden) { closeReport(); return; }
@@ -1252,7 +1303,7 @@
     if (!n || !n.enabled || !text) return;
     const id = String(hash(title + text + (n.link || ""))), day = id + "|" + tnDay();
     const pop = $("noticePop"), de = document.documentElement;
-    const close = () => { pop.hidden = true; document.body.style.overflow = ""; try { sessionStorage.setItem("notice_closed", id); } catch (e) {} };
+    const close = () => { pop.hidden = true; document.body.style.overflow = ""; };
     $("npX").addEventListener("click", close);
     $("npGo").addEventListener("click", close);
     $("npHide").addEventListener("click", () => { store.set("notice_hide", day); close(); toast("오늘은 다시 안 보여드릴게요"); });
@@ -1271,8 +1322,7 @@
       } else open();
     };
     window.showNotice = show; $("noticeBtn").hidden = false;   // 설정 메뉴의 "공지 다시 보기"
-    let shut = false; try { shut = sessionStorage.getItem("notice_closed") === id; } catch (e) {}
-    if (shut || store.get("notice_hide", "") === day) return;
+    if (store.get("notice_hide", "") === day) return;   // "오늘 하루 보지 않기"를 누른 날에만 안 나와요
     let tries = 0;
     const t = setInterval(() => {   // 소개 화면·동의 창·사용법 안내가 모두 끝난 뒤에 보여줘요
       if (++tries > 400) return clearInterval(t);
@@ -1296,10 +1346,10 @@
   fetch("videos.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json())
     .then(data => {
       all = Array.isArray(data) ? data : [];
-      const defs = (SITE.series || []).map(x => { try { return { name: x[0], re: new RegExp(x[1], "i") }; } catch (e) { return null; } }).filter(Boolean);
-      all.forEach((v, i) => { v._i = i; v._s = defs.filter(x => x.re.test(v.title || "")).map(x => x.name); });
-      SERIES = defs.map(x => ({ name: x.name, n: all.filter(v => v._s.includes(x.name)).length })).filter(x => x.n >= 3).sort((a, b) => b.n - a.n);
-      const ok = new Set(SERIES.map(x => x.name)); all.forEach(v => { v._s = v._s.filter(n => ok.has(n)); });
+      SDEFS = (SITE.series || []).map(x => { try { return { name: x[0], re: new RegExp(x[1], "i") }; } catch (e) { return null; } }).filter(Boolean);
+      all.forEach((v, i) => { v._i = i; v._a = SDEFS.filter(x => x.re.test(v.title || "")).map(x => x.name); });
+      const ac = {}; all.forEach(v => v._a.forEach(n => { ac[n] = (ac[n] || 0) + 1; })); baseOk = new Set(Object.keys(ac).filter(n => ac[n] >= 3));
+      buildSeries();
       $("abN").textContent = nf(all.length); $("abC").textContent = new Set(all.map(v => v.category).filter(Boolean)).size; $("abS").textContent = SERIES.length;
       let sv = null; try { if (((performance.getEntriesByType("navigation")[0] || {}).type) === "reload") sv = JSON.parse(sessionStorage.getItem("view1")); } catch (e) {}
       route(); achStart();
