@@ -1130,3 +1130,22 @@ body { padding-left:env(safe-area-inset-left); padding-right:env(safe-area-inset
 .promo.tn .promo-go { color:#3a3fb8; }
 .promo.tn:hover .promo-go { background:#e8e9ff; }
 .promo.tn:hover { box-shadow:0 0 0 2px var(--bg), 0 0 0 4px #7a7df0; }
+
+/* 배너 두 개를 나란히 (홈 화면이 길어지지 않게) */
+.promos { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:34px; }
+.promos > :only-child { grid-column:1 / -1; }
+.promos .promo { margin-bottom:0; padding:18px 20px; gap:14px; min-width:0; }
+.promos .promo-ic { width:48px; height:48px; }
+.promos .promo-t b { font-size:clamp(16px,1.5vw,20px); }
+.promos .promo-go { height:42px; padding:0 14px; font-size:14px; }
+.promos .promo-t i { font-size:12.5px; }
+@media (max-width:1080px) { .promos .promo-go { display:none; } }
+@media (max-width:860px) {
+  .promos { display:flex; gap:10px; margin:0 -16px 24px; padding:0 16px 2px; overflow-x:auto; scroll-snap-type:x mandatory; scroll-padding-left:16px; scrollbar-width:none; }
+  .promos::-webkit-scrollbar { display:none; }
+  .promos .promo { flex:0 0 86%; flex-wrap:nowrap; scroll-snap-align:start; padding:14px 16px; border-radius:16px; }
+  .promos > :only-child { flex-basis:100%; }
+  .promos .promo-ic { width:42px; height:42px; }
+  .promos .promo-t b { font-size:16.5px; }
+  .promos .promo.tn .promo-t i { display:none; }
+}
