@@ -1190,6 +1190,7 @@
     m.style.left = Math.max(8, r.right - m.offsetWidth) + window.scrollX + "px";
   });
   $("setMenu").addEventListener("click", e => { if (e.target.closest("a")) closeSet(); });
+  $("noticeBtn").addEventListener("click", () => { closeSet(); if (window.showNotice) window.showNotice(); });
 
 
   /* ── 접속할 때 뜨는 썸네일 제보 안내 창 ── */
@@ -1250,21 +1251,14 @@
     const text = ((n && n.text) || "").trim(), title = ((n && n.title) || "공지").trim();
     if (!n || !n.enabled || !text) return;
     const id = String(hash(title + text + (n.link || ""))), day = id + "|" + tnDay();
-    let shut = false; try { shut = sessionStorage.getItem("notice_closed") === id; } catch (e) {}
-    if (shut || store.get("notice_hide", "") === day) return;
-    const pop = $("noticePop"), de = document.documentElement; let tries = 0;
+    const pop = $("noticePop"), de = document.documentElement;
     const close = () => { pop.hidden = true; document.body.style.overflow = ""; try { sessionStorage.setItem("notice_closed", id); } catch (e) {} };
     $("npX").addEventListener("click", close);
     $("npGo").addEventListener("click", close);
     $("npHide").addEventListener("click", () => { store.set("notice_hide", day); close(); toast("오늘은 다시 안 보여드릴게요"); });
     pop.addEventListener("click", e => { if (e.target === pop) close(); });
     window.closeNotice = close;
-    const t = setInterval(() => {   // 소개 화면·동의 창·사용법 안내가 모두 끝난 뒤에 보여줘요
-      if (++tries > 400) return clearInterval(t);
-      if (de.classList.contains("consent-on") || de.classList.contains("intro-on") || location.hash || document.getElementById("tourBox")) return;
-      let toured = true; try { toured = !!localStorage.getItem("tour1"); } catch (e) {}
-      if (!toured || document.querySelector(".modal:not([hidden]):not(#noticePop), .gacha:not([hidden])")) return;
-      clearInterval(t);
+    const show = () => {
       $("npT").textContent = title;
       const box = $("npD"); box.textContent = "";
       text.split("\n").map(x => x.trim()).filter(Boolean).forEach(x => { const el = document.createElement(x.startsWith("•") ? "div" : "p"); el.className = x.startsWith("•") ? "np-li" : "np-p"; el.textContent = x.startsWith("•") ? x.slice(1).trim() : x; box.appendChild(el); });
@@ -1275,6 +1269,17 @@
         im.onload = () => { el.src = im.src; el.alt = title + ". " + text.replace(/\n+/g, " "); el.hidden = false; pop.querySelector(".sheet").classList.add("has-img"); open(); };
         im.onerror = open; im.src = n.image + "?v=" + id;
       } else open();
+    };
+    window.showNotice = show; $("noticeBtn").hidden = false;   // 설정 메뉴의 "공지 다시 보기"
+    let shut = false; try { shut = sessionStorage.getItem("notice_closed") === id; } catch (e) {}
+    if (shut || store.get("notice_hide", "") === day) return;
+    let tries = 0;
+    const t = setInterval(() => {   // 소개 화면·동의 창·사용법 안내가 모두 끝난 뒤에 보여줘요
+      if (++tries > 400) return clearInterval(t);
+      if (de.classList.contains("consent-on") || de.classList.contains("intro-on") || /^#(v|import)=/.test(location.hash) || document.getElementById("tourBox")) return;
+      let toured = true; try { toured = !!localStorage.getItem("tour1") || !!location.hash; } catch (e) {}
+      if (!toured || document.querySelector(".modal:not([hidden]):not(#noticePop), .gacha:not([hidden])")) return;
+      clearInterval(t); show();
     }, 600);
   }).catch(() => {});
 
