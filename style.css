@@ -1199,3 +1199,10 @@ body { padding-left:env(safe-area-inset-left); padding-right:env(safe-area-inset
 body.ser-on #grid .card { cursor:pointer; }
 body.ser-on #grid .card a { pointer-events:none; }
 body.ser-on #grid .card .more-btn, body.ser-on #grid .card [data-menu] { pointer-events:auto; }
+
+.ser-bar { position:fixed; left:50%; transform:translateX(-50%); bottom:calc(76px + env(safe-area-inset-bottom)); z-index:27; display:flex; align-items:center; gap:12px; max-width:calc(100vw - 24px); padding:8px 8px 8px 16px; border-radius:99px; background:var(--accent); color:var(--on-accent); font-size:14px; box-shadow:0 8px 28px rgba(0,0,0,.4); }
+.ser-bar[hidden] { display:none; }
+.ser-bar button { flex:none; border:0; border-radius:99px; padding:8px 14px; background:var(--on-accent); color:var(--accent); font:inherit; font-weight:800; cursor:pointer; }
+@media (min-width:861px) { .ser-bar { bottom:24px; } }
+body.ser-on #serMode { display:none; }
+.ser-bar span { white-space:nowrap; }
