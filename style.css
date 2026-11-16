@@ -1173,7 +1173,7 @@ body { padding-left:env(safe-area-inset-left); padding-right:env(safe-area-inset
 .np .m-acts .btn { flex:1 1 calc(50% - 4px); justify-content:center; }
 .np .m-acts .np-go { flex:1 1 100%; }
 .np .m-acts .btn:not(.np-go) { flex:1 1 40%; min-width:0; padding-left:8px; padding-right:8px; }
-.np-img { display:block; width:100%; height:auto; border-radius:inherit; border-bottom-left-radius:0; border-bottom-right-radius:0; }
+.np-img { display:block; width:100%; height:auto; border-radius:0; }
 .sheet.np.has-img { overflow:hidden; }
 .np.has-img .np-k, .np.has-img h2, .np.has-img .np-d { display:none; }
 .np.has-img .m-body { padding:14px 16px 16px; }
