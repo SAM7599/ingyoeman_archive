@@ -1206,3 +1206,9 @@ body.ser-on .dots, body.ser-on .heart { display:none !important; }
 @media (min-width:861px) { .ser-bar { bottom:24px; } }
 body.ser-on #serMode { display:none; }
 .ser-bar span { white-space:nowrap; }
+
+.se-main { margin-bottom:10px; }
+.se-main .btn { flex:1 1 0; justify-content:center; }
+.se-n { margin:0 0 6px; font-size:12.5px; }
+.se-sub { display:flex; justify-content:center; gap:18px; margin:6px 0 0; }
+.se-sub button { border:0; background:none; padding:8px 4px; color:var(--sub); font:inherit; font-size:13px; text-decoration:underline; cursor:pointer; }
