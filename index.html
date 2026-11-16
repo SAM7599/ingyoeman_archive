@@ -28,7 +28,7 @@
   if (m !== "on" && m !== "off") m = (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) ? "off" : "on";
   document.documentElement.setAttribute("data-motion", m); })();
 </script>
-<link rel="stylesheet" href="style.css?v=167">
+<link rel="stylesheet" href="style.css?v=168">
 </head>
 <body>
 <div id="intro" role="dialog" aria-label="잉여맨 추억자료실 소개 화면">
@@ -277,18 +277,20 @@
 <button class="totop" id="totop" type="button" aria-label="맨 위로" hidden><svg viewBox="0 0 24 24"><path d="M6 14l6-6 6 6"/></svg></button>
 
 <div class="menu set" id="setMenu" hidden role="menu">
+  <div class="mh" role="presentation">앱</div>
   <button type="button" id="install" role="menuitem" hidden>📲 앱으로 설치하기</button>
   <button type="button" id="tour" role="menuitem">📖 사용법 보기</button>
+  <div class="mh" role="presentation">화면 설정</div>
   <button type="button" id="theme" role="menuitemcheckbox"><span>어두운 화면</span><i class="sw"></i></button>
   <button type="button" id="motion" role="menuitemcheckbox"><span>움직임 줄이기</span><i class="sw"></i></button>
   <button type="button" id="sound" role="menuitemcheckbox"><span>뽑기 소리</span><i class="sw"></i></button>
   <button type="button" id="popup" role="menuitemcheckbox"><span>카페 글 팝업 창으로</span><i class="sw"></i></button>
-  <a href="#ach" role="menuitem">도전과제</a>
+  <div class="mh" role="presentation">안내</div>
   <a href="#about" role="menuitem">사이트 소개</a>
   <a href="#guide" role="menuitem">이용 가이드</a>
   <a href="#notes" role="menuitem" id="notesLink">패치노트</a>
-  <a href="terms.html" role="menuitem">이용약관</a>
-  <a href="privacy.html" role="menuitem">개인정보처리방침</a>
+  <a href="#ach" role="menuitem">도전과제</a>
+  <div class="mf"><a href="terms.html" role="menuitem">이용약관</a><a href="privacy.html" role="menuitem">개인정보처리방침</a></div>
 </div>
 
 <div class="modal" id="admModal" hidden>
@@ -436,9 +438,9 @@
 
 <div class="ach-pop" id="achPop" role="status" hidden><span class="ach-ic"><svg viewBox="0 0 24 24"><path d="M8 4h8v5a4 4 0 0 1-8 0zM8 6H5v1a3 3 0 0 0 3 3M16 6h3v1a3 3 0 0 1-3 3M12 13v4M8.5 20h7M10 17h4"/></svg></span><span class="ach-tx"><small>도전과제 달성!</small><b id="achPopT"></b><i id="achPopD"></i></span></div>
 <div id="toast" role="status"></div>
-<script src="config.js?v=167"></script>
-<script src="app.js?v=167"></script>
-<script src="mobile.js?v=167"></script>
-<script src="tour.js?v=167"></script>
+<script src="config.js?v=168"></script>
+<script src="app.js?v=168"></script>
+<script src="mobile.js?v=168"></script>
+<script src="tour.js?v=168"></script>
 </body>
 </html>

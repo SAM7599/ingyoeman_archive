@@ -1113,3 +1113,11 @@ body { padding-left:env(safe-area-inset-left); padding-right:env(safe-area-inset
 #tourBox button { min-height:44px; padding:0 16px; border-radius:11px; border:1px solid var(--line); background:transparent; font-weight:700; font-size:14px; cursor:pointer; }
 #tourBox .tr-skip { border:0; padding:0 6px; color:var(--sub); font-weight:600; }
 #tourBox .tr-next { border-color:transparent; background:var(--accent); color:var(--on-accent); }
+
+/* 설정 메뉴 정리: 묶음별 제목과 약관 한 줄 */
+.menu.set { max-height:calc(100dvh - 90px); overflow-y:auto; overscroll-behavior:contain; }
+.menu.set .mh { padding:10px 12px 4px; font-size:11.5px; font-weight:700; color:var(--sub); letter-spacing:.2px; }
+.menu.set .mh:not(:first-child) { margin-top:4px; border-top:1px solid var(--line); }
+.menu.set .mf { display:flex; gap:4px; margin-top:6px; padding-top:6px; border-top:1px solid var(--line); }
+.menu.set { min-width:230px; }
+.menu.set .mf a { flex:1; justify-content:center; padding:9px 4px; font-size:12px; white-space:nowrap; color:var(--sub); text-align:center; }
