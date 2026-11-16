@@ -591,16 +591,19 @@
   function syncModalFav() { if (!current) return; $("mFav").textContent = favs.has(key(current)) ? "♥ 담았어요" : "♡ 즐겨찾기"; }
   function closeModal(keepHash) {
     $("modal").hidden = true; $("mScreen").innerHTML = ""; document.body.style.overflow = ""; current = null;
-    if (!keepHash && location.hash.startsWith("#v=")) history.replaceState(null, "", location.pathname + location.search);
+    if (!keepHash && location.hash.startsWith("#v=")) history.replaceState(history.state, "", location.pathname + location.search);
   }
   function toggleFav(k) {
     if (favs.has(k)) { favs.delete(k); toast("즐겨찾기에서 뺐어요"); } else { favs.add(k); toast("즐겨찾기에 담았어요"); }
     store.set("favs", [...favs]); popKey = favs.has(k) ? k : null; render(); popKey = null; syncModalFav(); syncGachaFav(); achCheck();
   }
+  const canShare = !!navigator.share && matchMedia("(pointer:coarse)").matches;   // 휴대폰은 카카오톡 등으로 바로 공유
+  if (canShare) $("mShare").textContent = "공유하기";
   function share(v) {
     achFlag("share");
     const url = location.origin + location.pathname + "#v=" + vid(v);
     const done = () => toast("링크를 복사했어요"), fail = () => toast("복사하지 못했어요");
+    if (canShare) { navigator.share({ title: v.title || "잉여맨추억자료실", text: v.title || "", url }).catch(e => { if (e && e.name !== "AbortError") fail(); }); return; }
     if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(done, fail);
     else { const t = document.createElement("textarea"); t.value = url; document.body.appendChild(t); t.select(); try { document.execCommand("copy") ? done() : fail(); } catch (e) { fail(); } t.remove(); }
   }
@@ -973,6 +976,32 @@
     if (e.target.closest("[data-draw]")) return openGacha();
   });
   $("chips").addEventListener("click", e => { if (e.target.closest("[data-draw]")) return openGacha(); const b = e.target.closest(".chip"); if (!b) return; cat = b.dataset.c; if (b.dataset.c === "" && tab === "all") $("q").value = ""; reset(); });
+  /* ── 검색창: 최근 검색어 + 자동완성 ── */
+  { const q = $("q"), box = document.createElement("div"); box.id = "sg"; box.className = "sg"; box.hidden = true; q.parentNode.appendChild(box);
+    const RS = "rs1", getR = () => { const a = store.get(RS, []); return Array.isArray(a) ? a.filter(x => typeof x === "string").slice(0, 8) : []; };
+    const addR = t => { t = (t || "").trim().slice(0, 40); if (t.length < 2) return; store.set(RS, [t, ...getR().filter(x => x !== t)].slice(0, 8)); };
+    const hide = () => { box.hidden = true; }, apply = t => { q.value = t; addR(t); hide(); q.blur(); q.dispatchEvent(new Event("input")); };
+    function draw() {
+      const t = q.value.trim().toLowerCase(); let h = "";
+      if (!t) { const r = getR(); if (r.length) h = `<div class="sg-h"><b>최근 검색어</b><button type="button" data-sgclr>모두 지우기</button></div>` + r.map(x => `<div class="sg-r"><button type="button" class="sg-i" data-sg="${esc(x)}">🕘 ${esc(x)}</button><button type="button" class="sg-x" data-sgdel="${esc(x)}" aria-label="${esc(x)} 지우기">✕</button></div>`).join(""); }
+      else {
+        const ws = t.split(/\s+/).filter(Boolean), cats = [...new Set(all.map(v => v.category).filter(Boolean))].filter(c => c.toLowerCase().includes(t)).slice(0, 3);
+        const ts = []; for (const v of all) { const x = (v.title || "").toLowerCase(); if (ws.every(w => x.includes(w))) { ts.push(v.title); if (ts.length >= 6) break; } }
+        h = cats.map(c => `<div class="sg-r"><button type="button" class="sg-i" data-sg="${esc(c)}">📁 ${esc(c)} <small>분류</small></button></div>`).join("") + ts.map(x => `<div class="sg-r"><button type="button" class="sg-i" data-sg="${esc(x)}">${esc(x)}</button></div>`).join("");
+      }
+      box.innerHTML = h; box.hidden = !h;
+    }
+    q.addEventListener("focus", draw); q.addEventListener("input", draw);
+    q.addEventListener("keydown", e => { if (e.key === "Enter") { addR(q.value); hide(); } });
+    q.addEventListener("blur", () => { addR(q.value); setTimeout(hide, 120); });
+    box.addEventListener("mousedown", e => e.preventDefault());   // 목록을 눌러도 입력창 포커스가 유지돼요
+    box.addEventListener("click", e => {
+      const b = e.target.closest("button"); if (!b) return;
+      if (b.dataset.sgclr !== undefined) { store.set(RS, []); return draw(); }
+      if (b.dataset.sgdel !== undefined) { store.set(RS, getR().filter(x => x !== b.dataset.sgdel)); return draw(); }
+      if (b.dataset.sg !== undefined) apply(b.dataset.sg);
+    });
+  }
   $("q").addEventListener("input", () => { if (isInfo()) location.hash = ""; reset(); });
   $("sort").addEventListener("change", () => { store.set("sort", $("sort").value); reset(); });
   $("vGrid").addEventListener("click", () => { view = "grid"; store.set("view2", view); render(); });
@@ -1018,11 +1047,16 @@
   $("modal").addEventListener("click", e => { if (e.target === $("modal") && mDown) closeModal(); mDown = false; });
   $("totop").addEventListener("click", () => window.scrollTo({ top: 0, behavior: calm() ? "auto" : "smooth" }));
   document.addEventListener("click", e => { if (!$("menu").hidden && !e.target.closest(".menu")) closeMenu(); if (!$("setMenu").hidden && !e.target.closest(".menu")) closeSet(); });
+  document.addEventListener("ovback", () => {   // 휴대폰 뒤로가기: 열려 있는 창 중 맨 위 하나만 닫기
+    if (!$("dcChat").hidden) closeDc(); else if (!$("repModal").hidden) closeReport(); else if (!$("admModal").hidden && $("modal").hidden) $("admModal").hidden = true;
+    else if (!$("setMenu").hidden) closeSet(); else if (!$("menu").hidden) closeMenu(); else if (!$("modal").hidden) closeModal(); else if (!$("gacha").hidden) closeGacha(); else if (!$("xfer").hidden) closeXfer(); else if (!$("imp").hidden) closeImp(); else if (!$("admModal").hidden) $("admModal").hidden = true;
+  });
   document.addEventListener("keydown", e => {
     if (e.key === "Escape" && document.getElementById("intro")) { introEnd(true); return; }
     if (e.key === "Escape" && !$("dcChat").hidden) { closeDc(); return; }
     if (e.key === "Escape" && !$("repModal").hidden) { closeReport(); return; }
     if (e.key === "Escape" && !$("tnPop").hidden) { tnClose(); return; }
+    if (e.key === "Escape" && !$("admModal").hidden && $("menu").hidden && $("modal").hidden) { $("admModal").hidden = true; return; }
     if (e.key === "Escape") {
       if (!$("setMenu").hidden) closeSet(); else if (!$("menu").hidden) closeMenu(); else if (!$("modal").hidden) closeModal(); else if (!$("gacha").hidden) closeGacha(); else if (!$("xfer").hidden) closeXfer(); else if (!$("imp").hidden) closeImp();
       else if (document.activeElement === $("q")) { $("q").value = ""; $("q").blur(); reset(); }

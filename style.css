@@ -1051,3 +1051,65 @@ details li + li { margin-top:4px; }
 
 .r-safe summary .r-more { display:inline-block; margin-left:4px; padding:1px 8px; border-radius:99px; font-size:12px; font-weight:700; color:var(--accent); border:1px solid currentColor; white-space:nowrap; }
 .r-safe[open] summary .r-more { display:none; }
+
+/* ── 휴대폰 편의 개편 ── */
+/* 검색창 아래 최근 검색어·자동완성 */
+.sg { position:absolute; left:0; right:0; top:calc(100% + 6px); z-index:35; max-height:min(60vh,380px); overflow:auto; padding:6px; background:var(--surface); border:1px solid var(--line); border-radius:12px; box-shadow:0 12px 32px rgba(0,0,0,.28); }
+.sg-h { display:flex; justify-content:space-between; align-items:center; padding:2px 6px 0 10px; font-size:12.5px; color:var(--sub); }
+.sg-h button { min-height:40px; padding:0 8px; border:0; background:none; color:var(--accent); font-size:12.5px; font-weight:600; cursor:pointer; }
+.sg-r { display:flex; align-items:center; }
+.sg-i { flex:1; min-width:0; min-height:44px; padding:8px 10px; border:0; border-radius:8px; background:none; color:var(--ink); font-size:14.5px; text-align:left; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer; }
+.sg-i:hover, .sg-i:active { background:color-mix(in srgb, var(--accent) 14%, transparent); }
+.sg-i small { margin-left:4px; color:var(--sub); font-size:12px; }
+.sg-x { flex:none; width:44px; height:44px; border:0; background:none; color:var(--sub); font-size:14px; cursor:pointer; }
+/* 당겨서 새로고침 · 인터넷 끊김 안내 */
+#ptr { position:fixed; left:50%; top:env(safe-area-inset-top); z-index:60; transform:translate(-50%,-44px); padding:9px 16px; border-radius:99px; background:var(--surface); color:var(--ink); border:1px solid var(--line); box-shadow:0 6px 20px rgba(0,0,0,.3); font-size:13.5px; font-weight:600; opacity:0; pointer-events:none; }
+#ptr.on { opacity:1; }
+html.is-app { overscroll-behavior-y:none; }
+#offline { position:fixed; left:0; right:0; top:0; z-index:95; padding:calc(9px + env(safe-area-inset-top)) 16px 9px; text-align:center; font-size:13.5px; font-weight:700; }
+#offline.bad { background:#c0392b; color:#fff; }
+#offline.ok { background:#1e8e5a; color:#fff; }
+/* 손가락으로 누르기 편하게: 터치 화면에서는 누르는 칸을 44px 이상으로 */
+@media (pointer:coarse) {
+  .round, .top-in .round { width:44px; height:44px; }
+  .chip { min-height:44px; height:44px; }
+  .btn { min-height:44px; }
+  details .btn, .about > p .btn, .about .g-item .btn { min-height:44px; height:auto; }
+  .menu button, .menu a { min-height:44px; display:flex; align-items:center; }
+  .sheet .x { width:44px; height:44px; }
+  .bottom .tab { min-height:52px; justify-content:center; }
+  .search input { height:46px; }
+}
+/* 노치·둥근 모서리에 글자가 가리지 않게 */
+body { padding-left:env(safe-area-inset-left); padding-right:env(safe-area-inset-right); }
+.bottom { padding-left:env(safe-area-inset-left); padding-right:env(safe-area-inset-right); }
+/* 휴대폰을 가로로 돌렸을 때 */
+@media (orientation:landscape) and (max-height:520px) {
+  .top { position:static; }
+  .grid { grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:18px 12px; }
+  .grid.tiles { grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); }
+  .rail { grid-auto-columns:30vw; }
+  .hero { min-height:220px; }
+  .bottom .tab { flex-direction:row; justify-content:center; gap:7px; padding:6px 0; min-height:0; font-size:12.5px; }
+  .bottom svg { width:20px; height:20px; }
+  .fb { bottom:calc(60px + env(safe-area-inset-bottom)); }
+  .totop { bottom:calc(116px + env(safe-area-inset-bottom)); }
+  #toast { bottom:calc(66px + env(safe-area-inset-bottom)); }
+  .sheet { max-height:96dvh; overflow:auto; }
+}
+
+/* ── 처음 오신 분 사용법 안내 ── */
+#tourBox { position:fixed; inset:0; z-index:120; }
+#tourBox .tr-hole { position:fixed; border-radius:14px; box-shadow:0 0 0 9999px rgba(8,9,22,.78), 0 0 0 2px var(--accent) inset; pointer-events:none; transition:left .25s, top .25s, width .25s, height .25s; }
+#tour.calm .tr-hole { transition:none; }
+#tourBox .tr-tip { position:fixed; padding:16px 16px 12px; border-radius:16px; background:var(--surface); color:var(--ink); border:1px solid var(--line); box-shadow:0 16px 40px rgba(0,0,0,.4); }
+#tourBox .tr-dots { display:flex; gap:5px; margin-bottom:10px; }
+#tourBox .tr-dots i { width:7px; height:7px; border-radius:99px; background:var(--line); }
+#tourBox .tr-dots i.on { width:20px; background:var(--accent); }
+#tourBox h2 { margin:0 0 6px; font-size:17px; letter-spacing:-.3px; }
+#tourBox p { margin:0 0 12px; font-size:14px; line-height:1.6; color:var(--sub); }
+#tourBox .tr-b { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+#tourBox .tr-b span { display:flex; gap:8px; }
+#tourBox button { min-height:44px; padding:0 16px; border-radius:11px; border:1px solid var(--line); background:transparent; font-weight:700; font-size:14px; cursor:pointer; }
+#tourBox .tr-skip { border:0; padding:0 6px; color:var(--sub); font-weight:600; }
+#tourBox .tr-next { border-color:transparent; background:var(--accent); color:var(--on-accent); }
