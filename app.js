@@ -1276,7 +1276,12 @@
       const box = $("npD"); box.textContent = "";
       text.split("\n").map(x => x.trim()).filter(Boolean).forEach(x => { const el = document.createElement(x.startsWith("•") ? "div" : "p"); el.className = x.startsWith("•") ? "np-li" : "np-p"; el.textContent = x.startsWith("•") ? x.slice(1).trim() : x; box.appendChild(el); });
       const go = $("npGo"); if (FB && /^https?:\/\//i.test(FB)) { go.href = FB; go.hidden = false; }
-      pop.hidden = false; document.body.style.overflow = "hidden"; $("npX").focus({ preventScroll: true });
+      const open = () => { pop.hidden = false; document.body.style.overflow = "hidden"; $("npX").focus({ preventScroll: true }); };
+      if (/^[\w./-]+\.(webp|png|jpe?g)$/i.test(n.image || "")) {   // 공지 이미지가 있으면 글 대신 이미지로 보여줘요 (이미지를 못 불러오면 글로 보여줘요)
+        const im = new Image(), el = $("npImg");
+        im.onload = () => { el.src = im.src; el.alt = title + ". " + text.replace(/\n+/g, " "); el.hidden = false; pop.querySelector(".sheet").classList.add("has-img"); open(); };
+        im.onerror = open; im.src = n.image + "?v=" + id;
+      } else open();
     }, 600);
   }).catch(() => {});
 
