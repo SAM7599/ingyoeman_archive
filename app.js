@@ -38,7 +38,7 @@
     age.addEventListener("change", sync); ok.addEventListener("change", sync);
     go.addEventListener("click", () => {
       if (go.disabled) return;
-      try { localStorage.setItem("consent1", JSON.stringify({ v: 3, t: Date.now(), adult: true })); } catch (e) {}
+      try { localStorage.setItem("consent1", JSON.stringify({ v: 4, t: Date.now(), adult: true })); } catch (e) {}
       root.classList.remove("consent-on"); lock(false);
     });
     const bye = document.getElementById("csBye"), sec = document.getElementById("csSec"), main = box.querySelector(".cs-box:not(.cs-bye)"); let byeT = 0;
@@ -1235,7 +1235,7 @@
 
   /* ── 패치노트 (patchnotes.json) ── */
   let notes = null;
-  const NOTE_TAG = { "신규": "new", "개선": "up", "수정": "fix" };
+  const NOTE_TAG = { "신규": "new", "개선": "up", "수정": "fix", "삭제": "del" };
   const noteDate = d => { const m = /^(\d+)-(\d+)-(\d+)$/.exec(d || ""); return m ? m[1] + "년 " + +m[2] + "월 " + +m[3] + "일" : esc(d || ""); };
   function drawNotes() {
     const box = $("notesList"); if (!box) return;

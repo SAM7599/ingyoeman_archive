@@ -1343,3 +1343,8 @@ html:not([data-motion="off"]) .cs-box:not(.cs-bye) { animation:zoom .35s cubic-b
 .del-ask input { display:block; margin:4px 0 16px; }
 .del-ask .del-acts { display:flex; gap:8px; }
 .del-ask .del-acts .btn { flex:1; justify-content:center; }
+.pl-cups { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin:14px 0; }
+.pl-cup { display:flex; flex-direction:column; align-items:center; gap:2px; padding:14px 8px; border:1px solid var(--line); border-radius:14px; background:var(--raise); color:var(--ink); cursor:pointer; font:inherit; }
+.pl-cup b { font-size:20px; } .pl-cup span { font-size:12px; color:var(--sub); }
+.pl-cup:hover:not(:disabled) { border-color:var(--accent); } .pl-cup:disabled { opacity:.4; cursor:not-allowed; }
+.nt.del { background:#6b7280; color:#fff; }

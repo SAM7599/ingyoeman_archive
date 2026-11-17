@@ -33,7 +33,7 @@
     st = null;
     body.innerHTML = '<h2 class="pl-h">🎮 미니게임</h2><p class="pl-sub">그 시절 영상 제목으로 올드팬의 실력을 뽐내 보세요!</p>' +
       '<button type="button" class="pl-card c1" data-g="blank"><i>✏️</i><b>제목 빈칸 채우기</b><span>빠진 글자를 맞혀 보세요 · 5문제</span></button>' +
-      '<button type="button" class="pl-card c2" data-g="cup"><i>🏆</i><b>영상 월드컵</b><span>둘 중 끌리는 제목을 골라 우승 영상을 가려요 · 16강</span></button>';
+      '<button type="button" class="pl-card c2" data-g="cup"><i>🏆</i><b>영상 월드컵</b><span>둘 중 끌리는 제목을 골라 우승 영상을 가려요 · 최대 128강</span></button>';
   }
 
   /* ───── 제목 빈칸 채우기 ───── */
@@ -77,9 +77,15 @@
   }
 
   /* ───── 영상 월드컵 ───── */
-  function cupStart() {
-    var all = A().vids().slice().sort(function (a, b) { return ((b.views || 0) + (b.likes || 0) * 5) - ((a.views || 0) + (a.likes || 0) * 5); }).slice(0, 80);
-    st = { g: "cup", cur: shuffle(all).slice(0, 16), next: [], i: 0 }; cupShow();
+  var CUPS = [8, 16, 32, 64, 128];
+  function cupMenu() {   // 몇 강으로 할지 고르기
+    st = null; var have = A().vids().length;
+    body.innerHTML = '<h2 class="pl-h">🏆 영상 월드컵</h2><p class="pl-sub">몇 강으로 할까요? 강수가 클수록 오래 걸려요.</p><div class="pl-cups">' +
+      CUPS.map(function (n) { return '<button type="button" class="pl-cup" data-cup="' + n + '"' + (have < n ? " disabled" : "") + "><b>" + n + '강</b><span>' + (n - 1) + "번 선택</span></button>"; }).join("") + '</div><div class="pl-act"><button type="button" class="btn" data-home>뒤로</button></div>';
+  }
+  function cupStart(n) {
+    var pool = A().vids().slice().sort(function (a, b) { return ((b.views || 0) + (b.likes || 0) * 5) - ((a.views || 0) + (a.likes || 0) * 5); }).slice(0, Math.max(80, n * 2));   // 인기 영상 중에서 무작위로 뽑아요
+    st = { g: "cup", n: n, cur: shuffle(pool).slice(0, n), next: [], i: 0 }; cupShow();
   }
   function cupCard(v, k) {
     var a = A();
@@ -101,14 +107,15 @@
     var a = A();
     body.innerHTML = '<div class="pl-end"><i>🏆</i><p class="pl-step">우승 영상</p><div class="pl-win" style="--g:' + a.grad(v.category) + '">' + (v.thumb ? '<img src="' + a.esc(v.thumb) + '" alt="">' : "") + '<b>' + a.esc(v.title) + '</b></div>' +
       '<div class="pl-act"><a class="btn primary" href="' + a.esc(a.url(v.url)) + '" target="_blank" rel="noopener noreferrer">다시보기</a><button type="button" class="btn" data-fav2="1">♡ 즐겨찾기</button></div>' +
-      '<div class="pl-act"><button type="button" class="btn" data-g="cup">다시 하기</button><button type="button" class="btn" data-home>다른 게임</button></div></div>';
+      '<div class="pl-act"><button type="button" class="btn" data-g="cup">강수 다시 고르기</button><button type="button" class="btn" data-home>다른 게임</button></div></div>';
     st.win = v;
   }
 
   function handle(e) {
-    if (!A().isIn()) return; var t = e.target.closest && e.target.closest("[data-g],[data-o],[data-next],[data-home],[data-v],[data-fav2]"); if (!t || !st && !t.dataset.g) { if (t && t.hasAttribute("data-home")) home(); return; }
+    if (!A().isIn()) return; var t = e.target.closest && e.target.closest("[data-g],[data-cup],[data-o],[data-next],[data-home],[data-v],[data-fav2]"); if (!t || !st && !t.dataset.g && !t.dataset.cup) { if (t && t.hasAttribute("data-home")) home(); return; }
     if (t.dataset.g === "blank") return blankStart();
-    if (t.dataset.g === "cup") return cupStart();
+    if (t.dataset.g === "cup") return cupMenu();
+    if (t.dataset.cup) return cupStart(+t.dataset.cup);
     if (t.hasAttribute("data-home")) return home();
     if (t.dataset.o != null && st && st.g === "blank") return blankPick(+t.dataset.o);
     if (t.hasAttribute("data-next") && st && st.g === "blank") return blankNext();
