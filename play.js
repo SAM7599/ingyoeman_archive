@@ -24,7 +24,7 @@
 
   function home() {
     st = null;
-    body.innerHTML = '<h2 class="pl-h">🎮 미니게임</h2><p class="pl-sub">영상 제목으로 가볍게 놀아 보세요. 잉여맨을 몰라도 괜찮아요!</p>' +
+    body.innerHTML = '<h2 class="pl-h">🎮 미니게임</h2><p class="pl-sub">그 시절 영상 제목으로 올드팬의 실력을 뽐내 보세요!</p>' +
       '<button type="button" class="pl-card c1" data-g="blank"><i>✏️</i><b>제목 빈칸 채우기</b><span>빠진 글자를 맞혀 보세요 · 5문제</span></button>' +
       '<button type="button" class="pl-card c2" data-g="cup"><i>🏆</i><b>영상 월드컵</b><span>둘 중 끌리는 제목을 골라 우승 영상을 가려요 · 16강</span></button>';
   }
