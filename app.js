@@ -642,7 +642,7 @@
       <p class="hero-meta"><span class="cat-dot" style="--c:${dot(v.category)}">${esc(v.category || "기타")}</span>${ytId(v) ? "<span>바로 재생돼요</span>" : ""}</p>
       <div class="acts"><a class="btn primary" data-go href="${esc(safeUrl(v.url))}" target="_blank" rel="noopener noreferrer">${ytId(v) ? "바로 보기" : "다시보기" + OUT}</a>
       <button class="btn glass" type="button" data-fav>${favs.has(todayKey) ? "♥ 담았어요" : "♡ 즐겨찾기"}</button>
-      ${all.length > 1 ? `<button class="btn glass" type="button" data-draw>${CARD}랜덤 뽑기</button>` : ""}</div></div>`;
+      ${all.length > 1 ? `<button class="btn glass" type="button" data-draw>${CARD}랜덤 뽑기</button><button class="btn glass" type="button" data-play>🎮 미니게임</button>` : ""}</div></div>`;
     if (box.dataset.shown !== todayKey) { box.dataset.shown = todayKey; box.classList.remove("anim"); void box.offsetWidth; box.classList.add("anim"); }
   }
   const ARR = d => `<button class="arr ${d < 0 ? "l" : "r"}" type="button" data-dir="${d}" aria-label="${d < 0 ? "앞으로" : "뒤로"} 넘기기"><svg viewBox="0 0 24 24"><path d="${d < 0 ? "M14 6l-6 6 6 6" : "M10 6l6 6-6 6"}"/></svg></button>`;
@@ -1155,6 +1155,7 @@
     m.style.left = Math.max(8, Math.min(r.right - w, window.innerWidth - w - 8)) + window.scrollX + "px";
   }
   function closeMenu() { $("menu").hidden = true; menuFor = null; }
+  window.PLAYAPI = { vids: () => all, esc, url: safeUrl, key, grad, closeMenu, addFav: v => { const k = key(v); if (!favs.has(k)) { favs.add(k); store.set("favs", [...favs]); } toast("즐겨찾기에 담았어요"); } };
   $("menu").addEventListener("click", e => {
     const b = e.target.closest("button"), v = menuFor; if (!b || !v) return;
     closeMenu();
