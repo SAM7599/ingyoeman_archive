@@ -1350,3 +1350,14 @@ body.is-in #favXferBox, body.is-in .xfer-only { display:none !important; }
 html:not([data-motion="off"]) .g-tip { animation:gtip 1.6s ease-in-out infinite; }
 @keyframes gtip { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-3px); } }
 @media (prefers-reduced-motion:reduce) { .g-tip { animation:none !important; } }
+
+/* 말풍선 안의 로그인 혜택 */
+.g-tip { width:min(300px, 86vw); max-width:none; padding:16px 14px 8px; border-radius:18px; cursor:default; font-weight:400; background:radial-gradient(120% 90% at 0% 0%, #3b2fa8 0%, #15132e 60%, #0c0b1c 100%); border:1px solid #3a3870; box-shadow:0 18px 40px -10px rgba(0,0,0,.65); animation:none !important; }
+.g-tip::before { background:#3b2fa8; border-left:1px solid #3a3870; border-top:1px solid #3a3870; right:16px; }
+.g-tip .g-x { position:absolute; top:8px; right:8px; width:28px; height:28px; border:0; border-radius:50%; background:rgba(255,255,255,.12); color:#fff; font-size:13px; cursor:pointer; }
+.g-tip .g-tt { display:block; margin:8px 0 0; font-size:19px; letter-spacing:-.4px; text-align:left; }
+.g-tip .lp-rows { padding:6px 0 0; }
+.g-tip .lp-rows li { padding:10px 0; gap:12px; }
+.g-tip .lp-i { width:38px; height:38px; border-radius:12px; } .g-tip .lp-i svg { width:19px; height:19px; }
+.g-tip .lp-rows b { font-size:14px; } .g-tip .lp-rows span { font-size:12.5px; }
+.gtop > .g-tip { display:block; }
