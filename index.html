@@ -28,7 +28,7 @@
   if (m !== "on" && m !== "off") m = (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) ? "off" : "on";
   document.documentElement.setAttribute("data-motion", m); })();
 </script>
-<link rel="stylesheet" href="style.css?v=227">
+<link rel="stylesheet" href="style.css?v=228">
 </head>
 <body>
 <div id="intro" role="dialog" aria-label="잉여맨 추억자료실 소개 화면">
@@ -52,6 +52,7 @@
       <p class="cs-lead">잉여맨 올드팬을 위한 추억 자료실이에요. 2011~2016년 방송 영상 800여 편을 제목·초성·시리즈로 쉽게 찾아볼 수 있어요.</p>
       <div class="cs-chips" aria-hidden="true"><span>🔍 초성 검색</span><span>🎞️ 시리즈 모아보기</span><span>⭐ 즐겨찾기</span><span>🏆 인기 랭킹</span><span>🎮 미니게임</span></div>
     </div>
+    <div class="cs-body">
     <div class="cs-sec">들어가기 전에 알아 두세요</div>
     <ul class="cs-list">
       <li><i class="cs-ic">📼</i><div><b>영상은 네이버 카페에서 열려요</b><span>이곳은 목록 사이트예요. 카페 가입(1980~2004년생)과 올드팬 인증이 필요하고, 일부 유튜브 영상은 여기서 바로 볼 수 있어요.</span></div></li>
@@ -64,6 +65,7 @@
       <p>구글 로그인은 선택이에요. 로그인하면 즐겨찾기·열어본 영상·시리즈 고침, 방문 도장, 퀴즈 기록이 계정에 저장되고(영상 번호만, 사람당 개수 제한), <b>6개월 동안 접속하지 않으면 자동으로 지워져요.</b> 미니게임은 로그인한 분만 할 수 있어요.</p>
       <p>미성년자는 이용하면 안 되고, 로그인도 19세 이상만 할 수 있어요. 알려 주신 내용은 본인이 책임져야 해요. 자세한 규칙은 <a href="terms.html" target="_blank" rel="noopener noreferrer">이용약관</a>, 개인정보는 <a href="privacy.html" target="_blank" rel="noopener noreferrer">개인정보처리방침</a>에 따라 다뤄요.</p>
     </details>
+    </div>
     <div class="cs-foot">
     <label class="cs-ck"><input type="checkbox" id="csAge"><span><b>(필수)</b> 저는 19세 이상이에요 <small class="cs-s">(올해 기준 2007년 이전 출생)</small></span></label>
     <label class="cs-ck"><input type="checkbox" id="csOk"><span><b>(필수)</b> 위 내용을 확인했고 동의해요 (운영진 책임 면제 포함)</span></label>
@@ -470,10 +472,10 @@
 
 <div class="ach-pop" id="achPop" role="status" hidden><span class="ach-ic"><svg viewBox="0 0 24 24"><path d="M8 4h8v5a4 4 0 0 1-8 0zM8 6H5v1a3 3 0 0 0 3 3M16 6h3v1a3 3 0 0 1-3 3M12 13v4M8.5 20h7M10 17h4"/></svg></span><span class="ach-tx"><small>도전과제 달성!</small><b id="achPopT"></b><i id="achPopD"></i></span></div>
 <div id="toast" role="status"></div>
-<script src="config.js?v=227"></script>
-<script src="app.js?v=227"></script>
-<script src="mobile.js?v=227"></script>
-<script src="tour.js?v=227"></script>
-<script src="play.js?v=227"></script>
+<script src="config.js?v=228"></script>
+<script src="app.js?v=228"></script>
+<script src="mobile.js?v=228"></script>
+<script src="tour.js?v=228"></script>
+<script src="play.js?v=228"></script>
 </body>
 </html>
