@@ -127,7 +127,10 @@ const sovClean = (o) => { if (!o || typeof o !== "object" || Array.isArray(o)) r
 const newUid = async (env, sub) => "u" + (await hmac(env.SESSION_SECRET, "uid:" + sub)).slice(0, 24);
 const UID_RE = /^(g\d{5,30}|u[\w-]{24})$/;
 // 예전 기록(uid = "g"+구글번호)을 새 코드로 바꿔요. 새 코드에 이미 같은 항목이 있으면 건드리지 않아요
-async function getAuth(env, req) { const s = await verify(env, (req.headers.get("Authorization") || "").replace(/^Bearer /, "")); return s && /^u[\w-]{24}$/.test(String(s.uid)) ? s : null; }   // 예전 방식 로그인은 한 번 다시 로그인하게 해요
+// ── 운영진이 정지한 계정 (계정 코드만 저장해요) ──
+let banReady = false;
+const isBanned = async (env, uid) => { try { if (!banReady) { await env.DB.prepare("CREATE TABLE IF NOT EXISTS acct_ban (uid TEXT PRIMARY KEY, ts INTEGER NOT NULL)").run(); banReady = true; } return !!(await env.DB.prepare("SELECT 1 AS x FROM acct_ban WHERE uid = ?").bind(uid).first()); } catch (e) { return false; } };
+async function getAuth(env, req) { const s = await verify(env, (req.headers.get("Authorization") || "").replace(/^Bearer /, "")); return s && /^u[\w-]{24}$/.test(String(s.uid)) && !(await isBanned(env, s.uid)) ? s : null; }   // 예전 방식 로그인은 한 번 다시 로그인하게 해요
 
 async function handle(req, env, ctx) {
   const url = new URL(req.url), p = url.pathname;
@@ -146,6 +149,7 @@ async function handle(req, env, ctx) {
     if (g.aud !== env.GOOGLE_CLIENT_ID || !/^\d{5,30}$/.test(String(g.sub || "")) || !(g.exp > Date.now() / 1000)) return json(env, { error: "login" }, 401);
     const uid = await newUid(env, g.sub);   // 구글 고유 번호는 저장하지 않고, 되돌릴 수 없는 코드만 써요
     { const em1 = g.email_verified === "true" || g.email_verified === true ? String(g.email || "").toLowerCase() : ""; const left = isAdmin(env, { em: em1 }) ? 0 : await lockLeft(env, uid); if (left) return coolBody(env, left); }   // 내 정보를 지운 뒤 24시간 동안은 다시 로그인할 수 없어요
+    if (await isBanned(env, uid)) return json(env, { error: "banned" }, 403);   // 운영진이 정지한 계정
     await noteAcct(env, req, uid);
     const name = await nick(env, uid);
     const em = g.email_verified === "true" || g.email_verified === true ? String(g.email || "").toLowerCase() : "";
@@ -222,7 +226,9 @@ async function handle(req, env, ctx) {
       const rows = (await env.DB.prepare("SELECT uid, fav, rec, q_ok, q_all, ts FROM udata ORDER BY ts DESC LIMIT 300").all()).results || [];
       const total = (await env.DB.prepare("SELECT COUNT(*) AS c FROM udata").first()).c || 0;
       const flags = new Set(((await env.DB.prepare("SELECT DISTINCT uid FROM abuse_log WHERE uid IS NOT NULL").all()).results || []).map(x => x.uid));
-      const users = []; for (const r of rows) users.push({ uid: r.uid, name: await nick(env, r.uid), ts: r.ts, fav: JSON.parse(r.fav || "[]").length, rec: JSON.parse(r.rec || "[]").length, qok: r.q_ok, qall: r.q_all, flag: flags.has(r.uid) });
+      await isBanned(env, "x"); const bans = new Map(((await env.DB.prepare("SELECT uid, ts FROM acct_ban").all()).results || []).map(x => [x.uid, x.ts]));
+      const users = []; for (const r of rows) { users.push({ uid: r.uid, name: await nick(env, r.uid), ts: r.ts, fav: JSON.parse(r.fav || "[]").length, rec: JSON.parse(r.rec || "[]").length, qok: r.q_ok, qall: r.q_all, flag: flags.has(r.uid), banned: bans.has(r.uid) }); bans.delete(r.uid); }
+      for (const [uid, ts] of bans) users.unshift({ uid, name: await nick(env, uid), ts, fav: 0, rec: 0, qok: 0, qall: 0, flag: flags.has(uid), banned: true });
       return json(env, { total, users }, 200, { "Cache-Control": "no-store" });
     } catch (e) { return json(env, { error: "busy" }, 503); }
   }
@@ -231,16 +237,19 @@ async function handle(req, env, ctx) {
     try {
       await abTables(env);
       const rows = (await env.DB.prepare("SELECT h, kind, uid, n, first, last FROM abuse_log ORDER BY last DESC LIMIT 200").all()).results || [];
-      const out = []; for (const r of rows) out.push({ ip: r.h.slice(0, 8), kind: r.kind, uid: r.uid, name: r.uid ? await nick(env, r.uid) : "", n: r.n, first: r.first, last: r.last });
+      const out = []; for (const r of rows) out.push({ ip: r.h.slice(0, 8), kind: r.kind, uid: r.uid, banned: r.uid ? await isBanned(env, r.uid) : false, name: r.uid ? await nick(env, r.uid) : "", n: r.n, first: r.first, last: r.last });
       return json(env, { days: ABUSE_DAYS, rows: out }, 200, { "Cache-Control": "no-store" });
     } catch (e) { return json(env, { error: "busy" }, 503); }
   }
-  if (p === "/admin/user/delete" && req.method === "POST") {   // 운영진: 한 사람의 저장 자료 지우기
+  if (p === "/admin/user/ban" && req.method === "POST") {   // 운영진: 계정 정지 / 정지 풀기
     const s = await getAuth(env, req); if (!s || !isAdmin(env, s)) return json(env, { error: "forbidden" }, 403);
     let b; try { b = await req.json(); } catch (e) { return json(env, { error: "bad" }, 400); }
-    if (!/^u[\w-]{10,40}$/.test(String(b.uid || ""))) return json(env, { error: "bad" }, 400);
-    await udTable(env); await env.DB.prepare("DELETE FROM udata WHERE uid = ?").bind(b.uid).run();
-    return json(env, { ok: true });
+    const uid = String(b.uid || ""); if (!/^u[\w-]{10,40}$/.test(uid)) return json(env, { error: "bad" }, 400);
+    if (uid === s.uid) return json(env, { error: "self" }, 400);   // 내 계정은 정지할 수 없어요
+    await isBanned(env, "x");
+    if (b.ban === false) await env.DB.prepare("DELETE FROM acct_ban WHERE uid = ?").bind(uid).run();
+    else await env.DB.prepare("INSERT INTO acct_ban (uid, ts) VALUES (?, ?) ON CONFLICT(uid) DO UPDATE SET ts = excluded.ts").bind(uid, Date.now()).run();
+    return json(env, { ok: true, banned: b.ban !== false });
   }
 
   if (p === "/account/delete" && req.method === "POST") {   // 내 저장 자료와 접속 기록을 한 번에 지워요
