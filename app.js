@@ -208,11 +208,12 @@
     if (!RATE || !rtok) return;
     rApi("/me").then(r => r.status === 401 ? Promise.reject("login") : r.json()).then(d => { rtok.name = d.name || ""; meI = { name: d.name || "", cnt: d.cnt || 0, title: d.title || "", next: d.next || null }; isAdm = !!d.admin; syncAdm(); drawLogin(); }).catch(e => { if (e === "login") rLogout(); });
   }
-  const DEL_WORD = "내 정보 지우기";
-  function deleteMine() {   // 내 정보 지우기: 안내 문구를 똑같이 입력해야 지워져요
+    function deleteMine() {   // 내 정보 지우기: 안내 문구를 똑같이 입력해야 지워져요
     if (!rtok || $("delAsk")) return;
+    const DEL_WORD = ((meI && meI.name) || rtok.name || "").trim();
+    if (!DEL_WORD) return toast("닉네임을 확인하지 못했어요. 잠시 뒤 다시 눌러 주세요");
     const m = document.createElement("div"); m.className = "modal del-ask"; m.id = "delAsk";
-    m.innerHTML = `<div class="sheet" role="dialog" aria-modal="true" aria-labelledby="delT"><div class="m-body"><h2 id="delT">내 정보를 지울까요?</h2><p class="del-p">즐겨찾기·열어본 영상·퀴즈 기록과 접속 기록이 모두 지워져요. 되돌릴 수 없고, 지운 뒤에는 자동으로 로그아웃돼요. 서버 부담을 줄이기 위해 지운 뒤 24시간 동안은 다시 로그인할 수 없어요.</p><p class="del-p">계속하려면 아래 칸에 <b>${DEL_WORD}</b> 를 똑같이 입력해 주세요.</p><input id="delIn" type="text" autocomplete="off" placeholder="${DEL_WORD}"><div class="m-acts"><button type="button" class="btn" id="delNo">취소</button><button type="button" class="btn del-go" id="delGo" disabled>지우기</button></div></div></div>`;
+    m.innerHTML = `<div class="sheet" role="dialog" aria-modal="true" aria-labelledby="delT"><div class="m-body"><h2 id="delT">내 정보를 지울까요?</h2><p class="del-p">즐겨찾기·열어본 영상·퀴즈 기록과 접속 기록이 모두 지워져요. 되돌릴 수 없고, 지운 뒤에는 자동으로 로그아웃돼요. 서버 부담을 줄이기 위해 지운 뒤 24시간 동안은 다시 로그인할 수 없어요.</p><p class="del-p">계속하려면 아래 칸에 내 닉네임 <b>${esc(DEL_WORD)}</b> 을(를) 똑같이 입력한 뒤 지우기를 눌러 주세요.</p><input id="delIn" type="text" autocomplete="off" placeholder="내 닉네임 입력" maxlength="40"><div class="del-acts"><button type="button" class="btn" id="delNo">취소</button><button type="button" class="btn del-go" id="delGo" disabled>지우기</button></div></div></div>`;
     document.body.appendChild(m);
     const inp = $("delIn"), go = $("delGo"), close = () => m.remove();
     inp.addEventListener("input", () => { go.disabled = inp.value.trim() !== DEL_WORD; });

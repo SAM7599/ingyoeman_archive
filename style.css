@@ -1340,3 +1340,6 @@ html:not([data-motion="off"]) .cs-box:not(.cs-bye) { animation:zoom .35s cubic-b
 .del-ask input { width:100%; box-sizing:border-box; padding:11px 12px; font-size:15px; border:1px solid var(--line); border-radius:10px; background:var(--raise); color:var(--ink); }
 .del-ask .del-go { background:#e5484d; border-color:#e5484d; color:#fff; }
 .del-ask .del-go:disabled { opacity:.4; cursor:not-allowed; }
+.del-ask input { display:block; margin:4px 0 16px; }
+.del-ask .del-acts { display:flex; gap:8px; }
+.del-ask .del-acts .btn { flex:1; justify-content:center; }
