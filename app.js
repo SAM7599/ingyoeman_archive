@@ -61,7 +61,7 @@
   let recent = store.get("recent", []);   // 열어본 영상 (자동)
   let view = store.get("view2", "grid") === "rows" ? "rows" : "grid";
   const savedSort = store.get("sort", "new");
-  $("sort").value = ["new", "old", "title", "likes", "rating"].includes(savedSort) ? savedSort : "new";
+  $("sort").value = ["new", "old", "title", "likes"].includes(savedSort) ? savedSort : "new";
 
   const key = v => (v.url || "") + "|" + (v.title || "");
   const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -82,34 +82,23 @@
   const byKey = k => all.find(v => key(v) === k);
   function toast(t) { const el = $("toast"); el.textContent = t; el.classList.add("show"); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove("show"), 2200); }
 
-  /* ── 별점 (구글 로그인) — 서버 주소는 config.js 의 rating ── */
+  /* ── 구글 로그인 — 서버 주소는 config.js 의 rating ── */
   const RATE = /^(https:\/\/|http:\/\/localhost)/i.test(SITE.rating || "") ? SITE.rating.replace(/\/+$/, "") : "";
-  let QZ = null, meI = null, isAdm = false, ravg = {}, mine = {}, rtok = store.get("dtok", null), banI = store.get("ban1", false), isBan = !!banI;
-  const setBan = (v, info) => { isBan = !!v; banI = isBan ? (info && typeof info === "object" ? info : (banI && typeof banI === "object" ? banI : true)) : false; store.set("ban1", banI); };
-  const rScore = v => { const a = ravg[vid(v)]; return a ? (a[0] * a[1] + 3 * 2) / (a[1] + 2) : 0; };   // 표가 적을 때 흔들리지 않게 보정
-  const rStars = n => "★".repeat(Math.round(n)) + "☆".repeat(5 - Math.round(n));
+  let QZ = null, meI = null, isAdm = false, rtok = store.get("dtok", null);
   const GID = SITE.google || "";
   /* 구글 로그인: 버튼을 눌러 로그인하면 구글이 확인 정보를 주고, 서버가 그걸 검사해서 우리 사이트용 토큰을 줘요 */
   let gsiReady = false;
   async function onGoogle(resp) {
     try {
       const r = await fetch(RATE + "/google", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ credential: resp.credential, adult: (() => { try { return JSON.parse(localStorage.getItem("consent1")).adult === true; } catch (e) { return false; } })() }) });
-      if (r.status === 403) { const j = await r.json().catch(() => ({})); if (j.error === "cooldown") return toast("내 정보를 삭제한 뒤 24시간 동안은 다시 로그인할 수 없어요. 약 " + (j.hours || 24) + "시간 뒤에 해 주세요"); setBan(true, j.ban); drawRate(); return toast("이용이 제한되어 로그인할 수 없어요"); }
+      if (r.status === 403) { const j = await r.json().catch(() => ({})); if (j.error === "cooldown") return toast("내 정보를 삭제한 뒤 24시간 동안은 다시 로그인할 수 없어요. 약 " + (j.hours || 24) + "시간 뒤에 해 주세요"); return toast("이용이 제한되어 로그인할 수 없어요"); }
       if (r.status === 400) { const j = await r.json().catch(() => ({})); if (j.error === "adult") return toast("만 19세 이상만 로그인할 수 있어요. 새로고침해서 동의 화면에서 확인해 주세요"); }
       if (!r.ok) return toast("로그인하지 못했어요. 잠시 후 다시 해 주세요");
-      const d = await r.json(); rtok = { t: d.token, name: d.name || "" }; isAdm = !!d.admin; syncAdm(); store.set("dtok", rtok); setBan(false);
-      toast("구글로 로그인했어요"); loadRatings(); drawRate();
+      const d = await r.json(); rtok = { t: d.token, name: d.name || "" }; isAdm = !!d.admin; syncAdm(); store.set("dtok", rtok);
+      toast("구글로 로그인했어요"); loadRatings();
     } catch (e) { toast("로그인하지 못했어요. 잠시 후 다시 해 주세요"); }
   }
-  function drawGoogleBtn() {
-    const box = $("gbtn"); if (!box || !GID) return;
-    const go = () => { try { if (!gsiReady) { google.accounts.id.initialize({ client_id: GID, callback: onGoogle, ux_mode: "popup" }); gsiReady = true; } google.accounts.id.renderButton(box, { theme: document.documentElement.getAttribute("data-theme") === "light" ? "outline" : "filled_black", size: "large", text: "signin_with", locale: "ko", width: 260 }); } catch (e) {} };
-    if (window.google && google.accounts) return go();
-    if (document.getElementById("gsi")) return setTimeout(drawGoogleBtn, 300);
-    const sc = document.createElement("script"); sc.id = "gsi"; sc.src = "https://accounts.google.com/gsi/client"; sc.async = true; sc.onload = go; document.head.appendChild(sc);
-  }
   /* ── 상단 구글 로그인 버튼 ── */
-  let gsiTop = false;
   function syncQuiz() {
     const home = $("home"); if (!home || $("home").hidden) return;
     const el = $("qz"), html = quizHtml();
@@ -138,7 +127,7 @@
     if (rtok) {
       const nm = (meI && meI.name) || rtok.name || "나";
       const st = stamp && stamp.days ? `<p class="g-st">🗓 방문 도장 <b>${stamp.days}일</b>${stamp.title ? ` · <i>${esc(stamp.title)}</i>` : ""}${stamp.streak > 1 ? `<small>${stamp.streak}일 연속 방문 중</small>` : ""}${stamp.next ? `<small>다음 칭호 「${esc(stamp.next.title)}」까지 ${stamp.next.need}일</small>` : ""}</p>` : "";
-      box.innerHTML = `<button type="button" class="round g-me" id="gMe" aria-haspopup="true" aria-expanded="false" title="${esc(nm)} (로그인됨)"><span>${esc(String(nm).slice(0, 1))}</span></button><div class="g-menu" id="gMenu" hidden><p><small>로그인됨</small><b>${esc(nm)}</b></p>${st}<button type="button" id="gOut">로그아웃</button></div>`;
+      box.innerHTML = `<button type="button" class="round g-me" id="gMe" aria-haspopup="true" aria-expanded="false" title="${esc(nm)} (로그인됨)"><span>${esc(String(nm).slice(0, 1))}</span></button><div class="g-menu" id="gMenu" hidden><p><small>로그인됨</small><b>${esc(nm)}</b></p>${st}<button type="button" id="gOut">로그아웃</button><button type="button" id="gDel" class="g-del">내 정보 지우기</button></div>`;
       syncPull(); return;
     }
     box.innerHTML = '<div id="gBtnTop"></div>' + (tipOn ? '<div class="g-tip" id="gTip" role="note"><button type="button" class="g-x" id="gTipX" aria-label="닫기">✕</button><span class="lp-badge">무료 회원</span><b class="g-tt">로그인 혜택</b><ul class="lp-rows"><li><i class="lp-i" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg></i><div><b>즐겨찾기·열어본 영상 저장</b><span>기기를 바꿔도 그대로예요</span></div></li><li><i class="lp-i" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 1-1 1.7"/><path d="M12 17h.01"/></svg></i><div><b>오늘의 한 줄 퀴즈</b><span>매일 새 문제, 연속 정답 기록</span></div></li><li><i class="lp-i" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="11" rx="5"/><path d="M8 11v5M5.5 13.5h5M15.5 12.5h.01M18 14.5h.01"/></svg></i><div><b>미니게임</b><span>제목 빈칸 채우기 · 영상 월드컵</span></div></li><li><i class="lp-i" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="15" rx="3"/><path d="M8 3v4M16 3v4M8 14l3 3 5-6"/></svg></i><div><b>방문 도장 · 칭호</b><span>자주 올수록 칭호가 올라가요</span></div></li></ul><button type="button" class="g-tipoff" id="gTipOff">오늘 하루 보지 않기</button></div>' : "");
@@ -199,6 +188,7 @@
     const me = e.target.closest && e.target.closest("#gMe"), menu = $("gMenu");
     if (me && menu) { menu.hidden = !menu.hidden; me.setAttribute("aria-expanded", String(!menu.hidden)); return; }
     if (e.target.closest && e.target.closest("#gOut")) { rLogout(); toast("로그아웃했어요"); return; }
+    if (e.target.closest && e.target.closest("#gDel")) { deleteMine(); return; }
     if (menu && !menu.hidden && !(e.target.closest && e.target.closest("#gMenu"))) menu.hidden = true;
   });
   drawLogin();
@@ -223,107 +213,23 @@
 
   const rApi = (path, opt) => fetch(RATE + path, { ...(opt || {}), headers: { ...(rtok ? { Authorization: "Bearer " + rtok.t } : {}), "Content-Type": "application/json" } });
   const refreshMe = () => { if (rtok) rApi("/me").then(r => r.ok ? r.json() : null).then(d => { if (d && d.name) { meI = { name: d.name, cnt: d.cnt || 0, title: d.title || "", next: d.next || null }; drawRate(); } }).catch(() => {}); };
-  function rLogout() { pulled = false; pullBusy = false; stamp = null; qst = null; store.set("stamp1", null); store.set("qzs1", null); store.set("ck1", null); meI = null; rtok = null; isAdm = false; syncAdm(); mine = {}; store.set("dtok", null); drawRate(); }
-  function loadRatings() {   // 별점·후기 화면은 쓰지 않아요. 로그인 상태만 확인해요
-    if (!RATE) return;
-    if (rtok) { rApi("/me").then(r => r.status === 401 ? Promise.reject("login") : r.json()).then(d => { rtok.name = d.name || ""; meI = { name: d.name || "", cnt: d.cnt || 0, title: d.title || "", next: d.next || null }; isAdm = !!d.admin; syncAdm(); if (d.member === false) setBan(true, d.ban); else setBan(false); drawLogin(); }).catch(e => { if (e === "login") { rtok = null; isAdm = false; syncAdm(); store.set("dtok", null); } drawLogin(); }); }
-    return;
-    // 별점 평균은 5분 동안 기기에 저장해 두고 다시 쓰고, 서버가 바쁘면 저장해 둔 값을 보여줘요 (방문자가 몰려도 서버 부담이 적도록)
-    let hit = null; try { hit = JSON.parse(localStorage.getItem("ravg1")); } catch (e) {}
-    if (hit && hit.d) { ravg = hit.d; render(); if (current) drawRate(); }
-    if (!(hit && hit.d && Date.now() - hit.t < 3e5)) fetch(RATE + "/ratings").then(r => r.ok ? r.json() : Promise.reject()).then(d => { ravg = d || {}; try { localStorage.setItem("ravg1", JSON.stringify({ t: Date.now(), d: ravg })); } catch (e) {} render(); if (current) drawRate(); }).catch(() => {});
-    if (rtok) rApi("/me").then(r => r.status === 401 ? Promise.reject("login") : r.json()).then(d => { mine = d.mine || {}; rtok.name = d.name || ""; meI = { name: d.name || "", cnt: d.cnt || 0, title: d.title || "", next: d.next || null }; isAdm = !!d.admin; syncAdm(); if (d.member === false) { setBan(true, d.ban); toast("차단된 계정이라 별점을 줄 수 없어요"); } else setBan(false); if (current) { resetDraft(); drawRate(); loadReviews(); } }).catch(e => { if (e === "login") rLogout(); });
+  function rLogout() { pulled = false; pullBusy = false; stamp = null; qst = null; store.set("stamp1", null); store.set("qzs1", null); store.set("ck1", null); meI = null; rtok = null; isAdm = false; syncAdm(); store.set("dtok", null); drawLogin(); }
+  function loadRatings() {   // 로그인 상태만 확인해요
+    if (!RATE || !rtok) return;
+    rApi("/me").then(r => r.status === 401 ? Promise.reject("login") : r.json()).then(d => { rtok.name = d.name || ""; meI = { name: d.name || "", cnt: d.cnt || 0, title: d.title || "", next: d.next || null }; isAdm = !!d.admin; syncAdm(); drawLogin(); }).catch(e => { if (e === "login") rLogout(); });
   }
-  /* 후기(평점)는 꼭 써야 해요. 신고 번호는 디스코드 채널에 직접 올려요. */
-  let draft = { stars: 0, text: "" }, reviews = [], repTarget = null;
-  const TEXT_MSG = { short: "후기는 5자 이상 써 주세요", long: "후기는 300자까지 쓸 수 있어요", empty: "점이나 같은 글자만 반복한 후기는 올릴 수 없어요", link: "링크나 주소는 넣을 수 없어요" };
-  function textProblem(t) {   // 서버와 같은 검사 (미리 알려 주려고)
-    const s = String(t || "").replace(/\s+/g, " ").trim();
-    if (s.length < 5) return "short"; if (s.length > 300) return "long";
-    const core = s.replace(/[^\p{L}\p{N}]/gu, ""); if (core.length < 4 || new Set(core).size < 3) return "empty";
-    if (/(https?:\/\/|www\.|discord\.gg|\.(com|net|kr|io|me|gg|xyz)\b)/i.test(s)) return "link";
-    return null;
-  }
-  const rAgo = ms => { const d = (Date.now() - ms) / 1000; return d < 60 ? "방금" : d < 3600 ? Math.floor(d / 60) + "분 전" : d < 86400 ? Math.floor(d / 3600) + "시간 전" : d < 86400 * 30 ? Math.floor(d / 86400) + "일 전" : new Date(ms).toLocaleDateString("ko-KR"); };
-  function resetDraft() { const m = current && mine[vid(current)]; draft = m ? { stars: m[0], text: m[1] } : { stars: 0, text: "" }; }
-  function loadReviews() {
-    return; const id = vid(current);
-    rApi("/reviews?vid=" + encodeURIComponent(id)).then(r => r.json()).then(l => { if (current && vid(current) === id) { reviews = Array.isArray(l) ? l : []; drawRate(); } }).catch(() => {});
-  }
-  function formState() {   // 입력할 때마다 버튼/안내만 바꿔요 (글 쓰는 중에 화면을 다시 그리지 않아요)
-    const t = $("rtext"), btn = $("rsend"); if (!t || !btn) return;
-    const bad = textProblem(draft.text);
-    $("rlen").textContent = draft.text.length + "/300";
-    $("rhint").textContent = !draft.stars ? "별을 먼저 눌러 주세요" : bad && draft.text.trim() ? TEXT_MSG[bad] : bad ? "후기를 5자 이상 써 주세요 (후기는 꼭 필요해요)" : "";
-    btn.disabled = !draft.stars || !!bad;
-  }
-  function drawRate() {
-    const el = $("rate"); if (el) el.hidden = true; drawLogin(); return;
-    if (!RATE || !current) return;
-    const id = vid(current), a = ravg[id], my = mine[id];
-    const head = a ? `<b class="r-avg">★ ${a[0].toFixed(1)}</b><span>${a[1]}명이 남겼어요</span>` : `<span>아직 별점과 후기가 없어요</span>`;
-    let body;
-    const WARN = `<div class="r-warn" role="note"><b>⚠ 금지: 과거와 현재를 비교하는 후기</b><br>예전과 지금을 비교하거나 깎아내리는 후기는 <b>적발 즉시 삭제하고 작성자를 차단</b>해요. 차단되면 후기·신고를 모두 쓸 수 없어요. 영상 자체에 대한 감상만 남겨 주세요.</div>`;
-    const bi = banI && typeof banI === "object" ? banI : {};
-    const BAN = `<div class="r-ban" role="alert"><b>🚫 이용이 제한된 계정이에요</b>${bi.ip ? `<p>이 접속 환경(IP)에서 이용이 제한된 계정이 있어서 후기와 신고를 할 수 없어요. 본인이 아니라면 디스코드로 문의해 주세요.</p>` : `<dl class="r-why"><dt>사유</dt><dd>${esc(bi.reason || "운영 규칙 위반 (광고·스팸·욕설, 과거와 현재를 비교하는 후기 등)")}</dd>${bi.vid ? `<dt>영상</dt><dd>${esc(vTitle(bi.vid))}</dd>` : ""}${bi.txt ? `<dt>문제가 된 후기</dt><dd><q>${esc(bi.txt)}</q></dd>` : ""}${bi.ts ? `<dt>제한된 날</dt><dd>${esc(new Date(bi.ts).toLocaleDateString("ko-KR"))}</dd>` : ""}</dl><p>그래서 후기와 신고를 할 수 없어요.</p>`}<p>잘못 제한됐다고 생각하시면 디스코드의 <b>⭐ 별점·후기</b> 태그로 문의해 주세요.</p><p><a class="btn" data-feedback target="_blank" rel="noopener noreferrer" href="${esc(FB || "#")}">디스코드로 문의하기</a>${rtok ? ` <button type="button" class="r-link" data-rout>로그아웃</button>` : ""}</p></div>`;
-    if (isBan && rtok) body = BAN;
-    else if (!rtok) body = (isBan ? BAN : "") + `<div id="gbtn" class="r-g"></div><p class="r-note">구글 계정으로 로그인하면 별점과 후기를 남길 수 있어요. <b>만 19세 이상</b>만 이용할 수 있어요. 한 계정당 영상마다 하나만 남길 수 있고, <b>별점과 후기를 모두</b> 써야 해요. 후기에는 구글 이름 대신 무작위 별명이 보여요. 로그인하면 <a href="privacy.html" target="_blank" rel="noopener">개인정보처리방침</a>을 확인한 것으로 봐요.</p><details class="r-safe"><summary>🔒 공용 컴퓨터·공용 와이파이에서는 로그인을 권하지 않아요 <span class="r-more">눌러서 자세히 보기</span></summary><p>PC방·학교·회사 같은 컴퓨터에는 입력한 내용을 몰래 기록하는 프로그램이 있을 수 있고, 로그인 정보가 컴퓨터에 남아 다음 사람이 내 계정으로 후기를 쓸 수도 있어요. 꼭 써야 한다면 다 쓴 뒤 반드시 <b>로그아웃</b>해 주세요.</p><p>휴대폰도 마찬가지예요. 카페·지하철·상점의 <b>무료(공용) 와이파이</b>에는 가짜 와이파이나 악성 접속점이 섞여 있을 수 있어서, 로그인 정보가 엿보일 위험이 있어요. 이럴 땐 <b>내 휴대폰 데이터(LTE·5G)</b>나 믿을 수 있는 집 와이파이로 로그인해 주세요. 영상 목록 보기와 즐겨찾기는 로그인 없이 되니 공용 와이파이에서는 그 기능만 쓰는 걸 권해요.</p></details>`;
-    else body = (meI ? `<p class="r-meinfo">내 별명 <b>${esc(meI.name)}</b>${meI.title ? ` · 칭호 <i class="r-t">${esc(meI.title)}</i>` : ""}<small>${meI.next ? `후기를 쓴 영상 ${meI.cnt}개 · 다음 칭호 ‘${esc(meI.next.title)}’까지 ${meI.next.need}개` : `후기를 쓴 영상 ${meI.cnt}개 · 가장 높은 칭호예요`}</small></p>` : "") + `<div class="r-stars" role="group" aria-label="내 별점">${[1, 2, 3, 4, 5].map(n => `<button type="button" class="${n <= draft.stars ? "on" : ""}" data-star="${n}" aria-label="별 ${n}개" aria-pressed="${n === draft.stars}">★</button>`).join("")}</div>
-      <textarea id="rtext" class="r-text" rows="3" maxlength="300" placeholder="후기를 남겨 주세요. 어떤 점이 좋았나요? (5자 이상)">${esc(draft.text)}</textarea>
-      <div class="r-row"><span id="rhint" class="r-hint"></span><span id="rlen" class="r-len">0/300</span></div>
-      <div class="r-row"><button type="button" class="btn primary" id="rsend" disabled>${my ? "수정하기" : "등록하기"}</button><span class="r-note">${my ? `<button type="button" class="r-link" data-del>내 별점·후기 지우기</button> ` : ""}<button type="button" class="r-link" data-rout>로그아웃</button> <button type="button" class="r-link" data-delall>내 정보 전부 삭제</button></span></div>
-      <p class="r-note">광고, 스팸, 욕설, 링크, 점(.)만 올린 후기, 정치 이야기, 영상과 관계없는 내용은 신고되거나 지워질 수 있어요. 영상을 본 느낌만 남겨 주세요.</p>`;
-    const list = reviews.length ? `<ul class="r-list">${reviews.map(r => `<li class="${r.me ? "mine" : ""}"><div class="r-h"><b>${esc(r.name)}</b>${r.title ? `<i class="r-t lv${r.lv}">${esc(r.title)}</i>` : ""}${r.me ? `<i class="r-me">내 후기</i>` : ""}<span class="r-s" aria-label="별 ${r.stars}개">${"★".repeat(r.stars)}${"☆".repeat(5 - r.stars)}</span><time>${rAgo(r.ts)}</time>${r.me ? "" : `<button type="button" class="r-link r-rep" data-rep="${esc(r.id)}">신고</button>`}</div><p>${esc(r.text)}</p></li>`).join("")}</ul>` : "";
-    el.innerHTML = `<div class="r-head">${head}</div>${body}${WARN}${list}`;
-    formState(); if (!rtok) drawGoogleBtn();
-  }
-  async function doSubmit() {
-    if (!current || !rtok) return; const id = vid(current), n = draft.stars, text = draft.text.trim();
-    const bad = textProblem(text); if (!n || bad) return formState();
-    $("rsend").disabled = true;
-    try {
-      const r = await rApi("/rate", { method: "POST", body: JSON.stringify({ vid: id, stars: n, text }) });
-      if (r.status === 401) { rLogout(); return toast("다시 로그인해 주세요"); }
-      if (r.status === 403) { mine = {}; const j = await r.json().catch(() => ({})); if (j.error === "cooldown") { rLogout(); return toast("내 정보를 삭제한 뒤 24시간 동안은 이용할 수 없어요. 약 " + (j.hours || 24) + "시간 뒤에 다시 로그인해 주세요"); } setBan(true, j.ban); drawRate(); return toast("차단된 계정이라 남길 수 없어요"); }
-      if (r.status === 400) { const d = await r.json().catch(() => ({})); formState(); return toast(TEXT_MSG[d.code] || "내용을 확인해 주세요"); }
-      if (r.status === 429) { const d = await r.json().catch(() => ({})); formState(); return toast(d.error === "slow" ? "너무 빨라요. 잠시 뒤에 다시 해 주세요" : "오늘은 후기를 너무 많이 남기셨어요. 내일 다시 남겨 주세요"); }
-      if (!r.ok) { formState(); return toast("지금은 남길 수 없어요. 잠시 후 다시 해 주세요"); }
-      const d = await r.json(); mine[id] = [n, text]; ravg[id] = [d.avg, d.n]; try { localStorage.removeItem("ravg1"); } catch (e) {}
-      toast("후기를 남겼어요"); loadReviews(); drawRate(); render(); refreshMe();
-    } catch (e) { formState(); toast("지금은 남길 수 없어요. 잠시 후 다시 해 주세요"); }
-  }
-  const my0 = () => true;
-  async function doDeleteAll() {
-    if (!rtok || !confirm("내 별점·후기와 보관 기록, 접속 기록을 모두 지울까요?\n\n지우면 되돌릴 수 없고, 칭호는 처음부터 다시 시작해요.\n별명은 그대로 남고, 지운 뒤에는 자동으로 로그아웃돼요.\n\n서버 부담을 줄이기 위해 지운 뒤 24시간 동안은 다시 로그인할 수 없어요.")) return;
+  async function deleteMine() {   // 내 정보 지우기
+    if (!rtok || !confirm("내 저장 자료(즐겨찾기·열어본 영상·방문 도장·퀴즈 기록)와 접속 기록을 모두 지울까요?\n\n지우면 되돌릴 수 없고, 지운 뒤에는 자동으로 로그아웃돼요.\n서버 부담을 줄이기 위해 지운 뒤 24시간 동안은 다시 로그인할 수 없어요.")) return;
     try {
       const r = await rApi("/account/delete", { method: "POST", body: "{}" });
-      if (r.status === 409) return toast("신고가 접수된 후기가 있어 지금은 지울 수 없어요. 운영진 확인 뒤에 다시 해 주세요");
-      if (r.status === 403) return toast("이용이 제한된 계정은 지울 수 없어요. 디스코드로 문의해 주세요");
       if (!r.ok) return toast("지금은 지울 수 없어요. 잠시 후 다시 해 주세요");
-      rLogout(); draft = { stars: 0, text: "" }; toast("내 정보를 모두 지우고 로그아웃했어요. 24시간 뒤에 다시 로그인할 수 있어요"); loadRatings(); loadReviews(); render();
+      rLogout(); toast("내 정보를 모두 지우고 로그아웃했어요");
     } catch (e) { toast("지금은 지울 수 없어요. 잠시 후 다시 해 주세요"); }
   }
-  async function doDelete() {
-    if (!current || !rtok || !confirm("내 별점과 후기를 지울까요?")) return; const id = vid(current);
-    try {
-      const r = await rApi("/rate", { method: "POST", body: JSON.stringify({ vid: id, stars: 0 }) });
-      if (!r.ok) return toast("지금은 지울 수 없어요. 잠시 후 다시 해 주세요");
-      const d = await r.json(); delete mine[id]; if (d.n) ravg[id] = [d.avg, d.n]; else delete ravg[id]; try { localStorage.removeItem("ravg1"); } catch (e) {}
-      draft = { stars: 0, text: "" }; toast("지웠어요"); loadReviews(); drawRate(); render(); refreshMe();
-    } catch (e) { toast("지금은 지울 수 없어요. 잠시 후 다시 해 주세요"); }
-  }
+  const my0 = () => true;
 
   /* ── 운영진 대시보드 (지정한 구글 계정만) ── */
-  const admCnt = { rep: 0, arc: 0, ban: 0 };
-  function admBadge() {
-    const n = admCnt.rep; $("admN").textContent = n > 0 ? (n > 99 ? "99+" : n) : "";
-    document.querySelectorAll(".adm-tabs button").forEach(b => { const c = admCnt[b.dataset.tab]; b.dataset.n = c > 0 ? c : ""; });
-  }
-  async function admCounts(all) {
-    const get = async (p, k) => { try { const r = await rApi(p); if (r.ok) admCnt[k] = (await r.json()).length; } catch (e) {} };
-    await Promise.all([get("/admin/reports", "rep"), ...(all ? [get("/admin/history", "arc"), get("/admin/bans", "ban")] : [])]); admBadge();
-  }
-  /* 별점·후기 서버 상태 (운영진에게만 보여요) */
+  /* 서버 상태 (운영진에게만 보여요) */
   let srv = null, srvTimer = null;
   async function srvCheck() {
     if (!RATE) return;
@@ -338,27 +244,16 @@
     const msg = { ok: "정상", slow: "느려요", down: "연결 안 됨" }[srv.s];
     const d = new Date(srv.t), hm = String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0") + ":" + String(d.getSeconds()).padStart(2, "0");
     $("admSrv").dataset.s = srv.s;
-    $("admSrvT").textContent = `별점·후기 서버: ${msg}` + (srv.s === "down" ? "" : ` · 응답 ${srv.ms}ms`) + ` · ${hm} 확인`;
+    $("admSrvT").textContent = `서버: ${msg}` + (srv.s === "down" ? "" : ` · 응답 ${srv.ms}ms`) + ` · ${hm} 확인`;
     $("admBtn").title = "운영진 대시보드 · 서버 " + msg;
   }
   function srvWatch(on) { clearInterval(srvTimer); srvTimer = null; if (on) { srvCheck(); srvTimer = setInterval(() => { if (!document.hidden) srvCheck(); }, 60000); } else srv = null; }
-  function syncAdm() { $("admBtn").hidden = !isAdm; srvWatch(isAdm); if (isAdm) admCounts(false); else { admCnt.rep = admCnt.arc = admCnt.ban = 0; admBadge(); } }
-  function openDash() { if (!isAdm) return; admSetTab("rep"); admCounts(true); srvCheck(); }
-  /* ── 운영진 신고함 (지정한 구글 계정만) ── */
+  function syncAdm() { $("admBtn").hidden = !isAdm; srvWatch(isAdm); }
+  function openDash() { if (!isAdm) return; openStatus(); srvCheck(); }
+  /* ── 운영진 서버 상태 (지정한 구글 계정만) ── */
   let tmap = null;
   const vTitle = id => { if (!tmap) { tmap = {}; all.forEach(v => { tmap[vid(v)] = v.title || ""; }); } return tmap[id] || "(목록에서 사라진 영상)"; };
-  const vLink = id => `영상 <a href="#v=${esc(id)}">${esc(vTitle(id))}</a>`;
-  const aAgo = ms => new Date(ms).toLocaleString("ko-KR");
-  let admTab = "rep", arcRows = [];
-  const WHY = { edit: "고침", del: "본인이 지움", mod: "운영진이 지움", ban: "차단으로 지워짐" };
-  function admSetTab(t) { admTab = t; document.querySelectorAll(".adm-tabs button").forEach(b => b.classList.toggle("on", b.dataset.tab === t)); $("admQ").hidden = t !== "arc"; $("admQ").value = ""; t === "arc" ? openArchive() : t === "ban" ? openBans() : t === "srv" ? openStatus() : openAdmin(); }
-  let stData = null;
-  async function openStatus() {
-    $("admModal").hidden = false; $("admList").textContent = "불러오는 중…";
-    try { const r = await rApi("/admin/stats"); if (r.status === 404) { stData = null; return drawStatus("서버 코드를 새 버전으로 바꾸면 활동 그래프가 나와요."); } if (!r.ok) { $("admList").textContent = "운영진만 볼 수 있어요"; return; } stData = await r.json(); }
-    catch (e) { stData = null; }
-    drawStatus();
-  }
+  function openStatus() { $("admModal").hidden = false; drawStatus(); }
   function lineChart(L) {
     if (L.length < 2) return `<p class="ch-empty">확인 기록이 쌓이면 그래프가 나와요. (1분마다 자동으로 확인해요)</p>`;
     const W = 600, H = 170, P = { l: 56, r: 14, t: 14, b: 26 }, ok = L.filter(x => x.s !== "down"), top = Math.max(500, ...ok.map(x => x.ms)) * 1.1;
@@ -368,110 +263,9 @@
     const hm = t => { const z = new Date(t); return String(z.getHours()).padStart(2, "0") + ":" + String(z.getMinutes()).padStart(2, "0"); };
     return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="서버 응답 속도 그래프"><line x1="${P.l}" x2="${W - P.r}" y1="${Y(2000)}" y2="${Y(2000)}" class="ch-warn"/><text x="${P.l - 6}" y="${Y(0) + 4}" class="ch-t" text-anchor="end">0</text><text x="${P.l - 6}" y="${P.t + 8}" class="ch-t" text-anchor="end">${Math.round(top)}ms</text><path d="${d}" class="ch-line"/>${dots}<text x="${P.l}" y="${H - 6}" class="ch-t">${hm(L[0].t)}</text><text x="${W - P.r}" y="${H - 6}" class="ch-t" text-anchor="end">${hm(L[L.length - 1].t)}</text></svg>`;
   }
-  function barChart(days) {
-    const W = 600, H = 190, P = { l: 36, r: 8, t: 14, b: 28 }, max = Math.max(4, ...days.flatMap(x => [x.rev, x.rep])), bw = (W - P.l - P.r) / days.length;
-    const Y = n => P.t + (H - P.t - P.b) * (1 - n / max), h = n => (H - P.t - P.b) * n / max;
-    const bars = days.map((x, i) => { const x0 = P.l + bw * i + bw * .12, w = bw * .38; return `<rect x="${x0.toFixed(1)}" y="${Y(x.rev).toFixed(1)}" width="${w.toFixed(1)}" height="${h(x.rev).toFixed(1)}" class="ch-b1"><title>${x.day} 후기 ${x.rev}개</title></rect><rect x="${(x0 + w + 2).toFixed(1)}" y="${Y(x.rep).toFixed(1)}" width="${w.toFixed(1)}" height="${h(x.rep).toFixed(1)}" class="ch-b2"><title>${x.day} 신고 ${x.rep}건</title></rect>`; }).join("");
-    const lab = days.map((x, i) => i % 3 === 0 || i === days.length - 1 ? `<text x="${(P.l + bw * (i + .5)).toFixed(1)}" y="${H - 8}" class="ch-t" text-anchor="middle">${x.day.replace("-", "/")}</text>` : "").join("");
-    return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="최근 14일 후기와 신고 막대 그래프"><line x1="${P.l}" x2="${W - P.r}" y1="${Y(0)}" y2="${Y(0)}" class="ch-ax"/><text x="${P.l - 6}" y="${Y(0) + 4}" class="ch-t" text-anchor="end">0</text><text x="${P.l - 6}" y="${P.t + 8}" class="ch-t" text-anchor="end">${max}</text>${bars}${lab}</svg>`;
-  }
   function drawStatus(note) {
     const L = store.get("srvlog", []), okN = L.filter(x => x.s !== "down"), avg = okN.length ? Math.round(okN.reduce((s, x) => s + x.ms, 0) / okN.length) : 0, bad = L.length - okN.length;
-    const T = stData && stData.totals, card = (n, l) => `<div class="st-c"><b>${n}</b><span>${l}</span></div>`;
-    $("admList").innerHTML = `<section class="st"><h3>서버 응답 속도</h3>${lineChart(L)}<p class="st-h">선이 <b>낮을수록 빨라요</b>. 점선(2초)을 넘으면 느린 거예요. 위쪽 <span class="st-red">빨간 점</span>은 연결이 안 됐던 때예요.${L.length ? ` 평균 ${avg}ms${bad ? ` · 안 된 적 ${bad}번` : ""} (이 기기에서 최근 ${L.length}번 확인 기준)` : ""}</p></section>`
-      + (T ? `<section class="st"><h3>최근 14일 활동</h3>${barChart(stData.days)}<p class="st-h"><span class="st-blue">■</span> 새로 올라오거나 고친 후기 <span class="st-red">■</span> 신고. 막대가 갑자기 높아지면 도배나 소동이 있을 수 있어요.</p><div class="st-cs">${card(T.reviews, "후기·별점")}${card(T.writers, "쓴 사람")}${card(T.reports, "신고")}${card(T.banned, "차단")}${card(T.archive, "보관함 기록")}</div></section>` : `<p class="ch-empty">${esc(note || "활동 그래프를 불러오지 못했어요")}</p>`);
-  }
-  async function openBans() {
-    $("admModal").hidden = false; $("admList").textContent = "불러오는 중…";
-    try {
-      const r = await rApi("/admin/bans"); if (!r.ok) { $("admList").textContent = "운영진만 볼 수 있어요"; return; }
-      const l = await r.json();
-      $("admList").innerHTML = l.length ? l.map(x => `<section class="adm-it"><b>${esc(x.name || "이름 없음")}</b> (${esc(x.uid)}) · 차단한 때 ${aAgo(x.ts)}<br>사유: ${esc(x.reason || "기록 없음")}${x.vid ? `<br>${vLink(x.vid)}` : ""}${x.txt ? `<blockquote>${esc(x.txt)}</blockquote>` : ""}<div class="adm-b"><button type="button" class="btn" data-u="${esc(x.uid)}">차단 해제</button></div></section>`).join("") : "차단된 사람이 없어요";
-    } catch (e) { $("admList").textContent = "불러오지 못했어요"; }
-  }
-  async function admUnban(uid) {
-    if (!confirm("이 사람의 차단을 풀까요?\n(계정과 접속 환경 차단이 함께 풀려요. 지워진 후기는 돌아오지 않아요.)")) return;
-    try { const r = await rApi("/admin/unban", { method: "POST", body: JSON.stringify({ uid }) }); if (!r.ok) return toast("처리하지 못했어요"); toast("차단을 풀었어요"); openBans(); admCounts(true); } catch (e) { toast("처리하지 못했어요"); }
-  }
-  async function openArchive() {
-    $("admList").textContent = "불러오는 중…";
-    try {
-      const r = await rApi("/admin/history"); if (!r.ok) { $("admList").textContent = "운영진만 볼 수 있어요"; return; }
-      arcRows = await r.json(); drawArchive();
-    } catch (e) { $("admList").textContent = "불러오지 못했어요"; }
-  }
-  function drawArchive() {
-    const q = $("admQ").value.trim().toLowerCase();
-    const l = arcRows.filter(x => !q || (x.name + " " + x.text + " " + x.uid + " " + vTitle(x.vid)).toLowerCase().includes(q));
-    $("admList").innerHTML = l.length ? l.map(x => `<section class="adm-it"><b>${esc(x.name || "이름 없음")}</b> (${esc(x.uid)})${x.banned ? " · <b>차단됨</b>" : ""}<br>${vLink(x.vid)} · <b>${WHY[x.why] || esc(x.why)}</b> · 이 내용을 올린 때 ${aAgo(x.ts)}<blockquote>${"★".repeat(x.stars)} ${esc(x.text)}</blockquote>${x.cur ? `<div class="adm-h">지금 후기: ★${x.cur.stars} ${esc(x.cur.text)}</div>` : `<div class="adm-h">지금은 없는 후기예요</div>`}<div class="adm-b"><button type="button" class="btn" data-p="id" data-id="${x.id}">이 기록 영구 삭제</button><button type="button" class="btn adm-ban" data-p="uid" data-id="${esc(x.uid)}">이 사람 보관 기록 전부 삭제</button></div></section>`).join("") : "보관된 후기가 없어요";
-  }
-  async function openAdmin() {
-    $("admModal").hidden = false; $("admList").textContent = "불러오는 중…";
-    try {
-      const r = await rApi("/admin/reports"); if (!r.ok) { $("admList").textContent = "운영진만 볼 수 있어요"; return; }
-      const l = await r.json();
-      $("admList").innerHTML = l.length ? l.map(x => `<section class="adm-it"><b>#${x.id}</b> · ${esc(x.reason)} · 누적 ${x.cnt}건 · ${aAgo(x.ts)}${x.note ? `<br>신고자 메모: ${esc(x.note)}` : ""}<br>${vLink(x.vid)} · 작성자 ${esc(x.cur ? x.cur.name : "(이미 삭제됨)")} (${esc(x.uid)})${x.banned ? " · <b>차단됨</b>" : ""}<br><span class="adm-h">이 작성자 기록: 운영진이 후기를 지운 횟수 <b>${x.mods || 0}번</b> · 경고 <b>${x.warns || 0}번</b></span>${x.cur ? `<blockquote>${"★".repeat(x.cur.stars)} ${esc(x.cur.text)}</blockquote>` : ""}${x.hist.length ? `<div class="adm-h">이전 후기(고치기 전)<br>${x.hist.map(h => `• ${aAgo(h.ts)} ★${h.stars} ${esc(h.text)}`).join("<br>")}</div>` : ""}<div class="adm-b"><button type="button" class="btn" data-a="warn" data-id="${x.id}">경고 기록하기</button>${x.cur ? `<button type="button" class="btn" data-a="delwarn" data-id="${x.id}">경고 + 삭제</button><button type="button" class="btn" data-a="del" data-id="${x.id}">이 후기만 삭제</button>` : ""}${x.banned ? "" : `<button type="button" class="btn adm-ban" data-a="ban" data-id="${x.id}">삭제 + 작성자 차단</button>`}</div></section>`).join("") : "아직 신고가 없어요";
-    } catch (e) { $("admList").textContent = "불러오지 못했어요"; }
-  }
-  async function admAct(id, act) {
-    if (!confirm(act === "ban" ? "작성자를 차단하고 그 사람의 모든 후기를 지울까요? 되돌릴 수 없어요." : act === "delwarn" ? "이 후기를 삭제하고 작성자에게 경고 1번을 기록할까요?\n(되돌릴 수 없어요.)" : act === "warn" ? "이 작성자에게 경고 1번을 기록할까요?\n(후기는 그대로 두고, 운영진만 보는 기록이에요.)" : "이 후기를 삭제할까요? 되돌릴 수 없어요.")) return;
-    try { const r = await rApi("/admin/act", { method: "POST", body: JSON.stringify({ id: +id, act }) }); if (!r.ok) return toast("처리하지 못했어요"); toast("처리했어요"); admSetTab("rep"); admCounts(true); loadRatings(); loadReviews(); } catch (e) { toast("처리하지 못했어요"); }
-  }
-  async function admPurge(k, v) {
-    if (!confirm(k === "uid" ? "이 사람의 보관 기록을 전부 영구 삭제할까요? 되돌릴 수 없어요." : "이 보관 기록을 영구 삭제할까요? 되돌릴 수 없어요.")) return;
-    try { const r = await rApi("/admin/purge", { method: "POST", body: JSON.stringify(k === "uid" ? { uid: v } : { id: +v }) }); if (!r.ok) return toast("처리하지 못했어요"); toast("보관 기록을 지웠어요"); openArchive(); } catch (e) { toast("처리하지 못했어요"); }
-  }
-  /* ── 후기 신고 ── */
-  function openReport(rid) {
-    if (!rtok) return toast("신고하려면 먼저 구글로 로그인해 주세요");
-    const r = reviews.find(x => x.id === rid); if (!r) return;
-    repTarget = r;
-    $("repWho").innerHTML = `<b>${esc(r.name)}</b> · ${"★".repeat(r.stars)}${"☆".repeat(5 - r.stars)}<p>${esc(r.text)}</p>`;
-    $("repForm").hidden = false; $("repDone").hidden = true; $("repNote").value = ""; $("repErr").textContent = "";
-    const first = $("repForm").querySelector('input[name="reason"]'); if (first) first.checked = true;
-    $("repGo").disabled = false; $("repModal").hidden = false; $("repGo").focus();
-  }
-  function closeReport() { $("repShot").hidden = true; $("repModal").hidden = true; repTarget = null; }
-  /* 신고한 후기를 그림(PNG)으로 만들어 저장해요. 디스코드에 올릴 증거 캡처로 쓰세요 */
-  let shotUrl = "";
-  function makeShot(r, no, reasonLabel) {
-    const W = 720, pad = 32, f = "'Pretendard','Noto Sans KR','Malgun Gothic',sans-serif";
-    const c = document.createElement("canvas"), x = c.getContext("2d");
-    const wrap = (t, w, font) => { x.font = font; const out = []; for (const para of String(t).split(/\n/)) { let line = ""; for (const ch of Array.from(para)) { if (x.measureText(line + ch).width > w) { out.push(line); line = ch; } else line += ch; } out.push(line); } return out; };
-    const title = wrap(current.title || "", W - pad * 2, "600 18px " + f).slice(0, 2);
-    const body = wrap(r.text, W - pad * 2 - 4, "400 20px " + f).slice(0, 14);
-    const H = pad + 22 + title.length * 26 + 22 + 30 + 18 + body.length * 30 + 28 + 56 + pad;
-    c.width = W * 2; c.height = H * 2; x.scale(2, 2);
-    x.fillStyle = "#ffffff"; x.fillRect(0, 0, W, H);
-    x.fillStyle = "#fff4f4"; x.fillRect(0, 0, W, 8);
-    let y = pad; x.textBaseline = "top";
-    x.fillStyle = "#777"; x.font = "400 14px " + f; x.fillText("후기 신고 #" + no + " · " + new Date().toLocaleString("ko-KR"), pad, y); y += 22;
-    x.fillStyle = "#222"; x.font = "600 18px " + f; for (const l of title) { x.fillText(l, pad, y); y += 26; } y += 14;
-    x.strokeStyle = "#e3e3e8"; x.beginPath(); x.moveTo(pad, y); x.lineTo(W - pad, y); x.stroke(); y += 16;
-    x.fillStyle = "#111"; x.font = "700 18px " + f; x.fillText(r.name, pad, y);
-    const nw = x.measureText(r.name).width;
-    x.fillStyle = "#e8a600"; x.font = "400 18px " + f; x.fillText("★".repeat(r.stars) + "☆".repeat(5 - r.stars), pad + nw + 12, y);
-    x.fillStyle = "#888"; x.font = "400 14px " + f; const when = new Date(r.ts).toLocaleString("ko-KR"); x.fillText(when, W - pad - x.measureText(when).width, y + 3); y += 40;
-    x.fillStyle = "#222"; x.font = "400 20px " + f; for (const l of body) { x.fillText(l, pad + 2, y); y += 30; } y += 14;
-    x.fillStyle = "#fdecec"; x.fillRect(pad, y, W - pad * 2, 44); x.fillStyle = "#b42318"; x.font = "600 15px " + f; x.fillText("신고 사유: " + reasonLabel, pad + 14, y + 13);
-    return new Promise(res => c.toBlob(res, "image/png"));
-  }
-  function saveShot() { if (!shotUrl) return; const a = document.createElement("a"); a.href = shotUrl; a.download = "후기신고_" + ($("repNo").textContent || "").replace("#", "") + ".png"; document.body.appendChild(a); a.click(); a.remove(); }
-  async function sendReport() {
-    if (!repTarget || !current) return;
-    const reason = ($("repForm").querySelector('input[name="reason"]:checked') || {}).value; if (!reason) return;
-    $("repGo").disabled = true; $("repErr").textContent = "";
-    try {
-      const r = await rApi("/report", { method: "POST", body: JSON.stringify({ vid: vid(current), id: repTarget.id, reason, note: $("repNote").value.trim() }) });
-      const d = await r.json().catch(() => ({}));
-      if (r.status === 401) { closeReport(); rLogout(); return toast("다시 로그인해 주세요"); }
-      if (!r.ok) { $("repGo").disabled = false; $("repErr").textContent = r.status === 403 ? "차단된 계정은 신고할 수 없어요" : r.status === 404 ? "이미 지워진 후기예요" : r.status === 429 ? "하루에 10건까지 신고할 수 있어요" : r.status === 400 ? "내 후기는 신고할 수 없어요" : "지금은 신고할 수 없어요. 잠시 후 다시 해 주세요"; return; }
-      $("repNo").textContent = "#" + d.no;
-      $("repText").value = `[후기 신고 #${d.no}]\n영상: ${location.origin}${location.pathname}#v=${vid(current)}\n작성자: ${repTarget.name}\n사유: ${({ ad: "광고·홍보", spam: "스팸·도배", abuse: "욕설·비방", empty: "무의미한 내용", off: "정치·영상과 무관", other: "기타" })[reason]}`; $("repForm").hidden = true; $("repDone").hidden = false;
-      try { const lab = ({ ad: "광고·홍보", spam: "스팸·도배", abuse: "욕설·비방", empty: "무의미한 내용", off: "정치·영상과 무관", other: "기타" })[reason]; const blob = await makeShot(repTarget, d.no, lab); if (shotUrl) URL.revokeObjectURL(shotUrl); shotUrl = URL.createObjectURL(blob); $("repShot").src = shotUrl; $("repShot").hidden = false; saveShot(); toast("후기 화면을 사진으로 저장했어요. 다운로드 폴더에서 찾을 수 있어요"); } catch (e) {}
-      const dc = $("repDiscord"); if (dc) { dc.hidden = !/^https?:\/\//i.test(SITE.discord || ""); dc.href = SITE.discord || "#"; }
-      $("repClose2").focus();
-    } catch (e) { $("repGo").disabled = false; $("repErr").textContent = "지금은 신고할 수 없어요. 잠시 후 다시 해 주세요"; }
+    $("admList").innerHTML = `<section class="st"><h3>서버 응답 속도</h3>${lineChart(L)}<p class="st-h">선이 <b>낮을수록 빨라요</b>. 점선(2초)을 넘으면 느린 거예요. 위쪽 <span class="st-red">빨간 점</span>은 연결이 안 됐던 때예요.${L.length ? ` 평균 ${avg}ms${bad ? ` · 안 된 적 ${bad}번` : ""} (이 기기에서 최근 ${L.length}번 확인 기준)` : ""}</p></section>`;
   }
   const HEART = `<svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>`;
   const OUT = `<svg class="out" viewBox="0 0 24 24"><path d="M9 6h9v9M18 6L7 17"/></svg>`;
@@ -489,9 +283,7 @@
     return all;
   }
   const LIKE_W = 50;   // 인기 점수 = 조회수 + 좋아요 × 50
-  const RATE_W = 40;   // 별점 한 표 = (점수 - 3) × 40점 (5점 +80, 4점 +40, 3점 0, 2점 -40, 1점 -80)
-  const starBonus = v => { const a = ravg[vid(v)]; return a ? (a[0] - 3) * a[1] * RATE_W : 0; };
-  const pop = v => Math.max(0, (v.views || 0) + LIKE_W * (v.likes || 0) + starBonus(v));
+  const pop = v => Math.max(0, (v.views || 0) + LIKE_W * (v.likes || 0));
   const nf = n => Number(n || 0).toLocaleString("ko-KR");
   const ranked = list => list.filter(v => pop(v) > 0).sort((a, b) => pop(b) - pop(a) || order(a) - order(b));   // 카페 조회수와 좋아요를 합친 순
   const words = () => $("q").value.trim().toLowerCase().split(/\s+/).filter(Boolean);
@@ -511,7 +303,6 @@
     });
     if (tab === "recent" && s === "new") return list;   // 본 순서 그대로
     if (tab === "rank") return list.slice(0, 100);        // 순위 그대로, 100위까지
-    if (s === "rating") return list.sort((a, b) => rScore(b) - rScore(a) || pop(b) - pop(a));
     if (s === "likes") return list.sort((a, b) => pop(b) - pop(a) || order(b) - order(a));
     return list.sort((a, b) => s === "title" ? (a.title || "").localeCompare(b.title || "", "ko") : s === "old" ? order(a) - order(b) : order(b) - order(a));
   }
@@ -532,7 +323,7 @@
   function cardHtml(v, shelf, rank) {
     const k = key(v), on = favs.has(k), seen = recent.includes(k) && tab !== "recent" && !shelf, rows = (view === "rows" || tab === "rank") && !shelf;
     const sn = v._s && v._s.find(n => n !== ser), showLikes = pop(v) > 0 && (rank || $("sort").value === "likes" && !shelf);
-    const meta = `<div class="meta"><span class="cat-dot" style="--c:${dot(v.category)}">${esc(v.category || "기타")}</span>${RATE && ravg[vid(v)] ? `<span class="rt" title="별점 ${ravg[vid(v)][0].toFixed(1)} (${ravg[vid(v)][1]}명)">${ravg[vid(v)][0].toFixed(1)}<small>(${ravg[vid(v)][1]})</small></span>` : ""}${showLikes ? `<span class="vw">조회 ${nf(v.views)}</span><span class="lk">♥ ${v.likes || 0}</span>` : ""}${repCount(v) ? `<span class="rp">썸네일 제보 ${repCount(v)}건</span>` : ""}${sn ? `<span class="ser" role="link" tabindex="0" data-ser="${esc(sn)}">${esc(sn)}</span>` : ""}</div>`;
+    const meta = `<div class="meta"><span class="cat-dot" style="--c:${dot(v.category)}">${esc(v.category || "기타")}</span>${showLikes ? `<span class="vw">조회 ${nf(v.views)}</span><span class="lk">♥ ${v.likes || 0}</span>` : ""}${repCount(v) ? `<span class="rp">썸네일 제보 ${repCount(v)}건</span>` : ""}${sn ? `<span class="ser" role="link" tabindex="0" data-ser="${esc(sn)}">${esc(sn)}</span>` : ""}</div>`;
     const info = `<div class="t"><h3>${shelf ? esc(v.title) : mark(v.title)}</h3>${meta}</div>`;
     const dots = `<button class="dots" type="button" aria-label="더 보기 메뉴" aria-haspopup="menu">${DOTS}</button>`;
     const heart = `<button class="heart ${on ? "on" : ""} ${k === popKey ? "pop" : ""}" type="button" aria-label="${on ? "즐겨찾기에서 빼기" : "즐겨찾기에 담기"}" title="즐겨찾기">${HEART}</button>`;
@@ -795,7 +586,7 @@
     $("mCat").textContent = v.category || "기타"; $("mCat").style.setProperty("--c", dot(v.category));
     $("mTitle").textContent = v.title || "";
     $("mGo").href = safeUrl(v.url); $("mGo").innerHTML = (id ? "원본 글 열기" : "다시보기") + OUT; $("mGo").hidden = safeUrl(v.url) === "#";
-    $("mNeed").hidden = !!id; syncModalFav(); reviews = []; resetDraft(); drawRate(); loadReviews();
+    $("mNeed").hidden = !!id; syncModalFav();
     $("modal").hidden = false; document.body.style.overflow = "hidden"; $("mClose").focus();
     if (id) { markSeen(v); render(); }
   }
@@ -1222,28 +1013,10 @@
   $("mFav").addEventListener("click", () => current && toggleFav(key(current)));
   $("mShare").addEventListener("click", () => current && share(current));
   $("mGo").addEventListener("click", e => current && follow(e, current, $("mGo").href));
-  $("rate").addEventListener("click", e => {
-    const b = e.target.closest("button"); if (!b) return;
-    if (b.dataset.rout !== undefined) return rLogout();
-    if (b.dataset.del !== undefined) return doDelete();
-    if (b.dataset.delall !== undefined) return doDeleteAll();
-    if (b.dataset.rep) return openReport(b.dataset.rep);
-    if (b.dataset.star) { draft.stars = +b.dataset.star; const t = $("rtext"); if (t) draft.text = t.value; drawRate(); const t2 = $("rtext"); if (t2) t2.focus(); return; }
-    if (b.id === "rsend") doSubmit();
-  });
-  $("rate").addEventListener("input", e => { if (e.target.id === "rtext") { draft.text = e.target.value; formState(); } });
-  $("repGo").addEventListener("click", sendReport);
-  $("repCopy").addEventListener("click", () => { const t = $("repText"); t.select(); try { navigator.clipboard.writeText(t.value).then(() => toast("복사했어요"), () => { document.execCommand("copy"); toast("복사했어요"); }); } catch (e) { document.execCommand("copy"); toast("복사했어요"); } });
-  $("admList").addEventListener("click", e => { const b = e.target.closest("button[data-a]"); if (b) return admAct(b.dataset.id, b.dataset.a); const u = e.target.closest("button[data-u]"); if (u) return admUnban(u.dataset.u); const c = e.target.closest("button[data-p]"); if (c) admPurge(c.dataset.p, c.dataset.id); });
-  document.querySelector(".adm-tabs").addEventListener("click", e => { const b = e.target.closest("button[data-tab]"); if (b) admSetTab(b.dataset.tab); });
-  $("admQ").addEventListener("input", drawArchive);
   $("admBtn").addEventListener("click", openDash);
   $("admSrvGo").addEventListener("click", () => { $("admSrvT").textContent = "확인하는 중…"; srvCheck(); });
   $("admClose").addEventListener("click", () => { $("admModal").hidden = true; });
   $("admModal").addEventListener("click", e => { if (e.target === $("admModal") && downT === e.target) $("admModal").hidden = true; });
-  $("repSave").addEventListener("click", saveShot);
-  $("repCancel").addEventListener("click", closeReport); $("repClose2").addEventListener("click", closeReport);
-  $("repModal").addEventListener("click", e => { if (e.target === $("repModal") && downT === e.target) closeReport(); });
   $("mClose").addEventListener("click", () => closeModal());
   let downT = null;   // 마지막으로 누른 곳 (창 바깥을 눌렀다 뗄 때만 닫기 위해)
   document.addEventListener("mousedown", e => { downT = e.target; }, true);
@@ -1255,7 +1028,7 @@
   $("totop").addEventListener("click", () => window.scrollTo({ top: 0, behavior: calm() ? "auto" : "smooth" }));
   document.addEventListener("click", e => { if (!$("menu").hidden && !e.target.closest(".menu")) closeMenu(); if (!$("setMenu").hidden && !e.target.closest(".menu")) closeSet(); });
   document.addEventListener("ovback", () => {   // 휴대폰 뒤로가기: 열려 있는 창 중 맨 위 하나만 닫기
-    if (!$("noticePop").hidden && window.closeNotice) window.closeNotice(); else if (!$("serEdit").hidden) closeSerEdit(); else if (!$("dcChat").hidden) closeDc(); else if (!$("repModal").hidden) closeReport(); else if (!$("admModal").hidden && $("modal").hidden) $("admModal").hidden = true;
+    if (!$("noticePop").hidden && window.closeNotice) window.closeNotice(); else if (!$("serEdit").hidden) closeSerEdit(); else if (!$("dcChat").hidden) closeDc(); else if (!$("admModal").hidden && $("modal").hidden) $("admModal").hidden = true;
     else if (!$("setMenu").hidden) closeSet(); else if (!$("menu").hidden) closeMenu(); else if (!$("modal").hidden) closeModal(); else if (!$("gacha").hidden) closeGacha(); else if (!$("xfer").hidden) closeXfer(); else if (!$("imp").hidden) closeImp(); else if (!$("admModal").hidden) $("admModal").hidden = true;
   });
   document.addEventListener("keydown", e => {
@@ -1263,7 +1036,6 @@
     if (e.key === "Escape" && !$("serEdit").hidden) { closeSerEdit(); return; }
     if (e.key === "Escape" && document.getElementById("intro")) { introEnd(true); return; }
     if (e.key === "Escape" && !$("dcChat").hidden) { closeDc(); return; }
-    if (e.key === "Escape" && !$("repModal").hidden) { closeReport(); return; }
     if (e.key === "Escape" && !$("tnPop").hidden) { tnClose(); return; }
     if (e.key === "Escape" && !$("admModal").hidden && $("menu").hidden && $("modal").hidden) { $("admModal").hidden = true; return; }
     if (e.key === "Escape") {
@@ -1300,8 +1072,6 @@
     "안녕하세요! 👋 잉여맨추억자료실 디스코드를 소개하는 <b>자동 안내</b>예요. 실시간으로 대화하는 곳은 아니니 편하게 읽어 주세요.",
     "여기에서는 사이트에 대한 <b>제보와 문의</b>를 받아요. <b>🛠-사이트-제보</b> 채널에 글을 올릴 때 아래 종류 중 하나를 골라 주세요.",
     "<ul><li>🐞 <b>버그</b> : 버튼이 안 눌리거나 화면이 깨지는 등 사이트가 제대로 작동하지 않을 때</li><li>📚 <b>시리즈 분류</b> : 시리즈 몰아보기에 다른 시리즈 영상이 섞여 있거나, 들어가야 할 영상이 빠져 있을 때</li><li>💡 <b>건의</b> : 이런 기능이 있으면 좋겠다는 아이디어</li><li>⭐ <b>별점·후기</b> : 후기 등록·로그인 문제, 내 후기 삭제·보관 삭제 요청</li></ul>",
-    "그리고 🚨 <b>부적절한 후기 신고</b>는 따로 받아요. 사이트에서 후기의 <b>신고</b> 버튼을 누르면 신고 번호가 나오고 후기 사진이 저장돼요. 그 번호와 사진을 <b>🚨-후기-신고</b> 채널에 올려 주세요.",
-    ["warn", "⚠ 신고할 때 후기 내용을 글로 그대로 적지 마세요. 보안봇이 글을 막거나 지울 수 있어요. 번호와 사진만 올려 주세요."],
     "디스코드 가입은 무료예요 🙂",
     "그럼 <b>디스코드에 참여하시겠어요?</b>"
   ];
@@ -1366,7 +1136,7 @@
   syncSet();
   $("theme").addEventListener("click", () => {
     const t = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
-    root.setAttribute("data-theme", t); try { localStorage.setItem("theme", t); } catch (e) {} syncSet(); if ($("gbtn") && $("gbtn").firstChild) drawGoogleBtn();
+    root.setAttribute("data-theme", t); try { localStorage.setItem("theme", t); } catch (e) {} syncSet();
   });
   $("motion").addEventListener("click", () => {
     const m = root.getAttribute("data-motion") === "off" ? "on" : "off";
