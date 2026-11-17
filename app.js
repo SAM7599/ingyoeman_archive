@@ -117,7 +117,7 @@
   }
   function drawPromoBtn() { const b = $("gBtnPromo"); if (b && !b.firstChild) gBtn(b, { text: "signin_with", shape: "pill", locale: "ko" }); }
   const tipDay = () => Math.floor((Date.now() + 9 * 36e5) / 864e5);
-  let tipOn = store.get("tip_hide", 0) !== tipDay(), tipT = 0, stamp = store.get("stamp1", null), qst = store.get("qzs1", null), pulled = false, pullBusy = false, pushT = 0, vmapC = null;
+  let tipOn = store.get("tip_hide", 0) !== tipDay(), tipT = 0, qst = store.get("qzs1", null), pulled = false, pullBusy = false, pushT = 0, vmapC = null;
   function drawLogin() {
     try { syncQuiz(); } catch (e) {}
     document.body.classList.toggle("is-in", !!rtok); if (rtok) document.dispatchEvent(new Event("dlogin"));
@@ -126,15 +126,14 @@
     box.hidden = false;
     if (rtok) {
       const nm = (meI && meI.name) || rtok.name || "나";
-      const st = stamp && stamp.days ? `<p class="g-st">🗓 방문 도장 <b>${stamp.days}일</b>${stamp.title ? ` · <i>${esc(stamp.title)}</i>` : ""}${stamp.streak > 1 ? `<small>${stamp.streak}일 연속 방문 중</small>` : ""}${stamp.next ? `<small>다음 칭호 「${esc(stamp.next.title)}」까지 ${stamp.next.need}일</small>` : ""}</p>` : "";
-      box.innerHTML = `<button type="button" class="round g-me" id="gMe" aria-haspopup="true" aria-expanded="false" title="${esc(nm)} (로그인됨)"><span>${esc(String(nm).slice(0, 1))}</span></button><div class="g-menu" id="gMenu" hidden><p><small>로그인됨</small><b>${esc(nm)}</b></p>${st}<button type="button" id="gOut">로그아웃</button><button type="button" id="gDel" class="g-del">내 정보 지우기</button></div>`;
+      box.innerHTML = `<button type="button" class="round g-me" id="gMe" aria-haspopup="true" aria-expanded="false" title="${esc(nm)} (로그인됨)"><span>${esc(String(nm).slice(0, 1))}</span></button><div class="g-menu" id="gMenu" hidden><p><small>로그인됨</small><b>${esc(nm)}</b></p><button type="button" id="gOut">로그아웃</button><button type="button" id="gDel" class="g-del">내 정보 지우기</button></div>`;
       syncPull(); return;
     }
-    box.innerHTML = '<div id="gBtnTop"></div>' + (tipOn ? '<div class="g-tip" id="gTip" role="note"><button type="button" class="g-x" id="gTipX" aria-label="닫기">✕</button><span class="lp-badge">무료 회원</span><b class="g-tt">로그인 혜택</b><ul class="lp-rows"><li><i class="lp-i" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg></i><div><b>즐겨찾기·열어본 영상 저장</b><span>기기를 바꿔도 그대로예요</span></div></li><li><i class="lp-i" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 1-1 1.7"/><path d="M12 17h.01"/></svg></i><div><b>오늘의 한 줄 퀴즈</b><span>매일 새 문제, 연속 정답 기록</span></div></li><li><i class="lp-i" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="11" rx="5"/><path d="M8 11v5M5.5 13.5h5M15.5 12.5h.01M18 14.5h.01"/></svg></i><div><b>미니게임</b><span>제목 빈칸 채우기 · 영상 월드컵</span></div></li><li><i class="lp-i" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="15" rx="3"/><path d="M8 3v4M16 3v4M8 14l3 3 5-6"/></svg></i><div><b>방문 도장 · 칭호</b><span>자주 올수록 칭호가 올라가요</span></div></li></ul><button type="button" class="g-tipoff" id="gTipOff">오늘 하루 보지 않기</button></div>' : "");
+    box.innerHTML = '<div id="gBtnTop"></div>' + (tipOn ? '<div class="g-tip" id="gTip" role="note"><button type="button" class="g-x" id="gTipX" aria-label="닫기">✕</button><span class="lp-badge">무료 회원</span><b class="g-tt">로그인 혜택</b><ul class="lp-rows"><li><i class="lp-i" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg></i><div><b>즐겨찾기·열어본 영상 저장</b><span>기기를 바꿔도 그대로예요</span></div></li><li><i class="lp-i" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 1-1 1.7"/><path d="M12 17h.01"/></svg></i><div><b>오늘의 한 줄 퀴즈</b><span>매일 새 문제, 연속 정답·정답률 기록</span></div></li><li><i class="lp-i" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="11" rx="5"/><path d="M8 11v5M5.5 13.5h5M15.5 12.5h.01M18 14.5h.01"/></svg></i><div><b>미니게임</b><span>제목 빈칸 채우기 · 영상 월드컵</span></div></li></ul><button type="button" class="g-tipoff" id="gTipOff">오늘 하루 보지 않기</button></div>' : "");
     const wide = window.innerWidth >= 861;
     gBtn($("gBtnTop"), wide ? { text: "signin", shape: "pill", locale: "ko" } : { type: "icon", shape: "circle" });
   }
-  /* ── 로그인 혜택: 즐겨찾기·열어본 영상·시리즈 고침을 계정에 저장하고, 방문 도장을 찍어요 ── */
+  /* ── 로그인 혜택: 즐겨찾기·열어본 영상·시리즈 고침을 계정에 저장해요 ── */
   const vmap = () => { if (!vmapC || vmapC.n !== all.length) { vmapC = { n: all.length, m: {} }; all.forEach(v => { vmapC.m[vid(v)] = key(v); }); } return vmapC.m; };
   const k2v = k => { const v = byKey(k); return v ? vid(v) : null; };
   document.addEventListener("click", e => {   // 로그인 말풍선 닫기 / 오늘 하루 보지 않기
@@ -151,7 +150,6 @@
     }, 4000);
   }
   window.__sd = syncPush;
-  function setStamp(s) { if (!s || typeof s.days !== "number") return; stamp = s; store.set("stamp1", s); const m = $("gMenu"); if (!m || m.hidden) drawLogin(); }
   function setQst(q) { if (!q || typeof q.all !== "number") return; qst = q; store.set("qzs1", q); const el = $("qz"); if (el && rtok) el.outerHTML = quizHtml(); }
   async function syncPull() {
     if (!rtok || pulled || pullBusy || !all.length) return;
@@ -166,19 +164,11 @@
       const ov = { ...(d.sov || {}), ...(store.get("sov1", {}) || {}) };
       store.set("favs", [...favs]); store.set("recent", recent);
       if (Object.keys(ov).length) { store.set("sov1", ov); buildSeries(); }
-      setStamp(d.stamp); setQst(d.quiz);
+      setQst(d.quiz);
       pulled = true; pullBusy = false;
       render(); if (added) toast("계정에 저장된 즐겨찾기 " + added + "개를 불러왔어요");
-      syncPush(); checkin();
+      syncPush();
     } catch (e) { pullBusy = false; }
-  }
-  function checkin() {
-    const today = qzDay(), nm = (meI && meI.name) || (rtok && rtok.name) || "", ck = store.get("ck1", null);
-    if (ck && ck.d === today && ck.n === nm && stamp) return;
-    rApi("/checkin", { method: "POST", body: "{}" }).then(r => r.ok ? r.json() : null).then(d => {
-      if (!d) return; store.set("ck1", { d: today, n: nm }); setStamp(d);
-      if (d.first) toast("방문 도장 " + d.days + "일째" + (d.title ? " · " + d.title : ""));
-    }).catch(() => {});
   }
   function quizReport(ok) {
     if (!rtok) return;
@@ -213,18 +203,31 @@
 
   const rApi = (path, opt) => fetch(RATE + path, { ...(opt || {}), headers: { ...(rtok ? { Authorization: "Bearer " + rtok.t } : {}), "Content-Type": "application/json" } });
   const refreshMe = () => { if (rtok) rApi("/me").then(r => r.ok ? r.json() : null).then(d => { if (d && d.name) { meI = { name: d.name, cnt: d.cnt || 0, title: d.title || "", next: d.next || null }; drawRate(); } }).catch(() => {}); };
-  function rLogout() { pulled = false; pullBusy = false; stamp = null; qst = null; store.set("stamp1", null); store.set("qzs1", null); store.set("ck1", null); meI = null; rtok = null; isAdm = false; syncAdm(); store.set("dtok", null); drawLogin(); }
+  function rLogout() { pulled = false; pullBusy = false; qst = null; store.set("qzs1", null); meI = null; rtok = null; isAdm = false; syncAdm(); store.set("dtok", null); drawLogin(); }
   function loadRatings() {   // 로그인 상태만 확인해요
     if (!RATE || !rtok) return;
     rApi("/me").then(r => r.status === 401 ? Promise.reject("login") : r.json()).then(d => { rtok.name = d.name || ""; meI = { name: d.name || "", cnt: d.cnt || 0, title: d.title || "", next: d.next || null }; isAdm = !!d.admin; syncAdm(); drawLogin(); }).catch(e => { if (e === "login") rLogout(); });
   }
-  async function deleteMine() {   // 내 정보 지우기
-    if (!rtok || !confirm("내 저장 자료(즐겨찾기·열어본 영상·방문 도장·퀴즈 기록)와 접속 기록을 모두 지울까요?\n\n지우면 되돌릴 수 없고, 지운 뒤에는 자동으로 로그아웃돼요.\n서버 부담을 줄이기 위해 지운 뒤 24시간 동안은 다시 로그인할 수 없어요.")) return;
-    try {
-      const r = await rApi("/account/delete", { method: "POST", body: "{}" });
-      if (!r.ok) return toast("지금은 지울 수 없어요. 잠시 후 다시 해 주세요");
-      rLogout(); toast("내 정보를 모두 지우고 로그아웃했어요");
-    } catch (e) { toast("지금은 지울 수 없어요. 잠시 후 다시 해 주세요"); }
+  const DEL_WORD = "내 정보 지우기";
+  function deleteMine() {   // 내 정보 지우기: 안내 문구를 똑같이 입력해야 지워져요
+    if (!rtok || $("delAsk")) return;
+    const m = document.createElement("div"); m.className = "modal del-ask"; m.id = "delAsk";
+    m.innerHTML = `<div class="sheet" role="dialog" aria-modal="true" aria-labelledby="delT"><div class="m-body"><h2 id="delT">내 정보를 지울까요?</h2><p class="del-p">즐겨찾기·열어본 영상·퀴즈 기록과 접속 기록이 모두 지워져요. 되돌릴 수 없고, 지운 뒤에는 자동으로 로그아웃돼요. 서버 부담을 줄이기 위해 지운 뒤 24시간 동안은 다시 로그인할 수 없어요.</p><p class="del-p">계속하려면 아래 칸에 <b>${DEL_WORD}</b> 를 똑같이 입력해 주세요.</p><input id="delIn" type="text" autocomplete="off" placeholder="${DEL_WORD}"><div class="m-acts"><button type="button" class="btn" id="delNo">취소</button><button type="button" class="btn del-go" id="delGo" disabled>지우기</button></div></div></div>`;
+    document.body.appendChild(m);
+    const inp = $("delIn"), go = $("delGo"), close = () => m.remove();
+    inp.addEventListener("input", () => { go.disabled = inp.value.trim() !== DEL_WORD; });
+    $("delNo").addEventListener("click", close);
+    m.addEventListener("click", e => { if (e.target === m) close(); });
+    m.addEventListener("keydown", e => { if (e.key === "Escape") close(); if (e.key === "Enter" && !go.disabled) go.click(); });
+    go.addEventListener("click", async () => {
+      if (inp.value.trim() !== DEL_WORD) return; go.disabled = true;
+      try {
+        const r = await rApi("/account/delete", { method: "POST", body: "{}" });
+        if (!r.ok) { go.disabled = false; return toast("지금은 지울 수 없어요. 잠시 후 다시 해 주세요"); }
+        close(); rLogout(); toast("내 정보를 모두 지우고 로그아웃했어요");
+      } catch (e) { go.disabled = false; toast("지금은 지울 수 없어요. 잠시 후 다시 해 주세요"); }
+    });
+    setTimeout(() => inp.focus(), 50);
   }
   const my0 = () => true;
 
@@ -236,7 +239,7 @@
     const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), 8000), t0 = performance.now();
     let s = "down", ms = 0;
     try { const r = await fetch(RATE + "/ratings", { cache: "no-store", signal: ctl.signal }); ms = Math.round(performance.now() - t0); s = r.ok ? (ms > 2000 ? "slow" : "ok") : "down"; } catch (e) { s = "down"; }
-    clearTimeout(to); srv = { s, ms, t: Date.now() }; { const L = store.get("srvlog", []); L.push({ t: srv.t, ms, s }); store.set("srvlog", L.slice(-60)); } srvDraw(); if (admTab === "srv" && !$("admModal").hidden) drawStatus();
+    clearTimeout(to); srv = { s, ms, t: Date.now() }; { const L = store.get("srvlog", []); L.push({ t: srv.t, ms, s }); store.set("srvlog", L.slice(-60)); } srvDraw(); if (!$("admModal").hidden && !$("admUl")) drawStatus();
   }
   function srvDraw() {
     if (!srv) return;
@@ -265,8 +268,27 @@
   }
   function drawStatus(note) {
     const L = store.get("srvlog", []), okN = L.filter(x => x.s !== "down"), avg = okN.length ? Math.round(okN.reduce((s, x) => s + x.ms, 0) / okN.length) : 0, bad = L.length - okN.length;
-    $("admList").innerHTML = `<section class="st"><h3>서버 응답 속도</h3>${lineChart(L)}<p class="st-h">선이 <b>낮을수록 빨라요</b>. 점선(2초)을 넘으면 느린 거예요. 위쪽 <span class="st-red">빨간 점</span>은 연결이 안 됐던 때예요.${L.length ? ` 평균 ${avg}ms${bad ? ` · 안 된 적 ${bad}번` : ""} (이 기기에서 최근 ${L.length}번 확인 기준)` : ""}</p></section>`;
+    $("admList").innerHTML = `<section class="st"><h3>서버 응답 속도</h3>${lineChart(L)}<p class="st-h">선이 <b>낮을수록 빨라요</b>. 점선(2초)을 넘으면 느린 거예요. 위쪽 <span class="st-red">빨간 점</span>은 연결이 안 됐던 때예요.${L.length ? ` 평균 ${avg}ms${bad ? ` · 안 된 적 ${bad}번` : ""} (이 기기에서 최근 ${L.length}번 확인 기준)` : ""}</p></section><section class="st" id="admUsers"><h3>의심 접속 기록</h3><p class="st-h">불러오는 중…</p></section><section class="st" id="admUl"><h3>로그인한 사람</h3><p class="st-h">불러오는 중…</p></section>`;
+    loadAdmUsers();
   }
+  /* ── 운영진: 유저 관리 · 서버에 부담을 준 것으로 의심되는 접속 ── */
+  const KIND = { many_accounts: "한 접속 주소에서 하루에 계정 3개 이상 로그인", sync: "저장 요청을 너무 자주 보냄", login: "로그인 시도를 너무 자주 함", quiz: "퀴즈 기록 요청을 너무 자주 보냄" };
+  const when = t => { const z = new Date(t); return `${z.getMonth() + 1}/${z.getDate()} ${String(z.getHours()).padStart(2, "0")}:${String(z.getMinutes()).padStart(2, "0")}`; };
+  async function loadAdmUsers() {
+    try {
+      const [ra, ru] = await Promise.all([rApi("/admin/abuse"), rApi("/admin/users")]);
+      if (!ra.ok || !ru.ok) throw 0;
+      const ab = await ra.json(), us = await ru.json(), box = $("admUsers"), ul = $("admUl"); if (!box || !ul) return;
+      box.innerHTML = `<h3>의심 접속 기록</h3>` + (ab.rows.length ? `<ul class="au-l">${ab.rows.map(r => `<li><b>${esc(KIND[r.kind] || r.kind)}</b><span>접속 코드 <code>${esc(r.ip)}</code>${r.name ? " · " + esc(r.name) : ""} · ${r.n}번 · 마지막 ${when(r.last)}</span></li>`).join("")}</ul>` : `<p class="st-h">아직 없어요. 👍</p>`) + `<p class="st-h">접속 주소는 되돌릴 수 없는 짧은 코드로만 남기고, ${ab.days}일 뒤 자동으로 지워요. 같은 코드는 같은 접속 주소예요.</p>`;
+      ul.innerHTML = `<h3>로그인한 사람 <small>(${us.total}명)</small></h3>` + (us.users.length ? `<ul class="au-l">${us.users.map(u => `<li${u.flag ? ' class="flag"' : ""}><b>${esc(u.name || "이름 없음")}${u.flag ? " ⚠️" : ""}</b><span>즐겨찾기 ${u.fav} · 본 영상 ${u.rec} · 퀴즈 ${u.qok}/${u.qall} · 마지막 ${when(u.ts)}</span><button type="button" class="au-del" data-uid="${esc(u.uid)}">저장 자료 지우기</button></li>`).join("")}</ul>` : `<p class="st-h">아직 없어요.</p>`);
+    } catch (e) { const b = $("admUsers"); if (b) b.innerHTML = `<h3>의심 접속 기록</h3><p class="st-h">불러오지 못했어요. 잠시 뒤 다시 열어 주세요.</p>`; const l = $("admUl"); if (l) l.innerHTML = ""; }
+  }
+  document.addEventListener("click", async e => {
+    const b = e.target.closest(".au-del"); if (!b) return;
+    if (!confirm("이 사람의 즐겨찾기·열어본 영상·퀴즈 기록을 지울까요? 되돌릴 수 없어요.")) return;
+    b.disabled = true;
+    try { const r = await rApi("/admin/user/delete", { method: "POST", body: JSON.stringify({ uid: b.dataset.uid }) }); if (r.ok) loadAdmUsers(); else b.disabled = false; } catch (x) { b.disabled = false; }
+  });
   const HEART = `<svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>`;
   const OUT = `<svg class="out" viewBox="0 0 24 24"><path d="M9 6h9v9M18 6L7 17"/></svg>`;
   const CARD = `<svg class="ci" viewBox="0 0 24 24"><rect x="6.5" y="3.5" width="11" height="17" rx="2.2"/><path d="M12 9.2l1 2 2.2.3-1.6 1.5.4 2.2-2-1.1-2 1.1.4-2.2-1.6-1.5 2.2-.3z"/></svg>`;
@@ -446,15 +468,18 @@
   function loginPromoHtml() {
     return ""; if (!RATE || !GID || lpHide) return "";   // 「나중에」를 누르면 이번 방문 동안만 숨기고, 새로고침하면 다시 보여요
     setTimeout(drawPromoBtn, 0);
-    return `<section class="qz lp" id="qz" aria-label="로그인 혜택"><div class="lp-top"><span class="lp-badge">무료 회원</span><b>로그인 혜택</b><span class="lp-sub">구글 계정으로 1초 만에 시작해요</span></div><ul class="lp-rows"><li><i class="lp-i" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg></i><div><b>즐겨찾기·열어본 영상 저장</b><span>기기를 바꿔도 그대로 이어서 봐요</span></div></li><li><i class="lp-i" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 1-1 1.7"/><path d="M12 17h.01"/></svg></i><div><b>오늘의 한 줄 퀴즈</b><span>매일 새 문제, 연속 정답 기록까지</span></div></li><li><i class="lp-i" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="15" rx="3"/><path d="M8 3v4M16 3v4M8 14l3 3 5-6"/></svg></i><div><b>방문 도장 · 칭호</b><span>자주 올수록 칭호가 올라가요</span></div></li></ul><div class="lp-a"><div id="gBtnPromo"></div><button type="button" class="btn" id="lpLater">나중에</button></div><p class="qz-n">이름 대신 랜덤 별명만 보여요</p></section>`;
+    return `<section class="qz lp" id="qz" aria-label="로그인 혜택"><div class="lp-top"><span class="lp-badge">무료 회원</span><b>로그인 혜택</b><span class="lp-sub">구글 계정으로 1초 만에 시작해요</span></div><ul class="lp-rows"><li><i class="lp-i" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg></i><div><b>즐겨찾기·열어본 영상 저장</b><span>기기를 바꿔도 그대로 이어서 봐요</span></div></li><li><i class="lp-i" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 1-1 1.7"/><path d="M12 17h.01"/></svg></i><div><b>오늘의 한 줄 퀴즈</b><span>매일 새 문제, 연속 정답 기록까지</span></div></li></ul><div class="lp-a"><div id="gBtnPromo"></div><button type="button" class="btn" id="lpLater">나중에</button></div><p class="qz-n">이름 대신 랜덤 별명만 보여요</p></section>`;
   }
   function quizHtml() {
     if (!rtok) return loginPromoHtml();   // 로그인한 사람에게만 퀴즈를 보여주고, 아니면 혜택 안내를 보여요
     if (!QZ || !QZ.length) return "";
     const d = qzDay(), n = QZ.length, q = QZ[(d * qzStep(n)) % n], st = store.get("qz1", null), got = st && st.d === d ? st.p : -1;
-    const opts = q.o.map((t, i) => `<button type="button" class="qz-o${got >= 0 ? (i === q.a ? " ok" : i === got ? " no" : "") : ""}" data-qz="${i}"${got >= 0 ? " disabled" : ""}>${esc(t)}</button>`).join("");
-    const res = got >= 0 ? `<p class="qz-r ${got === q.a ? "ok" : "no"}"><b>${got === q.a ? "정답이에요! 🎉" : "아쉬워요, 정답은 \"" + esc(q.o[q.a]) + "\""}</b><span>${esc(q.e)}</span></p>${qst && qst.all ? `<p class="qz-s">연속 정답 <b>${qst.streak}번</b> · 정답률 <b>${Math.round(qst.ok / qst.all * 100)}%</b> (${qst.all}문제 중 ${qst.ok}개)</p>` : ""}<p class="qz-n">내일 새 퀴즈가 나와요 · 참고: 나무위키 「잉여맨」 문서 (CC BY-NC-SA 2.0 KR)</p>` : `<p class="qz-n">매일 하나씩 바뀌어요 · 틀려도 괜찮아요</p>`;
-    return `<section class="qz" id="qz" aria-label="오늘의 한 줄 퀴즈"><div class="qz-h"><span class="qz-t">🧠 오늘의 한 줄 퀴즈</span></div><p class="qz-q">${esc(q.q)}</p><div class="qz-os">${opts}</div>${res}</section>`;
+    if (got >= 0) {   // 풀고 나면 한 줄로 접어 둬요 (눌러서 해설 보기)
+      const ok = got === q.a;
+      return `<details class="qz qz-done ${ok ? "ok" : "no"}" id="qz"><summary><span class="qz-t">🧠 오늘의 퀴즈</span><b>${ok ? "정답! 🎉" : "아쉬워요"}</b><em>내일 또 만나요</em></summary><p class="qz-q">${esc(q.q)}</p><p class="qz-r ${ok ? "ok" : "no"}"><b>${ok ? "정답이에요!" : "정답은 \"" + esc(q.o[q.a]) + "\""}</b><span>${esc(q.e)}</span></p>${qst && qst.all ? `<p class="qz-s">연속 정답 <b>${qst.streak}번</b> · 정답률 <b>${Math.round(qst.ok / qst.all * 100)}%</b> (${qst.all}문제 중 ${qst.ok}개)</p>` : ""}<p class="qz-n">내일 새 퀴즈가 나와요 · 참고: 나무위키 「잉여맨」 문서 (CC BY-NC-SA 2.0 KR)</p></details>`;
+    }
+    const opts = q.o.map((t, i) => `<button type="button" class="qz-o" data-qz="${i}">${esc(t)}</button>`).join("");
+    return `<section class="qz" id="qz" aria-label="오늘의 한 줄 퀴즈"><div class="qz-h"><span class="qz-t">🧠 오늘의 한 줄 퀴즈</span></div><p class="qz-q">${esc(q.q)}</p><div class="qz-os">${opts}</div><p class="qz-n">매일 하나씩 바뀌어요 · 틀려도 괜찮아요</p></section>`;
   }
   fetch("quiz.json").then(r => r.ok ? r.json() : Promise.reject()).then(d => { if (Array.isArray(d)) { QZ = d; const el = $("qz"); if (el) el.outerHTML = quizHtml(); else if (isHome()) render(); } }).catch(() => {});
   $("home").addEventListener("click", e => {

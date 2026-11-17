@@ -24,7 +24,7 @@
 
   function gate() {
     st = null;
-    body.innerHTML = '<div class="pl-end pl-gate"><i>🔐</i><h2 class="pl-h">로그인하고 즐겨요</h2><p>미니게임은 구글 로그인을 한 올드팬만 할 수 있어요.<br>로그인하면 즐겨찾기 저장, 오늘의 퀴즈, 방문 도장도 함께 쓸 수 있어요.</p><div class="pl-act" style="justify-content:center"><div id="plG"></div></div></div>';
+    body.innerHTML = '<div class="pl-end pl-gate"><i>🔐</i><h2 class="pl-h">로그인하고 즐겨요</h2><p>미니게임은 구글 로그인을 한 올드팬만 할 수 있어요.<br>로그인하면 즐겨찾기 저장, 오늘의 퀴즈도 함께 쓸 수 있어요.</p><div class="pl-act" style="justify-content:center"><div id="plG"></div></div></div>';
     A().loginBtn($("plG"));
   }
   document.addEventListener("dlogin", function () { if (box && !box.hidden && A().isIn() && $("plG")) home(); });

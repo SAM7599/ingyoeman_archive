@@ -547,7 +547,6 @@ html:not([data-motion="off"]) .ach-pop.show .ach-ic svg { animation:pop .6s .15s
 .btn.star:hover { box-shadow:0 4px 12px rgba(255,170,0,.5); transform:translateY(-1px); }
 [data-theme="dark"] .btn.star { color:#2b1c00; background:linear-gradient(135deg,#ffd666,#ffb81f); }
 @keyframes rflash { 0% { box-shadow:0 0 0 3px #ffc64a; } 100% { box-shadow:0 0 0 12px rgba(255,198,74,0); } }
-@media (prefers-reduced-motion:reduce) { html[data-motion="off"] .r-stars button { transition:none; }
 
 /* ── 인기 랭킹 연출 (움직임 줄이기를 켜면 멈춰요) ── */
 @property --ang { syntax:"<angle>"; initial-value:0deg; inherits:false; }
@@ -1314,3 +1313,30 @@ html:not([data-motion="off"]) .cs-box:not(.cs-bye) { animation:zoom .35s cubic-b
 @media (max-width:520px) { .cs-hd { padding:20px 16px 14px; } .cs-hd h2 { font-size:19.5px; } .cs-body { padding:4px 16px 8px; } .cs-foot { padding:10px 16px 14px; } }
 .rep h2 { margin:0 0 12px; font-size:20px; }
 .g-menu .g-del { color:var(--sub); font-weight:500; font-size:13px; }
+
+/* 오늘의 퀴즈: 푼 뒤에는 한 줄로 접어 둬요 */
+.qz-done { padding:0; }
+.qz-done > summary { list-style:none; display:flex; align-items:center; gap:10px; padding:12px 16px; cursor:pointer; font-size:14px; }
+.qz-done > summary::-webkit-details-marker { display:none; }
+.qz-done > summary::after { content:"▾"; margin-left:auto; color:var(--sub); transition:transform .2s; }
+.qz-done[open] > summary::after { transform:rotate(180deg); }
+.qz-done > summary em { font-style:normal; color:var(--sub); font-size:13px; }
+.qz-done.ok > summary b { color:#1fa971; } .qz-done.no > summary b { color:#e5484d; }
+.qz-done > :not(summary) { margin-left:16px; margin-right:16px; } .qz-done > p:last-child { margin-bottom:14px; }
+.qz-done { margin-bottom:18px; }
+
+/* 운영진 유저 관리 */
+.au-l { list-style:none; margin:6px 0 0; padding:0; display:grid; gap:6px; max-height:260px; overflow:auto; }
+.au-l li { background:var(--raise); border-radius:10px; padding:9px 12px; display:grid; gap:3px; font-size:13px; }
+.au-l li.flag { outline:1.5px solid #f0a020; }
+.au-l li span { color:var(--sub); word-break:keep-all; }
+.au-l code { font-size:12px; }
+.au-del { justify-self:start; margin-top:4px; border:1px solid var(--line); background:transparent; color:#e5484d; border-radius:8px; padding:4px 10px; font-size:12px; cursor:pointer; }
+.st h3 small { font-weight:400; color:var(--sub); }
+
+.del-ask { z-index:60; }
+.del-ask .del-p { margin:0 0 10px; font-size:14px; line-height:1.65; color:var(--sub); word-break:keep-all; }
+.del-ask .del-p b { color:var(--ink); }
+.del-ask input { width:100%; box-sizing:border-box; padding:11px 12px; font-size:15px; border:1px solid var(--line); border-radius:10px; background:var(--raise); color:var(--ink); }
+.del-ask .del-go { background:#e5484d; border-color:#e5484d; color:#fff; }
+.del-ask .del-go:disabled { opacity:.4; cursor:not-allowed; }
