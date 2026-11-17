@@ -239,7 +239,7 @@
     if (!RATE) return;
     const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), 8000), t0 = performance.now();
     let s = "down", ms = 0;
-    try { const r = await fetch(RATE + "/ratings", { cache: "no-store", signal: ctl.signal }); ms = Math.round(performance.now() - t0); s = r.ok ? (ms > 2000 ? "slow" : "ok") : "down"; } catch (e) { s = "down"; }
+    try { const r = await fetch(RATE + "/me", { cache: "no-store", signal: ctl.signal }); ms = Math.round(performance.now() - t0); s = r.status < 500 ? (ms > 2000 ? "slow" : "ok") : "down"; } catch (e) { s = "down"; }
     clearTimeout(to); srv = { s, ms, t: Date.now() }; { const L = store.get("srvlog", []); L.push({ t: srv.t, ms, s }); store.set("srvlog", L.slice(-60)); } srvDraw(); if (!$("admModal").hidden && !$("admUl")) drawStatus();
   }
   function srvDraw() {
