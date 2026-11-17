@@ -1290,3 +1290,16 @@ footer .vis { font-size:12.5px; margin-bottom:10px; }
 .qz-r span { color:var(--sub); }
 .qz-n { margin:6px 0 0; font-size:12px; color:var(--sub); }
 @media (max-width:560px) { .qz { padding:16px 14px 12px; border-radius:16px; } .qz-os { grid-template-columns:1fr; } .qz-q { font-size:16px; } }
+
+/* 로그인한 사람은 계정에 저장되니 「다른 기기로 옮기기」를 숨겨요 */
+body.is-in #favXferBox, body.is-in .xfer-only { display:none !important; }
+/* 로그인 혜택 안내 / 퀴즈 기록 / 방문 도장 */
+.lp-l { margin:10px 0 12px; padding:0; list-style:none; display:flex; flex-direction:column; gap:8px; }
+.lp-l li { display:flex; flex-direction:column; gap:1px; padding-left:12px; border-left:3px solid var(--accent); line-height:1.45; }
+.lp-l b { font-size:14.5px; } .lp-l span { font-size:13px; color:var(--sub); }
+.lp-a { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.lp-a > div { display:flex; min-height:40px; }
+.qz-s { margin:10px 0 0; font-size:13px; color:var(--sub); } .qz-s b { color:var(--accent); }
+.g-st { margin:0 0 8px; font-size:13.5px; line-height:1.5; }
+.g-st b { color:var(--accent); } .g-st i { font-style:normal; font-weight:700; }
+.g-st small { display:block; font-size:12px; color:var(--sub); }

@@ -8,7 +8,7 @@
   const $ = id => document.getElementById(id);
   const store = {
     get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
-    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} if (window.__sd && (k === "favs" || k === "recent" || k === "sov1")) window.__sd(); }
   };
   const SITE = window.SITE || {};
   /* ── 처음 오신 분께 보여 드리는 인트로 ── */
@@ -115,25 +115,79 @@
     const el = $("qz"), html = quizHtml();
     if (el) { if (html) el.outerHTML = html; else el.remove(); } else if (html) home.insertAdjacentHTML("afterbegin", html);
   }
+  function gLoad(cb) {
+    if (window.google && google.accounts) return cb();
+    if (document.getElementById("gsi")) { const w = setInterval(() => { if (window.google && google.accounts) { clearInterval(w); cb(); } }, 300); setTimeout(() => clearInterval(w), 8000); return; }
+    const sc = document.createElement("script"); sc.id = "gsi"; sc.src = "https://accounts.google.com/gsi/client"; sc.async = true; sc.onload = cb; document.head.appendChild(sc);
+  }
+  function gBtn(el, o) {
+    gLoad(() => { try {
+      if (!gsiReady) { google.accounts.id.initialize({ client_id: GID, callback: onGoogle, ux_mode: "popup" }); gsiReady = true; }
+      google.accounts.id.renderButton(el, { theme: document.documentElement.getAttribute("data-theme") === "light" ? "outline" : "filled_black", size: "large", ...o });
+    } catch (e) {} });
+  }
+  function drawPromoBtn() { const b = $("gBtnPromo"); if (b && !b.firstChild) gBtn(b, { text: "signin_with", shape: "pill", locale: "ko" }); }
+  let stamp = store.get("stamp1", null), qst = store.get("qzs1", null), pulled = false, pullBusy = false, pushT = 0, vmapC = null;
   function drawLogin() {
     try { syncQuiz(); } catch (e) {}
+    document.body.classList.toggle("is-in", !!rtok);
     const box = $("gTop"); if (!box) return;
     if (!RATE || !GID) { box.hidden = true; return; }
     box.hidden = false;
     if (rtok) {
       const nm = (meI && meI.name) || rtok.name || "나";
-      box.innerHTML = `<button type="button" class="round g-me" id="gMe" aria-haspopup="true" aria-expanded="false" title="${esc(nm)} (로그인됨)"><span>${esc(String(nm).slice(0, 1))}</span></button><div class="g-menu" id="gMenu" hidden><p><small>로그인됨</small><b>${esc(nm)}</b></p><button type="button" id="gOut">로그아웃</button></div>`;
-      gsiTop = false; return;
+      const st = stamp && stamp.days ? `<p class="g-st">🗓 방문 도장 <b>${stamp.days}일</b>${stamp.title ? ` · <i>${esc(stamp.title)}</i>` : ""}${stamp.streak > 1 ? `<small>${stamp.streak}일 연속 방문 중</small>` : ""}${stamp.next ? `<small>다음 칭호 「${esc(stamp.next.title)}」까지 ${stamp.next.need}일</small>` : ""}</p>` : "";
+      box.innerHTML = `<button type="button" class="round g-me" id="gMe" aria-haspopup="true" aria-expanded="false" title="${esc(nm)} (로그인됨)"><span>${esc(String(nm).slice(0, 1))}</span></button><div class="g-menu" id="gMenu" hidden><p><small>로그인됨</small><b>${esc(nm)}</b></p>${st}<button type="button" id="gOut">로그아웃</button></div>`;
+      syncPull(); return;
     }
     box.innerHTML = '<div id="gBtnTop"></div>';
-    const go = () => { try {
-      if (!gsiReady) { google.accounts.id.initialize({ client_id: GID, callback: onGoogle, ux_mode: "popup" }); gsiReady = true; }
-      const wide = window.innerWidth >= 861;
-      google.accounts.id.renderButton($("gBtnTop"), wide ? { theme: document.documentElement.getAttribute("data-theme") === "light" ? "outline" : "filled_black", size: "large", text: "signin", shape: "pill", locale: "ko" } : { type: "icon", theme: document.documentElement.getAttribute("data-theme") === "light" ? "outline" : "filled_black", size: "large", shape: "circle" });
-    } catch (e) {} };
-    if (window.google && google.accounts) return go();
-    if (document.getElementById("gsi")) { const w = setInterval(() => { if (window.google && google.accounts) { clearInterval(w); go(); } }, 300); setTimeout(() => clearInterval(w), 8000); return; }
-    const sc = document.createElement("script"); sc.id = "gsi"; sc.src = "https://accounts.google.com/gsi/client"; sc.async = true; sc.onload = go; document.head.appendChild(sc);
+    const wide = window.innerWidth >= 861;
+    gBtn($("gBtnTop"), wide ? { text: "signin", shape: "pill", locale: "ko" } : { type: "icon", shape: "circle" });
+  }
+  /* ── 로그인 혜택: 즐겨찾기·열어본 영상·시리즈 고침을 계정에 저장하고, 방문 도장을 찍어요 ── */
+  const vmap = () => { if (!vmapC || vmapC.n !== all.length) { vmapC = { n: all.length, m: {} }; all.forEach(v => { vmapC.m[vid(v)] = key(v); }); } return vmapC.m; };
+  const k2v = k => { const v = byKey(k); return v ? vid(v) : null; };
+  function syncPush() {
+    if (!rtok || !pulled || pullBusy) return;
+    clearTimeout(pushT);
+    pushT = setTimeout(() => {   // 바뀐 뒤 4초 기다렸다가 한 번에 보내요 (서버 부담을 줄여요)
+      const fav = [...favs].map(k2v).filter(Boolean).slice(0, 300), rec = recent.map(k2v).filter(Boolean).slice(0, 100), sov = store.get("sov1", {}) || {};
+      rApi("/sync", { method: "POST", body: JSON.stringify({ fav, rec, sov }) }).catch(() => {});
+    }, 4000);
+  }
+  window.__sd = syncPush;
+  function setStamp(s) { if (!s || typeof s.days !== "number") return; stamp = s; store.set("stamp1", s); const m = $("gMenu"); if (!m || m.hidden) drawLogin(); }
+  function setQst(q) { if (!q || typeof q.all !== "number") return; qst = q; store.set("qzs1", q); const el = $("qz"); if (el && rtok) el.outerHTML = quizHtml(); }
+  async function syncPull() {
+    if (!rtok || pulled || pullBusy || !all.length) return;
+    pullBusy = true;
+    try {
+      const r = await rApi("/sync"); if (!r.ok) { pullBusy = false; return; }
+      const d = await r.json(), m = vmap();
+      let added = 0;
+      (d.fav || []).forEach(i => { const k = m[i]; if (k && !favs.has(k)) { favs.add(k); added++; } });
+      const have = new Set(recent), add = (d.rec || []).map(i => m[i]).filter(k => k && !have.has(k));
+      recent = [...recent, ...add].slice(0, RECENT_MAX);
+      const ov = { ...(d.sov || {}), ...(store.get("sov1", {}) || {}) };
+      store.set("favs", [...favs]); store.set("recent", recent);
+      if (Object.keys(ov).length) { store.set("sov1", ov); buildSeries(); }
+      setStamp(d.stamp); setQst(d.quiz);
+      pulled = true; pullBusy = false;
+      render(); if (added) toast("계정에 저장된 즐겨찾기 " + added + "개를 불러왔어요");
+      syncPush(); checkin();
+    } catch (e) { pullBusy = false; }
+  }
+  function checkin() {
+    const today = qzDay(), nm = (meI && meI.name) || (rtok && rtok.name) || "", ck = store.get("ck1", null);
+    if (ck && ck.d === today && ck.n === nm && stamp) return;
+    rApi("/checkin", { method: "POST", body: "{}" }).then(r => r.ok ? r.json() : null).then(d => {
+      if (!d) return; store.set("ck1", { d: today, n: nm }); setStamp(d);
+      if (d.first) toast("방문 도장 " + d.days + "일째" + (d.title ? " · " + d.title : ""));
+    }).catch(() => {});
+  }
+  function quizReport(ok) {
+    if (!rtok) return;
+    rApi("/quiz", { method: "POST", body: JSON.stringify({ d: new Date(Date.now() + 9 * 36e5).toISOString().slice(0, 10), ok }) }).then(r => r.ok ? r.json() : null).then(setQst).catch(() => {});
   }
   document.addEventListener("click", e => {
     const me = e.target.closest && e.target.closest("#gMe"), menu = $("gMenu");
@@ -163,7 +217,7 @@
 
   const rApi = (path, opt) => fetch(RATE + path, { ...(opt || {}), headers: { ...(rtok ? { Authorization: "Bearer " + rtok.t } : {}), "Content-Type": "application/json" } });
   const refreshMe = () => { if (rtok) rApi("/me").then(r => r.ok ? r.json() : null).then(d => { if (d && d.name) { meI = { name: d.name, cnt: d.cnt || 0, title: d.title || "", next: d.next || null }; drawRate(); } }).catch(() => {}); };
-  function rLogout() { meI = null; rtok = null; isAdm = false; syncAdm(); mine = {}; store.set("dtok", null); drawRate(); }
+  function rLogout() { pulled = false; pullBusy = false; stamp = null; qst = null; store.set("stamp1", null); store.set("qzs1", null); store.set("ck1", null); meI = null; rtok = null; isAdm = false; syncAdm(); mine = {}; store.set("dtok", null); drawRate(); }
   function loadRatings() {   // 별점·후기 화면은 쓰지 않아요. 로그인 상태만 확인해요
     if (!RATE) return;
     if (rtok) { rApi("/me").then(r => r.status === 401 ? Promise.reject("login") : r.json()).then(d => { rtok.name = d.name || ""; meI = { name: d.name || "", cnt: d.cnt || 0, title: d.title || "", next: d.next || null }; isAdm = !!d.admin; syncAdm(); if (d.member === false) setBan(true, d.ban); else setBan(false); drawLogin(); }).catch(e => { if (e === "login") { rtok = null; isAdm = false; syncAdm(); store.set("dtok", null); } drawLogin(); }); }
@@ -591,18 +645,27 @@
   /* ── 오늘의 한 줄 퀴즈: 하루에 하나, quiz.json에서 날짜로 골라요 (정답 기록은 이 기기에만 저장) ── */
   const qzDay = () => Math.floor((Date.now() + 9 * 36e5) / 864e5);
   const qzStep = n => [7, 11, 13, 17, 19, 1].find(s => { let a = s, b = n; while (b) [a, b] = [b, a % b]; return a === 1; });
+  function loginPromoHtml() {
+    if (!RATE || !GID || qzDay() - store.get("lp1", 0) < 3) return "";   // 「나중에」를 누르면 3일 동안 숨겨요
+    setTimeout(drawPromoBtn, 0);
+    return `<section class="qz lp" id="qz" aria-label="로그인 혜택"><div class="qz-h"><span class="qz-t">🔐 구글 로그인하면 이런 게 좋아요</span></div><ul class="lp-l"><li><b>즐겨찾기·열어본 영상이 계정에 저장돼요</b><span>기기를 바꿔도 그대로예요</span></li><li><b>오늘의 한 줄 퀴즈</b><span>매일 하나씩, 정답 기록도 쌓여요</span></li><li><b>방문 도장과 칭호</b><span>자주 올수록 칭호가 올라가요</span></li></ul><div class="lp-a"><div id="gBtnPromo"></div><button type="button" class="btn" id="lpLater">나중에</button></div><p class="qz-n">이름 대신 랜덤 별명만 보여요 · 로그인은 만 19세 이상만 할 수 있어요</p></section>`;
+  }
   function quizHtml() {
-    if (!rtok || !QZ || !QZ.length) return "";   // 구글 로그인한 사람에게만 보여요
+    if (!rtok) return loginPromoHtml();   // 로그인한 사람에게만 퀴즈를 보여주고, 아니면 혜택 안내를 보여요
+    if (!QZ || !QZ.length) return "";
     const d = qzDay(), n = QZ.length, q = QZ[(d * qzStep(n)) % n], st = store.get("qz1", null), got = st && st.d === d ? st.p : -1;
     const opts = q.o.map((t, i) => `<button type="button" class="qz-o${got >= 0 ? (i === q.a ? " ok" : i === got ? " no" : "") : ""}" data-qz="${i}"${got >= 0 ? " disabled" : ""}>${esc(t)}</button>`).join("");
-    const res = got >= 0 ? `<p class="qz-r ${got === q.a ? "ok" : "no"}"><b>${got === q.a ? "정답이에요! 🎉" : "아쉬워요, 정답은 \"" + esc(q.o[q.a]) + "\""}</b><span>${esc(q.e)}</span></p><p class="qz-n">내일 새 퀴즈가 나와요 · 참고: 나무위키 「잉여맨」 문서 (CC BY-NC-SA 2.0 KR)</p>` : `<p class="qz-n">매일 하나씩 바뀌어요 · 틀려도 괜찮아요</p>`;
+    const res = got >= 0 ? `<p class="qz-r ${got === q.a ? "ok" : "no"}"><b>${got === q.a ? "정답이에요! 🎉" : "아쉬워요, 정답은 \"" + esc(q.o[q.a]) + "\""}</b><span>${esc(q.e)}</span></p>${qst && qst.all ? `<p class="qz-s">연속 정답 <b>${qst.streak}번</b> · 정답률 <b>${Math.round(qst.ok / qst.all * 100)}%</b> (${qst.all}문제 중 ${qst.ok}개)</p>` : ""}<p class="qz-n">내일 새 퀴즈가 나와요 · 참고: 나무위키 「잉여맨」 문서 (CC BY-NC-SA 2.0 KR)</p>` : `<p class="qz-n">매일 하나씩 바뀌어요 · 틀려도 괜찮아요</p>`;
     return `<section class="qz" id="qz" aria-label="오늘의 한 줄 퀴즈"><div class="qz-h"><span class="qz-t">🧠 오늘의 한 줄 퀴즈</span></div><p class="qz-q">${esc(q.q)}</p><div class="qz-os">${opts}</div>${res}</section>`;
   }
   fetch("quiz.json").then(r => r.ok ? r.json() : Promise.reject()).then(d => { if (Array.isArray(d)) { QZ = d; const el = $("qz"); if (el) el.outerHTML = quizHtml(); else if (isHome()) render(); } }).catch(() => {});
   $("home").addEventListener("click", e => {
-    const b = e.target.closest && e.target.closest("[data-qz]"); if (!b || !QZ) return;
-    store.set("qz1", { d: qzDay(), p: +b.dataset.qz });
+    if (e.target.closest && e.target.closest("#lpLater")) { store.set("lp1", qzDay()); const el = $("qz"); if (el) el.remove(); return; }
+    const b = e.target.closest && e.target.closest("[data-qz]"); if (!b || !QZ || !rtok) return;
+    const n = QZ.length, q = QZ[(qzDay() * qzStep(n)) % n], pick = +b.dataset.qz;
+    store.set("qz1", { d: qzDay(), p: pick });
     const el = $("qz"); if (el) el.outerHTML = quizHtml();
+    quizReport(pick === q.a);
   });
 
   function renderHome() {   // 첫 화면: 분류별로 한 줄씩
@@ -1444,7 +1507,7 @@
       buildSeries();
       $("abN").textContent = nf(all.length); $("abC").textContent = new Set(all.map(v => v.category).filter(Boolean)).size; $("abS").textContent = SERIES.length;
       let sv = null; try { if (((performance.getEntriesByType("navigation")[0] || {}).type) === "reload") sv = JSON.parse(sessionStorage.getItem("view1")); } catch (e) {}
-      route(); achStart();
+      route(); achStart(); if (rtok) syncPull();
       if (sv && sv.h === location.hash && !location.hash.startsWith("#v=") && !location.hash.startsWith("#import=")) {   // 새로고침하면 보던 분류·검색·위치를 그대로 이어서 보여줘요
         if (typeof sv.cat === "string" && sv.cat) cat = sv.cat;
         if (typeof sv.q === "string" && sv.q) $("q").value = sv.q.slice(0, 80);

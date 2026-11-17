@@ -97,7 +97,21 @@ const nick = async (env, uid) => { const h = await hmac(env.SESSION_SECRET, "nic
 // 보관함 자동 비우기: 보관한 지 RETENTION_DAYS(기본 180일 ≈ 6개월)가 지난 기록을 지워요. 별도 설정 없이 후기가 오갈 때·보관함을 열 때 알아서 정리돼요
 const TITLES = [[100, "추억 지킴이"], [30, "다시보기 평론가"], [10, "열혈 팬"], [3, "단골 시청자"], [1, "새내기"]];   // 후기 글을 쓴 영상 수 → 칭호 (위에서부터 먼저 맞는 것)
 const titleOf = (n) => { const i = TITLES.findIndex(t => n >= t[0]); return i < 0 ? null : { lv: TITLES.length - i, title: TITLES[i][1] }; };
-const sweep = (env) => env.DB.prepare("DELETE FROM rating_history WHERE (CASE WHEN at > 0 THEN at ELSE ts END) < ?").bind(Date.now() - (Number(env.RETENTION_DAYS) || 180) * 864e5).run().then(() => env.DB.batch([env.DB.prepare("DELETE FROM ip_seen WHERE ts < ?").bind(Date.now() - IPDAYS(env)), env.DB.prepare("DELETE FROM banned_ip WHERE ts < ?").bind(Date.now() - IPDAYS(env)), env.DB.prepare("UPDATE ratings SET name = '' WHERE name != ''"), env.DB.prepare("UPDATE rating_history SET name = '' WHERE name != ''")])).then(() => warnTable(env)).then(() => env.DB.prepare("DELETE FROM warns WHERE ts < ?").bind(Date.now() - (Number(env.RETENTION_DAYS) || 180) * 864e5).run());
+const sweep0 = (env) => env.DB.prepare("DELETE FROM rating_history WHERE (CASE WHEN at > 0 THEN at ELSE ts END) < ?").bind(Date.now() - (Number(env.RETENTION_DAYS) || 180) * 864e5).run().then(() => env.DB.batch([env.DB.prepare("DELETE FROM ip_seen WHERE ts < ?").bind(Date.now() - IPDAYS(env)), env.DB.prepare("DELETE FROM banned_ip WHERE ts < ?").bind(Date.now() - IPDAYS(env)), env.DB.prepare("UPDATE ratings SET name = '' WHERE name != ''"), env.DB.prepare("UPDATE rating_history SET name = '' WHERE name != ''")])).then(() => warnTable(env)).then(() => env.DB.prepare("DELETE FROM warns WHERE ts < ?").bind(Date.now() - (Number(env.RETENTION_DAYS) || 180) * 864e5).run());
+// ── 로그인한 사람의 자료 저장 (즐겨찾기·열어본 영상·시리즈 고침 + 방문 도장 + 퀴즈 기록) ──
+// 저장량 한도: 영상 번호만 저장하고, 사람마다 상한을 둬요. 6개월(RETENTION_DAYS) 동안 오지 않으면 자동으로 지워요.
+const FAV_MAX = 300, REC_MAX = 100, SOV_MAX = 200;
+const STAMPS = [[100, "자료실의 전설"], [60, "자료실 지킴이"], [30, "오랜 단골"], [14, "단골"], [7, "자주 오는 손님"], [3, "또 왔네요"], [1, "첫 발자국"]];
+const stampOf = (days) => { const t = STAMPS.find(s => days >= s[0]) || null, nx = [...STAMPS].reverse().find(s => s[0] > days); return { title: t ? t[1] : "", next: nx ? { title: nx[1], need: nx[0] - days } : null }; };
+const kstDay = (ms = Date.now()) => new Date(ms + 9 * 36e5).toISOString().slice(0, 10);
+let udReady = false;
+const udTable = async (env) => { if (udReady) return; await env.DB.prepare("CREATE TABLE IF NOT EXISTS udata (uid TEXT PRIMARY KEY, fav TEXT NOT NULL DEFAULT '[]', rec TEXT NOT NULL DEFAULT '[]', sov TEXT NOT NULL DEFAULT '{}', days INTEGER NOT NULL DEFAULT 0, streak INTEGER NOT NULL DEFAULT 0, last TEXT NOT NULL DEFAULT '', q_ok INTEGER NOT NULL DEFAULT 0, q_all INTEGER NOT NULL DEFAULT 0, q_streak INTEGER NOT NULL DEFAULT 0, q_last TEXT NOT NULL DEFAULT '', ts INTEGER NOT NULL DEFAULT 0)").run(); udReady = true; };
+const udGet = async (env, uid) => { await udTable(env); return (await env.DB.prepare("SELECT * FROM udata WHERE uid = ?").bind(uid).first()) || { uid, fav: "[]", rec: "[]", sov: "{}", days: 0, streak: 0, last: "", q_ok: 0, q_all: 0, q_streak: 0, q_last: "", ts: 0 }; };
+const udSave = (env, r) => env.DB.prepare("INSERT INTO udata (uid, fav, rec, sov, days, streak, last, q_ok, q_all, q_streak, q_last, ts) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(uid) DO UPDATE SET fav = excluded.fav, rec = excluded.rec, sov = excluded.sov, days = excluded.days, streak = excluded.streak, last = excluded.last, q_ok = excluded.q_ok, q_all = excluded.q_all, q_streak = excluded.q_streak, q_last = excluded.q_last, ts = excluded.ts").bind(r.uid, r.fav, r.rec, r.sov, r.days, r.streak, r.last, r.q_ok, r.q_all, r.q_streak, r.q_last, r.ts).run();
+const udOut = (r) => { const st = stampOf(r.days); return { fav: JSON.parse(r.fav || "[]"), rec: JSON.parse(r.rec || "[]"), sov: JSON.parse(r.sov || "{}"), stamp: { days: r.days, streak: r.streak, last: r.last, title: st.title, next: st.next }, quiz: { ok: r.q_ok, all: r.q_all, streak: r.q_streak } }; };
+const idList = (a, max) => Array.isArray(a) ? [...new Set(a.filter(x => typeof x === "string" && /^[\w-]{1,24}$/.test(x)))].slice(0, max) : null;
+const sovClean = (o) => { if (!o || typeof o !== "object" || Array.isArray(o)) return null; const out = {}; let n = 0; for (const k of Object.keys(o)) { if (!/^[\w-]{1,24}$/.test(k) || !Array.isArray(o[k])) continue; const names = [...new Set(o[k].filter(x => typeof x === "string").map(x => x.trim().slice(0, 20)).filter(Boolean))].slice(0, 6); out[k] = names; if (++n >= SOV_MAX) break; } return out; };
+const sweep = (env) => sweep0(env).then(() => udTable(env)).then(() => env.DB.prepare("DELETE FROM udata WHERE ts < ?").bind(Date.now() - (Number(env.RETENTION_DAYS) || 180) * 864e5).run());
 const archive = async (env, vid, uid, r, why) => { await env.DB.prepare("INSERT INTO rating_history (vid, uid, stars, text, ts, name, why, at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)").bind(vid, uid, r.stars, r.text, r.ts, keep(r.name), why, Date.now()).run(); if (Math.random() < 0.05) await sweep(env).catch(() => {}); };
 // 운영진 경고 기록 (운영진만 볼 수 있는 메모예요. 보관 기간이 지나면 자동으로 지워져요)
 let warnReady = false;
@@ -175,6 +189,42 @@ async function handle(req, env, ctx) {
     } catch (e) { return json(env, { error: "busy" }, 503); }
   }
 
+  if (p === "/sync" && req.method === "GET") {   // 내 즐겨찾기·열어본 영상·시리즈 고침·도장·퀴즈 기록 가져오기
+    const s = await getAuth(env, req); if (!s) return json(env, { error: "login" }, 401);
+    try { return json(env, udOut(await udGet(env, s.uid)), 200, { "Cache-Control": "no-store" }); } catch (e) { return json(env, { error: "busy" }, 503); }
+  }
+  if (p === "/sync" && req.method === "POST") {   // 바뀐 것만 보내면 저장해요 (한도를 넘으면 오래된 것부터 잘라요)
+    const s = await getAuth(env, req); if (!s) return json(env, { error: "login" }, 401);
+    if (await isBanned(env, s.uid)) return json(env, { error: "banned" }, 403);
+    if (await tooFast(env, req, "sync", 20, 60)) return slow(env);
+    let b; try { const t = await req.text(); if (t.length > 40000) return json(env, { error: "big" }, 413); b = JSON.parse(t); } catch (e) { return json(env, { error: "bad" }, 400); }
+    try {
+      const r = await udGet(env, s.uid), fav = idList(b.fav, FAV_MAX), rec = idList(b.rec, REC_MAX), sov = sovClean(b.sov);
+      if (fav) r.fav = JSON.stringify(fav); if (rec) r.rec = JSON.stringify(rec); if (sov) r.sov = JSON.stringify(sov);
+      r.ts = Date.now(); await udSave(env, r);
+      return json(env, { ok: true });
+    } catch (e) { return json(env, { error: "busy" }, 503); }
+  }
+  if (p === "/checkin" && req.method === "POST") {   // 오늘 방문 도장 (하루에 한 번만 올라가요)
+    const s = await getAuth(env, req); if (!s) return json(env, { error: "login" }, 401);
+    if (await isBanned(env, s.uid)) return json(env, { error: "banned" }, 403);
+    try {
+      const r = await udGet(env, s.uid), today = kstDay(), first = r.last !== today;
+      if (first) { r.streak = r.last === kstDay(Date.now() - 864e5) ? r.streak + 1 : 1; r.days += 1; r.last = today; r.ts = Date.now(); await udSave(env, r); if (Math.random() < 0.05) await env.DB.prepare("DELETE FROM udata WHERE ts < ?").bind(Date.now() - (Number(env.RETENTION_DAYS) || 180) * 864e5).run().catch(() => {}); }
+      return json(env, { ...udOut(r).stamp, first });
+    } catch (e) { return json(env, { error: "busy" }, 503); }
+  }
+  if (p === "/quiz" && req.method === "POST") {   // 오늘의 퀴즈 결과 기록 (하루 한 번)
+    const s = await getAuth(env, req); if (!s) return json(env, { error: "login" }, 401);
+    if (await isBanned(env, s.uid)) return json(env, { error: "banned" }, 403);
+    let b; try { b = await req.json(); } catch (e) { return json(env, { error: "bad" }, 400); }
+    try {
+      const r = await udGet(env, s.uid), today = kstDay();
+      if (b && b.d === today && r.q_last !== today) { r.q_all += 1; if (b.ok === true) { r.q_ok += 1; r.q_streak += 1; } else r.q_streak = 0; r.q_last = today; r.ts = Date.now(); await udSave(env, r); }
+      return json(env, udOut(r).quiz);
+    } catch (e) { return json(env, { error: "busy" }, 503); }
+  }
+
   if (p === "/ratings" && req.method === "GET") {   // 영상별 평균 (누구나) — 1분 동안 저장해 두고 재사용해서 데이터 읽기를 아껴요
     const ck = typeof caches !== "undefined" ? caches.default : null, key = new Request(url.origin + "/__ratings_cache");
     if (ck) { const hit = await ck.match(key); if (hit) return new Response(hit.body, { status: 200, headers: { "Content-Type": "application/json; charset=utf-8", ...cors(env), "Cache-Control": "public, max-age=60" } }); }
@@ -245,6 +295,7 @@ async function handle(req, env, ctx) {
       env.DB.prepare("DELETE FROM reports WHERE uid = ? OR reporter = ?").bind(s.uid, s.uid),
       env.DB.prepare("DELETE FROM ip_seen WHERE uid = ?").bind(s.uid),
     ]);
+    await udTable(env).then(() => env.DB.prepare("DELETE FROM udata WHERE uid = ?").bind(s.uid).run()).catch(() => {});   // 저장해 둔 즐겨찾기·기록도 함께 지워요
     if (!isAdmin(env, s)) { await lockLeft(env, s.uid); await env.DB.prepare("INSERT INTO delete_lock (uid, ts) VALUES (?, ?) ON CONFLICT(uid) DO UPDATE SET ts = excluded.ts").bind(s.uid, Date.now()).run(); await env.DB.prepare("DELETE FROM delete_lock WHERE ts < ?").bind(Date.now() - LOCK_MS).run().catch(() => {}); }   // 24시간 동안 다시 로그인할 수 없어요
     return json(env, { ok: true, hours: 24 });
   }
