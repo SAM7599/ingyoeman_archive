@@ -595,6 +595,7 @@
     if (next !== tab || nextSer !== ser) cat = "";
     if (nextSer !== ser) $("q").value = "";
     tab = next; ser = nextSer;
+    if (tab !== "series" && serOn) { serOn = false; $("serBar").hidden = true; document.body.classList.remove("ser-on"); }   // 시리즈 탭을 떠나면 편집 모드는 꺼져요
     $("viewGuide").hidden = tab !== "guide"; $("viewAbout").hidden = tab !== "about"; $("viewNotes").hidden = tab !== "notes"; if (tab === "notes") showNotes(); $("viewAch").hidden = tab !== "ach"; if (tab === "ach") renderAch(); $("viewList").hidden = isInfo();
     document.querySelectorAll(".tab").forEach(a => a.classList.toggle("on", a.dataset.tab === (tab === "ach" ? "ach" : isInfo() ? "info" : tab === "nothumb" ? "all" : tab)));
     const pg = tab === "guide" ? $("viewGuide") : tab === "about" ? $("viewAbout") : tab === "notes" ? $("viewNotes") : tab === "ach" ? $("viewAch") : $("viewList"); pg.classList.remove("enter"); if (moved && !document.documentElement.classList.contains("vt")) { void pg.offsetWidth; pg.classList.add("enter"); }
