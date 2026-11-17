@@ -148,7 +148,7 @@
       try {
         const r = await fetch(RATE + "/ping", { method: "POST" }); if (!r.ok) return;
         const d = await r.json(); if (typeof d.today !== "number") return;
-        el.textContent = "오늘 " + nf(d.today) + "명 방문 · 지금까지 총 " + nf(d.total) + "번 방문" + (d.now >= 2 ? " · 지금 " + nf(d.now) + "명 보는 중" : "");
+        el.textContent = "지금 " + nf(Math.max(1, d.now || 0)) + "명 보는 중 · 오늘 방문 " + nf(Math.max(1, d.today || 0)) + "번";
         el.hidden = false;
       } catch (e) {}
     }
