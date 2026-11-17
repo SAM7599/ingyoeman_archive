@@ -382,10 +382,10 @@
   const words = () => $("q").value.trim().toLowerCase().split(/\s+/).filter(Boolean);
   /* 검색: 띄어쓰기가 달라도, 초성(ㅁㄱㅌㅊㅁ)만 써도 찾아요 */
   const CHO = "ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ";
-  const chosung = s => { let o = ""; for (const c of s) { const n = c.charCodeAt(0); if (n >= 0xAC00 && n <= 0xD7A3) o += CHO[Math.floor((n - 0xAC00) / 588)]; else if (!/\s/.test(c)) o += c; } return o; };
+  const chosung = s => { let o = ""; for (const c of s) { const n = c.charCodeAt(0); if (n >= 0xAC00 && n <= 0xD7A3) o += CHO[Math.floor((n - 0xAC00) / 588)]; else if (/[a-z0-9]/i.test(c)) o += c.toLowerCase(); } return o; };
   function hit(v, ws) {
     if (!ws.length) return true;
-    if (!v._sh) { const h = ((v.title || "") + " " + (v.category || "")).toLowerCase(); v._sh = [h, h.replace(/\s+/g, ""), chosung(h)]; }
+    if (!v._sh) { const h = ((v.title || "") + " " + (v.category || "")).toLowerCase(); v._sh = [h, h.replace(/[\s!-\/:-@\[-`{-~·~…“”‘’]+/g, ""), chosung(h)]; }
     return ws.every(x => v._sh[0].includes(x) || v._sh[1].includes(x) || (/^[ㄱ-ㅎ]+$/.test(x) && v._sh[2].includes(x)));
   }
   function filtered() {
