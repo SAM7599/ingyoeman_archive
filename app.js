@@ -648,8 +648,9 @@
   /* ── 오늘의 한 줄 퀴즈: 하루에 하나, quiz.json에서 날짜로 골라요 (정답 기록은 이 기기에만 저장) ── */
   const qzDay = () => Math.floor((Date.now() + 9 * 36e5) / 864e5);
   const qzStep = n => [7, 11, 13, 17, 19, 1].find(s => { let a = s, b = n; while (b) [a, b] = [b, a % b]; return a === 1; });
+  let lpHide = false; try { localStorage.removeItem("lp1"); } catch (e) {}
   function loginPromoHtml() {
-    if (!RATE || !GID || qzDay() - store.get("lp1", 0) < 3) return "";   // 「나중에」를 누르면 3일 동안 숨겨요
+    if (!RATE || !GID || lpHide) return "";   // 「나중에」를 누르면 이번 방문 동안만 숨기고, 새로고침하면 다시 보여요
     setTimeout(drawPromoBtn, 0);
     return `<section class="qz lp" id="qz" aria-label="로그인 혜택"><div class="lp-top"><span class="lp-badge">무료 회원</span><b>로그인 혜택</b><span class="lp-sub">구글 계정으로 1초 만에 시작해요</span></div><ul class="lp-rows"><li><i class="lp-i" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg></i><div><b>즐겨찾기·열어본 영상 저장</b><span>기기를 바꿔도 그대로 이어서 봐요</span></div></li><li><i class="lp-i" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 1-1 1.7"/><path d="M12 17h.01"/></svg></i><div><b>오늘의 한 줄 퀴즈</b><span>매일 새 문제, 연속 정답 기록까지</span></div></li><li><i class="lp-i" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="15" rx="3"/><path d="M8 3v4M16 3v4M8 14l3 3 5-6"/></svg></i><div><b>방문 도장 · 칭호</b><span>자주 올수록 칭호가 올라가요</span></div></li></ul><div class="lp-a"><div id="gBtnPromo"></div><button type="button" class="btn" id="lpLater">나중에</button></div><p class="qz-n">이름 대신 랜덤 별명만 보여요</p></section>`;
   }
@@ -663,7 +664,7 @@
   }
   fetch("quiz.json").then(r => r.ok ? r.json() : Promise.reject()).then(d => { if (Array.isArray(d)) { QZ = d; const el = $("qz"); if (el) el.outerHTML = quizHtml(); else if (isHome()) render(); } }).catch(() => {});
   $("home").addEventListener("click", e => {
-    if (e.target.closest && e.target.closest("#lpLater")) { store.set("lp1", qzDay()); const el = $("qz"); if (el) el.remove(); return; }
+    if (e.target.closest && e.target.closest("#lpLater")) { lpHide = true; const el = $("qz"); if (el) el.remove(); return; }
     const b = e.target.closest && e.target.closest("[data-qz]"); if (!b || !QZ || !rtok) return;
     const n = QZ.length, q = QZ[(qzDay() * qzStep(n)) % n], pick = +b.dataset.qz;
     store.set("qz1", { d: qzDay(), p: pick });
