@@ -370,7 +370,7 @@
     if (tab === "recent") return recent.map(byKey).filter(Boolean);
     if (tab === "nothumb") return all.filter(v => !v.thumb);
     if (tab === "rank") return ranked(all);
-    if (tab === "series") return ser ? all.filter(v => v._s.includes(ser)) : [];
+    if (tab === "series") { const w = $("serQ").value.trim().toLowerCase().split(/\s+/).filter(Boolean); return ser ? all.filter(v => v._s.includes(ser) && (!w.length || w.every(x => (v.title || "").toLowerCase().includes(x)))) : []; }
     return all;
   }
   const LIKE_W = 50;   // 인기 점수 = 조회수 + 좋아요 × 50
@@ -439,7 +439,8 @@
     $("seList").innerHTML = names.map(n => `<label class="se-r"><input type="checkbox" value="${esc(n)}"${sel.has(n) ? " checked" : ""}><span>${esc(n)}</span></label>`).join("") || `<p class="se-n">아직 시리즈가 없어요. 아래에서 새로 만들어 보세요.</p>`;
   }
   const seSel = () => new Set([...$("seList").querySelectorAll("input:checked")].map(i => i.value));
-  let serOn = false;
+  let serOn = false, serQFor = "";
+  $("serQ").addEventListener("input", () => render());
   $("serMode").addEventListener("click", () => { serOn = !serOn; render(); });
   $("serEnd").addEventListener("click", () => { serOn = false; render(); });
   $("grid").addEventListener("click", e => {
@@ -563,6 +564,7 @@
     $("pageH").textContent = tiles ? "시리즈" : rank ? "인기 랭킹" : tab === "series" && ser ? ser : q ? "검색 결과" : tab === "fav" ? "즐겨찾기" : tab === "recent" ? "열어본 영상" : tab === "nothumb" ? "썸네일 없는 영상" : cat && cat !== "*" ? cat : "전체 영상";
     $("count").textContent = tiles ? SERIES.length + "개" : list.length + (tab === "series" ? "편" : "개");
     { const bk = $("back"); bk.hidden = !((tab === "series" && ser) || tab === "nothumb"); bk.setAttribute("href", tab === "nothumb" ? "#" : "#series"); bk.textContent = tab === "nothumb" ? "홈으로" : "시리즈 목록"; }
+    { const inS = tab === "series" && !!ser; $("serQBox").hidden = !inS; if (!inS || serQFor !== ser) { $("serQ").value = ""; } serQFor = inS ? ser : ""; }
     { const sm = $("serMode"); sm.hidden = tab !== "series"; if (tab !== "series") serOn = false; sm.classList.toggle("primary", serOn); sm.textContent = serOn ? "✔ 편집 끝내기" : "✏️ 시리즈 편집"; document.body.classList.toggle("ser-on", serOn); $("serBar").hidden = !serOn; }
     $("sort").hidden = tiles || rank; document.querySelector(".seg").hidden = tiles || rank;
     const note = serOn ? (tiles ? "시리즈를 열어서 고칠 영상을 눌러 주세요. 고친 내용은 이 기기에만 저장돼요." : "시리즈를 바꿀 영상을 눌러 주세요. 고친 내용은 이 기기에만 저장돼요.") : tab === "nothumb" ? "아직 썸네일이 없는 영상이에요. 영상 제목 옆 점 세 개(⋮) 메뉴에서 “썸네일 제보”를 눌러 주세요. 여러분의 제보로 목록이 채워져요." : tiles ? "같은 콘텐츠끼리 묶었어요. 제목으로 자동 분류해서 빠지거나 잘못 들어간 영상이 있을 수 있어요."
