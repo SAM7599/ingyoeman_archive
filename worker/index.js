@@ -63,14 +63,14 @@ const noteAcct = async (env, req, uid) => {
 };
 // 같은 접속 주소(IP 코드)가 짧은 시간에 너무 자주 요청하면 막아요 (서버 한도를 지키기 위한 속도 제한)
 let rlReady = false, visReady = false;
-const tooFast = async (env, req, key, max, secs, uid) => {
+const tooFast = async (env, req, key, max, secs, uid, noLog) => {
   try {
     const h = await ipHash(env, req); if (!h) return false;
     if (!rlReady) { await env.DB.prepare("CREATE TABLE IF NOT EXISTS rate_hit (k TEXT PRIMARY KEY, win INTEGER NOT NULL, n INTEGER NOT NULL, ts INTEGER NOT NULL)").run(); rlReady = true; }
     const now = Date.now(), win = Math.floor(now / (secs * 1000));
     const r = await env.DB.prepare("INSERT INTO rate_hit (k, win, n, ts) VALUES (?1, ?2, 1, ?3) ON CONFLICT(k) DO UPDATE SET n = CASE WHEN win = excluded.win THEN n + 1 ELSE 1 END, win = excluded.win, ts = excluded.ts RETURNING n").bind(key + ":" + h, win, now).first();
     if (Math.random() < 0.02) await env.DB.prepare("DELETE FROM rate_hit WHERE ts < ?").bind(now - 864e5).run().catch(() => {});
-    if (r && r.n > max) { await logAbuse(env, h, uid, key); return true; }   // 한도를 넘으면 의심 기록에 남겨요
+    if (r && r.n > max) { if (!noLog) await logAbuse(env, h, uid, key); return true; }   // 운영진 계정은 의심 기록에 남기지 않아요   // 한도를 넘으면 의심 기록에 남겨요
     return false;
   } catch (e) { return false; }   // 속도 제한 장치가 고장나도 사이트는 계속 돼요
 };
@@ -150,9 +150,9 @@ async function handle(req, env, ctx) {
     const uid = await newUid(env, g.sub);   // 구글 고유 번호는 저장하지 않고, 되돌릴 수 없는 코드만 써요
     { const em1 = g.email_verified === "true" || g.email_verified === true ? String(g.email || "").toLowerCase() : ""; const left = isAdmin(env, { em: em1 }) ? 0 : await lockLeft(env, uid); if (left) return coolBody(env, left); }   // 내 정보를 지운 뒤 24시간 동안은 다시 로그인할 수 없어요
     if (await isBanned(env, uid)) return json(env, { error: "banned" }, 403);   // 운영진이 정지한 계정
-    await noteAcct(env, req, uid);
-    const name = await nick(env, uid);
     const em = g.email_verified === "true" || g.email_verified === true ? String(g.email || "").toLowerCase() : "";
+    if (!isAdmin(env, { em })) await noteAcct(env, req, uid);   // 운영진 계정은 의심 기록에서 제외
+    const name = await nick(env, uid);
     return json(env, { token: await sign(env, { uid, name, em }, 30 * DAY), name, admin: isAdmin(env, { em }) });
   }
 
@@ -193,7 +193,7 @@ async function handle(req, env, ctx) {
   }
   if (p === "/sync" && req.method === "POST") {   // 바뀐 것만 보내면 저장해요 (한도를 넘으면 오래된 것부터 잘라요)
     const s = await getAuth(env, req); if (!s) return json(env, { error: "login" }, 401);
-    if (await tooFast(env, req, "sync", 20, 60, s.uid)) return slow(env);
+    if (await tooFast(env, req, "sync", 20, 60, s.uid, isAdmin(env, s))) return slow(env);
     let b; try { const t = await req.text(); if (t.length > 40000) return json(env, { error: "big" }, 413); b = JSON.parse(t); } catch (e) { return json(env, { error: "bad" }, 400); }
     try {
       const r = await udGet(env, s.uid), fav = idList(b.fav, FAV_MAX), rec = idList(b.rec, REC_MAX), sov = sovClean(b.sov);
@@ -204,7 +204,7 @@ async function handle(req, env, ctx) {
   }
   if (p === "/quiz" && req.method === "POST") {   // 오늘의 퀴즈 결과 기록 (하루 한 번)
     const s = await getAuth(env, req); if (!s) return json(env, { error: "login" }, 401);
-    if (await tooFast(env, req, "quiz", 10, 60, s.uid)) return slow(env);
+    if (await tooFast(env, req, "quiz", 10, 60, s.uid, isAdmin(env, s))) return slow(env);
     let b; try { b = await req.json(); } catch (e) { return json(env, { error: "bad" }, 400); }
     try {
       const r = await udGet(env, s.uid), today = kstDay();
