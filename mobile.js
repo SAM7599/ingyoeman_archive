@@ -24,11 +24,31 @@
     var mo = new MutationObserver(sync);
     els.forEach(function (e) { mo.observe(e, { attributes: true, attributeFilter: ["hidden"] }); });
   }
+  /* 앱에서 홈 화면 뒤로가기: 한 번 더 누르면 꺼져요 */
+  var isApp = (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true;
+  var exitT = 0, exitArmed = false;
+  function exitToast() {
+    var t = $("toast"); if (!t) return;
+    t.textContent = "한 번 더 뒤로가기를 누르면 꺼져요"; t.classList.add("show");
+    clearTimeout(exitToast.t); exitToast.t = setTimeout(function () { t.classList.remove("show"); }, 2200);
+  }
+  if (isApp) {
+    var st = history.state;
+    if (!(st && (st.root || st.guard))) {
+      try { history.replaceState({ root: 1 }, "", location.href); history.pushState({ guard: 1 }, "", location.href); } catch (e) {}
+    }
+  }
   window.addEventListener("popstate", function () {
     if (skip > 0) {
       skip--;
       if (location.hash.indexOf("#v=") === 0 && $("modal") && $("modal").hidden) history.replaceState(history.state, "", location.pathname + location.search);   // 공유 링크로 열린 영상을 닫고 돌아올 때 다시 열리지 않게
       return;
+    }
+    if (isApp && history.state && history.state.root && openN() === 0) {   // 맨 처음 기록까지 왔어요
+      if (exitArmed) { exitArmed = false; clearTimeout(exitT); history.back(); return; }   // 두 번째: 꺼져요
+      exitArmed = true; exitT = setTimeout(function () { exitArmed = false; }, 2500);
+      try { history.pushState({ guard: 1 }, "", location.href); } catch (e) {}
+      exitToast(); return;
     }
     if (openN() > 0) {   // 뒤로가기: 열린 창 중 맨 위 하나만 닫기 
       if (pushed > 0) pushed--;
