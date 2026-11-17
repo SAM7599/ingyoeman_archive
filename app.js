@@ -84,7 +84,7 @@
 
   /* ── 별점 (구글 로그인) — 서버 주소는 config.js 의 rating ── */
   const RATE = /^(https:\/\/|http:\/\/localhost)/i.test(SITE.rating || "") ? SITE.rating.replace(/\/+$/, "") : "";
-  let isAdm = false, ravg = {}, mine = {}, rtok = store.get("dtok", null), banI = store.get("ban1", false), isBan = !!banI;
+  let meI = null, isAdm = false, ravg = {}, mine = {}, rtok = store.get("dtok", null), banI = store.get("ban1", false), isBan = !!banI;
   const setBan = (v, info) => { isBan = !!v; banI = isBan ? (info && typeof info === "object" ? info : (banI && typeof banI === "object" ? banI : true)) : false; store.set("ban1", banI); };
   const rScore = v => { const a = ravg[vid(v)]; return a ? (a[0] * a[1] + 3 * 2) / (a[1] + 2) : 0; };   // 표가 적을 때 흔들리지 않게 보정
   const rStars = n => "★".repeat(Math.round(n)) + "☆".repeat(5 - Math.round(n));
@@ -108,6 +108,34 @@
     if (document.getElementById("gsi")) return setTimeout(drawGoogleBtn, 300);
     const sc = document.createElement("script"); sc.id = "gsi"; sc.src = "https://accounts.google.com/gsi/client"; sc.async = true; sc.onload = go; document.head.appendChild(sc);
   }
+  /* ── 상단 구글 로그인 버튼 ── */
+  let gsiTop = false;
+  function drawLogin() {
+    const box = $("gTop"); if (!box) return;
+    if (!RATE || !GID) { box.hidden = true; return; }
+    box.hidden = false;
+    if (rtok) {
+      const nm = (meI && meI.name) || rtok.name || "나";
+      box.innerHTML = `<button type="button" class="round g-me" id="gMe" aria-haspopup="true" aria-expanded="false" title="${esc(nm)} (로그인됨)"><span>${esc(String(nm).slice(0, 1))}</span></button><div class="g-menu" id="gMenu" hidden><p><small>로그인됨</small><b>${esc(nm)}</b></p><button type="button" id="gOut">로그아웃</button></div>`;
+      gsiTop = false; return;
+    }
+    box.innerHTML = '<div id="gBtnTop"></div>';
+    const go = () => { try {
+      if (!gsiReady) { google.accounts.id.initialize({ client_id: GID, callback: onGoogle, ux_mode: "popup" }); gsiReady = true; }
+      const wide = window.innerWidth >= 861;
+      google.accounts.id.renderButton($("gBtnTop"), wide ? { theme: document.documentElement.getAttribute("data-theme") === "light" ? "outline" : "filled_black", size: "large", text: "signin", shape: "pill", locale: "ko" } : { type: "icon", theme: document.documentElement.getAttribute("data-theme") === "light" ? "outline" : "filled_black", size: "large", shape: "circle" });
+    } catch (e) {} };
+    if (window.google && google.accounts) return go();
+    if (document.getElementById("gsi")) { const w = setInterval(() => { if (window.google && google.accounts) { clearInterval(w); go(); } }, 300); setTimeout(() => clearInterval(w), 8000); return; }
+    const sc = document.createElement("script"); sc.id = "gsi"; sc.src = "https://accounts.google.com/gsi/client"; sc.async = true; sc.onload = go; document.head.appendChild(sc);
+  }
+  document.addEventListener("click", e => {
+    const me = e.target.closest && e.target.closest("#gMe"), menu = $("gMenu");
+    if (me && menu) { menu.hidden = !menu.hidden; me.setAttribute("aria-expanded", String(!menu.hidden)); return; }
+    if (e.target.closest && e.target.closest("#gOut")) { rLogout(); toast("로그아웃했어요"); return; }
+    if (menu && !menu.hidden && !(e.target.closest && e.target.closest("#gMenu"))) menu.hidden = true;
+  });
+  drawLogin();
   /* ── 방문자 수 (로그인 없이, 접속 주소를 하루짜리 코드로만 세요) ── */
   (function () {
     if (!RATE || /^(localhost|127\.0\.0\.1)$/.test(location.hostname)) return;
@@ -128,11 +156,12 @@
   })();
 
   const rApi = (path, opt) => fetch(RATE + path, { ...(opt || {}), headers: { ...(rtok ? { Authorization: "Bearer " + rtok.t } : {}), "Content-Type": "application/json" } });
-  let meI = null;
   const refreshMe = () => { if (rtok) rApi("/me").then(r => r.ok ? r.json() : null).then(d => { if (d && d.name) { meI = { name: d.name, cnt: d.cnt || 0, title: d.title || "", next: d.next || null }; drawRate(); } }).catch(() => {}); };
   function rLogout() { meI = null; rtok = null; isAdm = false; syncAdm(); mine = {}; store.set("dtok", null); drawRate(); }
-  function loadRatings() {
+  function loadRatings() {   // 별점·후기 화면은 쓰지 않아요. 로그인 상태만 확인해요
     if (!RATE) return;
+    if (rtok) { rApi("/me").then(r => r.status === 401 ? Promise.reject("login") : r.json()).then(d => { rtok.name = d.name || ""; meI = { name: d.name || "", cnt: d.cnt || 0, title: d.title || "", next: d.next || null }; isAdm = !!d.admin; syncAdm(); if (d.member === false) setBan(true, d.ban); else setBan(false); drawLogin(); }).catch(e => { if (e === "login") { rtok = null; isAdm = false; syncAdm(); store.set("dtok", null); } drawLogin(); }); }
+    return;
     // 별점 평균은 5분 동안 기기에 저장해 두고 다시 쓰고, 서버가 바쁘면 저장해 둔 값을 보여줘요 (방문자가 몰려도 서버 부담이 적도록)
     let hit = null; try { hit = JSON.parse(localStorage.getItem("ravg1")); } catch (e) {}
     if (hit && hit.d) { ravg = hit.d; render(); if (current) drawRate(); }
@@ -152,7 +181,7 @@
   const rAgo = ms => { const d = (Date.now() - ms) / 1000; return d < 60 ? "방금" : d < 3600 ? Math.floor(d / 60) + "분 전" : d < 86400 ? Math.floor(d / 3600) + "시간 전" : d < 86400 * 30 ? Math.floor(d / 86400) + "일 전" : new Date(ms).toLocaleDateString("ko-KR"); };
   function resetDraft() { const m = current && mine[vid(current)]; draft = m ? { stars: m[0], text: m[1] } : { stars: 0, text: "" }; }
   function loadReviews() {
-    if (!RATE || !current) return; const id = vid(current);
+    return; const id = vid(current);
     rApi("/reviews?vid=" + encodeURIComponent(id)).then(r => r.json()).then(l => { if (current && vid(current) === id) { reviews = Array.isArray(l) ? l : []; drawRate(); } }).catch(() => {});
   }
   function formState() {   // 입력할 때마다 버튼/안내만 바꿔요 (글 쓰는 중에 화면을 다시 그리지 않아요)
@@ -163,7 +192,8 @@
     btn.disabled = !draft.stars || !!bad;
   }
   function drawRate() {
-    const el = $("rate"); if (!el) return; el.hidden = !RATE; if (!RATE || !current) return;
+    const el = $("rate"); if (el) el.hidden = true; drawLogin(); return;
+    if (!RATE || !current) return;
     const id = vid(current), a = ravg[id], my = mine[id];
     const head = a ? `<b class="r-avg">★ ${a[0].toFixed(1)}</b><span>${a[1]}명이 남겼어요</span>` : `<span>아직 별점과 후기가 없어요</span>`;
     let body;
@@ -594,7 +624,7 @@
     { const sm = $("serMode"); sm.hidden = tab !== "series"; if (tab !== "series") serOn = false; sm.classList.toggle("primary", serOn); sm.textContent = serOn ? "✔ 편집 끝내기" : "✏️ 시리즈 편집"; document.body.classList.toggle("ser-on", serOn); $("serBar").hidden = !serOn; }
     $("sort").hidden = tiles || rank; document.querySelector(".seg").hidden = tiles || rank;
     const note = serOn ? (tiles ? "시리즈를 열어서 고칠 영상을 눌러 주세요. 고친 내용은 이 기기에만 저장돼요." : "시리즈를 바꿀 영상을 눌러 주세요. 고친 내용은 이 기기에만 저장돼요.") : tab === "nothumb" ? "아직 썸네일이 없는 영상이에요. 영상 제목 옆 점 세 개(⋮) 메뉴에서 “썸네일 제보”를 눌러 주세요. 여러분의 제보로 목록이 채워져요." : tiles ? "같은 콘텐츠끼리 묶었어요. 제목으로 자동 분류해서 빠지거나 잘못 들어간 영상이 있을 수 있어요."
-      : rank ? "네이버 카페 조회수와 좋아요를 합친 점수 순서예요. 좋아요 1개를 조회수 " + LIKE_W + "회로 쳤어요." + (RATE ? " 사이트 별점도 반영해요. 별 한 표는 (점수 − 3) × " + RATE_W + "점이라 5점이면 +" + 2 * RATE_W + ", 1점이면 −" + 2 * RATE_W + "점이에요." : "") + " 카페 숫자는 목록을 정리한 때 기준이라 지금과 조금 다를 수 있어요." : "";
+      : rank ? "네이버 카페 조회수와 좋아요를 합친 점수 순서예요. 좋아요 1개를 조회수 " + LIKE_W + "회로 쳤어요." + "" + " 카페 숫자는 목록을 정리한 때 기준이라 지금과 조금 다를 수 있어요." : "";
     $("pageNote").hidden = !note; $("pageNote").textContent = note;
     $("favXferBox").hidden = tab !== "fav";
     $("grid").className = tiles ? "grid tiles" : "grid" + (view === "rows" || rank ? " rows" : "");
@@ -672,7 +702,7 @@
     $("mCat").textContent = v.category || "기타"; $("mCat").style.setProperty("--c", dot(v.category));
     $("mTitle").textContent = v.title || "";
     $("mGo").href = safeUrl(v.url); $("mGo").innerHTML = (id ? "원본 글 열기" : "다시보기") + OUT; $("mGo").hidden = safeUrl(v.url) === "#";
-    $("mNeed").hidden = !!id; $("mRate").hidden = !RATE; syncModalFav(); reviews = []; resetDraft(); drawRate(); loadReviews();
+    $("mNeed").hidden = !!id; syncModalFav(); reviews = []; resetDraft(); drawRate(); loadReviews();
     $("modal").hidden = false; document.body.style.overflow = "hidden"; $("mClose").focus();
     if (id) { markSeen(v); render(); }
   }
@@ -1097,12 +1127,6 @@
   $("vList").addEventListener("click", () => { view = "rows"; store.set("view2", view); render(); });
   $("mFav").addEventListener("click", () => current && toggleFav(key(current)));
   $("mShare").addEventListener("click", () => current && share(current));
-  $("mRate").addEventListener("click", () => {
-    const r = $("rate"); if (!r || r.hidden) return;
-    r.scrollIntoView({ block: "center", behavior: calm() ? "auto" : "smooth" });
-    r.classList.remove("flash"); void r.offsetWidth; r.classList.add("flash");
-    const f = r.querySelector("[data-star], #rtext, #gbtn"); if (f && f.focus) f.focus({ preventScroll: true });
-  });
   $("mGo").addEventListener("click", e => current && follow(e, current, $("mGo").href));
   $("rate").addEventListener("click", e => {
     const b = e.target.closest("button"); if (!b) return;
