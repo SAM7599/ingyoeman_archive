@@ -1274,3 +1274,19 @@ footer .vis { font-size:12.5px; margin-bottom:10px; }
 .cafe-ic svg { width:21px; height:21px; fill:none; stroke:#fff; stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round; }
 .cafe-ic:hover { filter:brightness(1.08); }
 .cafe-ic { display:grid; place-items:center; padding:0; }
+
+/* 오늘의 한 줄 퀴즈 */
+.qz { margin:0 0 26px; padding:18px 18px 14px; border:1px solid var(--line); border-radius:18px; background:var(--surface); }
+.qz-t { font-size:13.5px; font-weight:800; color:var(--accent); }
+.qz-q { margin:8px 0 12px; font-size:17px; font-weight:800; line-height:1.45; word-break:keep-all; letter-spacing:-.3px; }
+.qz-os { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.qz-o { min-height:46px; padding:8px 12px; border:1px solid var(--line); border-radius:12px; background:transparent; color:inherit; font:inherit; font-size:14.5px; font-weight:600; text-align:left; cursor:pointer; word-break:keep-all; }
+.qz-o:hover:not(:disabled) { border-color:var(--accent); }
+.qz-o:disabled { cursor:default; opacity:.65; }
+.qz-o.ok { opacity:1; border-color:#1fa971; background:rgba(31,169,113,.14); font-weight:800; }
+.qz-o.no { opacity:1; border-color:#e5484d; background:rgba(229,72,77,.12); }
+.qz-r { margin:12px 0 4px; display:flex; flex-direction:column; gap:3px; font-size:14px; line-height:1.5; }
+.qz-r.ok b { color:#1fa971; } .qz-r.no b { color:#e5484d; }
+.qz-r span { color:var(--sub); }
+.qz-n { margin:6px 0 0; font-size:12px; color:var(--sub); }
+@media (max-width:560px) { .qz { padding:16px 14px 12px; border-radius:16px; } .qz-os { grid-template-columns:1fr; } .qz-q { font-size:16px; } }
