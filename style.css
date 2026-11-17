@@ -1361,3 +1361,7 @@ html:not([data-motion="off"]) .g-tip { animation:gtip 1.6s ease-in-out infinite;
 .g-tip .lp-i { width:38px; height:38px; border-radius:12px; } .g-tip .lp-i svg { width:19px; height:19px; }
 .g-tip .lp-rows b { font-size:14px; } .g-tip .lp-rows span { font-size:12.5px; }
 .gtop > .g-tip { display:block; }
+/* 로그인 말풍선: 공지·소개·동의·사용법 안내가 떠 있는 동안은 숨기고, 닫히면 나타나요 */
+body:has(#noticePop:not([hidden])) .g-tip, html.consent-on .g-tip, html.intro-on .g-tip, body:has(#tourBox) .g-tip { display:none !important; }
+html:not([data-motion="off"]) .g-tip { animation:gtipin .35s ease 1.2s both !important; }
+@keyframes gtipin { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:none; } }
