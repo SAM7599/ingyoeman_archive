@@ -1365,3 +1365,6 @@ html:not([data-motion="off"]) .g-tip { animation:gtip 1.6s ease-in-out infinite;
 body:has(#noticePop:not([hidden])) .g-tip, html.consent-on .g-tip, html.intro-on .g-tip, body:has(#tourBox) .g-tip { display:none !important; }
 html:not([data-motion="off"]) .g-tip { animation:gtipin .35s ease 1.2s both !important; }
 @keyframes gtipin { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:none; } }
+/* 말풍선 위쪽 화살표와 본체 색을 똑같이 */
+.g-tip { background:linear-gradient(180deg,#2c2380 0,#15132e 55%,#0c0b1c 100%) !important; }
+.g-tip::before { background:#2c2380 !important; border-color:#3a3870 !important; }
