@@ -130,7 +130,7 @@
     } catch (e) {} });
   }
   function drawPromoBtn() { const b = $("gBtnPromo"); if (b && !b.firstChild) gBtn(b, { text: "signin_with", shape: "pill", locale: "ko" }); }
-  let stamp = store.get("stamp1", null), qst = store.get("qzs1", null), pulled = false, pullBusy = false, pushT = 0, vmapC = null;
+  let tipOn = true, tipT = 0, stamp = store.get("stamp1", null), qst = store.get("qzs1", null), pulled = false, pullBusy = false, pushT = 0, vmapC = null;
   function drawLogin() {
     try { syncQuiz(); } catch (e) {}
     document.body.classList.toggle("is-in", !!rtok);
@@ -143,7 +143,8 @@
       box.innerHTML = `<button type="button" class="round g-me" id="gMe" aria-haspopup="true" aria-expanded="false" title="${esc(nm)} (로그인됨)"><span>${esc(String(nm).slice(0, 1))}</span></button><div class="g-menu" id="gMenu" hidden><p><small>로그인됨</small><b>${esc(nm)}</b></p>${st}<button type="button" id="gOut">로그아웃</button></div>`;
       syncPull(); return;
     }
-    box.innerHTML = '<div id="gBtnTop"></div>';
+    box.innerHTML = '<div id="gBtnTop"></div>' + (tipOn ? '<button type="button" class="g-tip" id="gTip">로그인하면 즐겨찾기가 저장돼요 ✨</button>' : "");
+    if (tipOn) { clearTimeout(tipT); tipT = setTimeout(() => { tipOn = false; const t = $("gTip"); if (t) t.remove(); }, 9000); }
     const wide = window.innerWidth >= 861;
     gBtn($("gBtnTop"), wide ? { text: "signin", shape: "pill", locale: "ko" } : { type: "icon", shape: "circle" });
   }
@@ -664,6 +665,7 @@
   }
   fetch("quiz.json").then(r => r.ok ? r.json() : Promise.reject()).then(d => { if (Array.isArray(d)) { QZ = d; const el = $("qz"); if (el) el.outerHTML = quizHtml(); else if (isHome()) render(); } }).catch(() => {});
   $("home").addEventListener("click", e => {
+    if (e.target.closest && e.target.closest("#gTip")) { tipOn = false; const t = $("gTip"); if (t) t.remove(); return; }
     if (e.target.closest && e.target.closest("#lpLater")) { lpHide = true; const el = $("qz"); if (el) el.remove(); return; }
     const b = e.target.closest && e.target.closest("[data-qz]"); if (!b || !QZ || !rtok) return;
     const n = QZ.length, q = QZ[(qzDay() * qzStep(n)) % n], pick = +b.dataset.qz;

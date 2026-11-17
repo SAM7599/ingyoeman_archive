@@ -1343,3 +1343,10 @@ body.is-in #favXferBox, body.is-in .xfer-only { display:none !important; }
 .lp .lp-a { padding:12px 18px 4px; justify-content:flex-start; }
 .lp .lp-a .btn { background:transparent; border-color:#3a3870; color:#cfcdf5; }
 .lp .qz-n { padding:0 18px 16px; text-align:left; color:#8d8ac0; }
+
+/* 상단 로그인 말풍선 */
+.g-tip { position:absolute; right:0; top:calc(100% + 10px); z-index:55; width:max-content; max-width:min(240px, 70vw); padding:9px 13px; border:0; border-radius:12px; background:#5b4bff; color:#fff; font:inherit; font-size:13px; font-weight:700; line-height:1.45; text-align:left; cursor:pointer; box-shadow:0 10px 26px -8px rgba(91,75,255,.7); word-break:keep-all; }
+.g-tip::before { content:""; position:absolute; right:14px; top:-6px; width:12px; height:12px; background:#5b4bff; transform:rotate(45deg); border-radius:2px; }
+html:not([data-motion="off"]) .g-tip { animation:gtip 1.6s ease-in-out infinite; }
+@keyframes gtip { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-3px); } }
+@media (prefers-reduced-motion:reduce) { .g-tip { animation:none !important; } }
