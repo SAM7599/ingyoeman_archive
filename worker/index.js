@@ -39,7 +39,7 @@ const json = (env, data, status = 200, extra = {}) => new Response(JSON.stringif
 const siteUrl = (env, hash) => env.SITE_ORIGIN + (env.SITE_PATH || "/") + "#" + hash;
 
 // 같은 접속 주소(IP 코드)가 짧은 시간에 너무 자주 요청하면 막아요 (서버 한도를 지키기 위한 속도 제한)
-let rlReady = false;
+let rlReady = false, visReady = false;
 const tooFast = async (env, req, key, max, secs) => {
   try {
     const h = await ipHash(env, req); if (!h) return false;
@@ -146,6 +146,33 @@ async function handle(req, env, ctx) {
     const name = await nick(env, uid);
     const em = g.email_verified === "true" || g.email_verified === true ? String(g.email || "").toLowerCase() : "";
     return json(env, { token: await sign(env, { uid, name, em }, 30 * DAY), name, admin: isAdmin(env, { em }) });
+  }
+
+  if (p === "/ping" && req.method === "POST") {   // 방문자 수: 접속 주소(IP)를 하루짜리 코드로만 바꿔 세고, 원래 주소는 저장하지 않아요 (하루가 지나면 코드도 지워요)
+    try {
+      if (!visReady) {
+        await env.DB.batch([
+          env.DB.prepare("CREATE TABLE IF NOT EXISTS visit_day (day TEXT NOT NULL, h TEXT NOT NULL, PRIMARY KEY (day, h))"),
+          env.DB.prepare("CREATE TABLE IF NOT EXISTS visit_now (h TEXT PRIMARY KEY, ts INTEGER NOT NULL)"),
+          env.DB.prepare("CREATE TABLE IF NOT EXISTS visit_tot (day TEXT PRIMARY KEY, n INTEGER NOT NULL)")]);
+        visReady = true;
+      }
+      const now = Date.now(), day = new Date(now + 9 * 36e5).toISOString().slice(0, 10), ip = req.headers.get("CF-Connecting-IP") || "";
+      if (ip) {
+        const h = (await hmac(env.SESSION_SECRET, "vis:" + day + ":" + ip)).slice(0, 22);
+        const fresh = await env.DB.prepare("INSERT INTO visit_day (day, h) VALUES (?, ?) ON CONFLICT DO NOTHING RETURNING h").bind(day, h).first();
+        if (fresh) {
+          await env.DB.prepare("INSERT INTO visit_tot (day, n) VALUES (?, 1) ON CONFLICT(day) DO UPDATE SET n = n + 1").bind(day).run();
+          await env.DB.prepare("DELETE FROM visit_day WHERE day < ?").bind(day).run().catch(() => {});   // 지난 날의 접속 코드는 모두 지워요
+          await env.DB.prepare("DELETE FROM visit_now WHERE ts < ?").bind(now - 6e5).run().catch(() => {});
+        }
+        await env.DB.prepare("INSERT INTO visit_now (h, ts) VALUES (?, ?) ON CONFLICT(h) DO UPDATE SET ts = excluded.ts WHERE visit_now.ts < excluded.ts - 30000").bind(h, now).run();
+      }
+      const t = await env.DB.prepare("SELECT n FROM visit_tot WHERE day = ?").bind(day).first();
+      const a = await env.DB.prepare("SELECT COALESCE(SUM(n), 0) AS n FROM visit_tot").first();
+      const c = await env.DB.prepare("SELECT COUNT(*) AS n FROM visit_now WHERE ts > ?").bind(now - 12e4).first();
+      return json(env, { today: t ? t.n : 0, total: a ? a.n : 0, now: c ? c.n : 0 }, 200, { "Cache-Control": "no-store" });
+    } catch (e) { return json(env, { error: "busy" }, 503); }
   }
 
   if (p === "/ratings" && req.method === "GET") {   // 영상별 평균 (누구나) — 1분 동안 저장해 두고 재사용해서 데이터 읽기를 아껴요

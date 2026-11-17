@@ -108,6 +108,25 @@
     if (document.getElementById("gsi")) return setTimeout(drawGoogleBtn, 300);
     const sc = document.createElement("script"); sc.id = "gsi"; sc.src = "https://accounts.google.com/gsi/client"; sc.async = true; sc.onload = go; document.head.appendChild(sc);
   }
+  /* ── 방문자 수 (로그인 없이, 접속 주소를 하루짜리 코드로만 세요) ── */
+  (function () {
+    if (!RATE || /^(localhost|127\.0\.0\.1)$/.test(location.hostname)) return;
+    const el = $("vis"); if (!el) return;
+    const nf = n => Number(n).toLocaleString("ko-KR");
+    let last = 0;
+    async function ping() {
+      if (document.visibilityState !== "visible" || Date.now() - last < 45000) return;
+      last = Date.now();
+      try {
+        const r = await fetch(RATE + "/ping", { method: "POST" }); if (!r.ok) return;
+        const d = await r.json(); if (typeof d.today !== "number") return;
+        el.textContent = "오늘 " + nf(d.today) + "명 방문 · 지금까지 총 " + nf(d.total) + "번 방문" + (d.now >= 2 ? " · 지금 " + nf(d.now) + "명 보는 중" : "");
+        el.hidden = false;
+      } catch (e) {}
+    }
+    ping(); setInterval(ping, 60000); document.addEventListener("visibilitychange", ping);
+  })();
+
   const rApi = (path, opt) => fetch(RATE + path, { ...(opt || {}), headers: { ...(rtok ? { Authorization: "Bearer " + rtok.t } : {}), "Content-Type": "application/json" } });
   let meI = null;
   const refreshMe = () => { if (rtok) rApi("/me").then(r => r.ok ? r.json() : null).then(d => { if (d && d.name) { meI = { name: d.name, cnt: d.cnt || 0, title: d.title || "", next: d.next || null }; drawRate(); } }).catch(() => {}); };

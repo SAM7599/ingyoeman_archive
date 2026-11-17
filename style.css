@@ -1248,3 +1248,5 @@ body.ser-on #serMode { display:none; }
 .ser-q { margin:0 0 12px; }
 .ser-q input { width:100%; height:44px; padding:0 14px; border:1px solid var(--line); border-radius:12px; background:var(--card, #fff); color:inherit; font:inherit; font-size:15px; }
 .ser-q input:focus { outline:2px solid var(--accent); outline-offset:1px; }
+
+footer .vis { font-size:12.5px; margin-bottom:10px; }
