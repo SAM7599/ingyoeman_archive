@@ -34,10 +34,7 @@
     const root = document.documentElement, box = document.getElementById("consent"); if (!box) return;
     const lock = on => [...document.body.children].forEach(el => { if (el === box || el.id === "intro" || el.tagName === "SCRIPT") return; on ? el.setAttribute("inert", "") : el.removeAttribute("inert"); });
     const age = document.getElementById("csAge"), ok = document.getElementById("csOk"), go = document.getElementById("csGo"), no = document.getElementById("csNo");
-    const yr = new Date().getFullYear(), young = document.getElementById("csYoung");
-    for (let y = yr - 10; y >= 1940; y--) age.add(new Option(y + "년", y));
-    const adultOk = () => age.value !== "" && +age.value <= yr - 19;   // 연 나이 기준 19세 이상 (태어난 해는 저장하지 않아요)
-    const sync = () => { young.hidden = !(age.value !== "" && !adultOk()); go.disabled = !(adultOk() && ok.checked); };
+    const sync = () => { go.disabled = !(age.checked && ok.checked); };
     age.addEventListener("change", sync); ok.addEventListener("change", sync);
     go.addEventListener("click", () => {
       if (go.disabled) return;
