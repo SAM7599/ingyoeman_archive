@@ -22,7 +22,14 @@
   function close() { if (!box) return; box.hidden = true; document.body.style.overflow = ""; st = null; }
   window.openPlay = open;
 
+  function gate() {
+    st = null;
+    body.innerHTML = '<div class="pl-end pl-gate"><i>🔐</i><h2 class="pl-h">로그인하고 즐겨요</h2><p>미니게임은 구글 로그인을 한 올드팬만 할 수 있어요.<br>로그인하면 즐겨찾기 저장, 오늘의 퀴즈, 방문 도장도 함께 쓸 수 있어요.</p><div class="pl-act" style="justify-content:center"><div id="plG"></div></div></div>';
+    A().loginBtn($("plG"));
+  }
+  document.addEventListener("dlogin", function () { if (box && !box.hidden && A().isIn() && $("plG")) home(); });
   function home() {
+    if (!A().isIn()) return gate();
     st = null;
     body.innerHTML = '<h2 class="pl-h">🎮 미니게임</h2><p class="pl-sub">그 시절 영상 제목으로 올드팬의 실력을 뽐내 보세요!</p>' +
       '<button type="button" class="pl-card c1" data-g="blank"><i>✏️</i><b>제목 빈칸 채우기</b><span>빠진 글자를 맞혀 보세요 · 5문제</span></button>' +
@@ -99,7 +106,7 @@
   }
 
   function handle(e) {
-    var t = e.target.closest && e.target.closest("[data-g],[data-o],[data-next],[data-home],[data-v],[data-fav2]"); if (!t || !st && !t.dataset.g) { if (t && t.hasAttribute("data-home")) home(); return; }
+    if (!A().isIn()) return; var t = e.target.closest && e.target.closest("[data-g],[data-o],[data-next],[data-home],[data-v],[data-fav2]"); if (!t || !st && !t.dataset.g) { if (t && t.hasAttribute("data-home")) home(); return; }
     if (t.dataset.g === "blank") return blankStart();
     if (t.dataset.g === "cup") return cupStart();
     if (t.hasAttribute("data-home")) return home();

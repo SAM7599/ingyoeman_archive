@@ -1413,3 +1413,4 @@ html:not([data-motion="off"]) .g-tip { animation:gtipin .35s ease 1.2s both !imp
 .gp b i { flex:none; width:22px; height:22px; display:grid; place-items:center; border-radius:50%; background:var(--accent); color:var(--on-accent); font-style:normal; font-size:12px; font-weight:800; }
 .gp > span { display:block; margin-top:4px; font-size:13px; color:var(--sub); line-height:1.55; word-break:keep-all; }
 @media (max-width:520px) { .gpics { grid-template-columns:1fr; } .gp { display:grid; grid-template-columns:120px 1fr; column-gap:12px; align-items:center; } .gp-i { grid-row:span 2; } .gp b { margin-top:0; } }
+.pl-gate p { line-height:1.7; word-break:keep-all; margin:8px 0 14px; } .pl-gate .pl-h { margin-top:4px; }

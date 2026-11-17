@@ -134,7 +134,7 @@
   let tipOn = store.get("tip_hide", 0) !== tipDay(), tipT = 0, stamp = store.get("stamp1", null), qst = store.get("qzs1", null), pulled = false, pullBusy = false, pushT = 0, vmapC = null;
   function drawLogin() {
     try { syncQuiz(); } catch (e) {}
-    document.body.classList.toggle("is-in", !!rtok);
+    document.body.classList.toggle("is-in", !!rtok); if (rtok) document.dispatchEvent(new Event("dlogin"));
     const box = $("gTop"); if (!box) return;
     if (!RATE || !GID) { box.hidden = true; return; }
     box.hidden = false;
@@ -1155,7 +1155,7 @@
     m.style.left = Math.max(8, Math.min(r.right - w, window.innerWidth - w - 8)) + window.scrollX + "px";
   }
   function closeMenu() { $("menu").hidden = true; menuFor = null; }
-  window.PLAYAPI = { vids: () => all, esc, url: safeUrl, key, grad, closeMenu, addFav: v => { const k = key(v); if (!favs.has(k)) { favs.add(k); store.set("favs", [...favs]); } toast("즐겨찾기에 담았어요"); } };
+  window.PLAYAPI = { isIn: () => !!rtok, loginBtn: el => gBtn(el, { text: "signin_with", shape: "pill", locale: "ko" }), vids: () => all, esc, url: safeUrl, key, grad, closeMenu, addFav: v => { const k = key(v); if (!favs.has(k)) { favs.add(k); store.set("favs", [...favs]); } toast("즐겨찾기에 담았어요"); } };
   $("menu").addEventListener("click", e => {
     const b = e.target.closest("button"), v = menuFor; if (!b || !v) return;
     closeMenu();
