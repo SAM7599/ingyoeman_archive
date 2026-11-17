@@ -1263,9 +1263,14 @@ footer .vis { font-size:12.5px; margin-bottom:10px; }
 .g-menu p b { font-size:14.5px; word-break:break-all; }
 .g-menu button { width:100%; height:38px; border:0; border-radius:10px; background:transparent; color:inherit; font:inherit; font-size:14px; font-weight:700; text-align:left; padding:0 8px; cursor:pointer; }
 .g-menu button:hover { background:var(--line); }
-@media (max-width:420px) { #achBtn { display:none; } }
+@media (max-width:380px) { #achBtn { display:none; } }
 .g-menu { display:block; width:max-content; min-width:150px; max-width:220px; }
 .g-menu[hidden] { display:none; }
 .g-menu button { display:block; width:100%; }
 .g-menu p b { display:block; }
 .gtop > .g-menu { display:block; } .gtop > .g-menu[hidden] { display:none; }
+
+.cafe-ic { background:#03c75a; border-color:#03c75a; color:#fff; }
+.cafe-ic svg { width:21px; height:21px; fill:none; stroke:#fff; stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round; }
+.cafe-ic:hover { filter:brightness(1.08); }
+.cafe-ic { display:grid; place-items:center; padding:0; }

@@ -28,7 +28,7 @@
   if (m !== "on" && m !== "off") m = (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) ? "off" : "on";
   document.documentElement.setAttribute("data-motion", m); })();
 </script>
-<link rel="stylesheet" href="style.css?v=200">
+<link rel="stylesheet" href="style.css?v=202">
 </head>
 <body>
 <div id="intro" role="dialog" aria-label="잉여맨 추억자료실 소개 화면">
@@ -103,8 +103,8 @@
       <input id="q" type="search" placeholder="제목이나 분류로 검색" autocomplete="off" aria-label="제목이나 분류로 검색">
       <kbd>/</kbd>
     </label>
-    <a class="btn cafe" data-cafe target="_blank" rel="noopener noreferrer">카페<span class="hm">가기</span><svg class="out" viewBox="0 0 24 24"><path d="M9 6h9v9M18 6L7 17"/></svg></a>
     <div class="gtop" id="gTop" hidden></div>
+    <a class="round cafe-ic" data-cafe target="_blank" rel="noopener noreferrer" aria-label="네이버 카페 가기" title="네이버 카페 가기"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9h11v5a5 5 0 0 1-5 5H10a5 5 0 0 1-5-5zM16 10h1.5a2.5 2.5 0 0 1 0 5H16M8 3.5c-.8 1 .8 1.6 0 2.7M12 3.5c-.8 1 .8 1.6 0 2.7"/></svg></a>
     <a class="round ach-btn" id="achBtn" href="#ach" aria-label="도전과제" title="도전과제"><svg viewBox="0 0 24 24"><path d="M8 4h8v5a4 4 0 0 1-8 0zM8 6H5v1a3 3 0 0 0 3 3M16 6h3v1a3 3 0 0 1-3 3M12 13v4M8.5 20h7M10 17h4"/></svg><b id="achN"></b></a>
     <button class="round ach-btn" id="admBtn" type="button" hidden aria-label="운영진 대시보드" title="운영진 대시보드"><span class="adm-ic"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg><i class="srv" id="admDot"></i></span><b id="admN"></b></button>
     <button class="round" id="set" type="button" aria-label="화면 설정" title="화면 설정" aria-haspopup="menu" aria-expanded="false"><svg viewBox="0 0 24 24"><path d="M5 7h9M18 7h1M5 12h2M11 12h8M5 17h7M16 17h3"/><circle cx="16" cy="7" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="14" cy="17" r="2"/></svg></button>
@@ -468,9 +468,9 @@
 
 <div class="ach-pop" id="achPop" role="status" hidden><span class="ach-ic"><svg viewBox="0 0 24 24"><path d="M8 4h8v5a4 4 0 0 1-8 0zM8 6H5v1a3 3 0 0 0 3 3M16 6h3v1a3 3 0 0 1-3 3M12 13v4M8.5 20h7M10 17h4"/></svg></span><span class="ach-tx"><small>도전과제 달성!</small><b id="achPopT"></b><i id="achPopD"></i></span></div>
 <div id="toast" role="status"></div>
-<script src="config.js?v=200"></script>
-<script src="app.js?v=200"></script>
-<script src="mobile.js?v=200"></script>
-<script src="tour.js?v=200"></script>
+<script src="config.js?v=202"></script>
+<script src="app.js?v=202"></script>
+<script src="mobile.js?v=202"></script>
+<script src="tour.js?v=202"></script>
 </body>
 </html>
