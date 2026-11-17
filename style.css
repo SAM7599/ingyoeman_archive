@@ -1327,3 +1327,19 @@ body.is-in #favXferBox, body.is-in .xfer-only { display:none !important; }
 .lp .lp-a { padding:12px 14px 4px; justify-content:center; }
 .lp .qz-n { padding:0 14px 14px; text-align:center; }
 @media (max-width:560px) { .lp-g { grid-template-columns:1fr; } .lp-c { flex-direction:row; text-align:left; gap:12px; padding:10px 14px; } .lp-c svg { width:84px; max-width:84px; margin:0; flex:none; } .lp-c b, .lp-c span { display:block; } }
+
+/* 로그인 혜택: 멤버십 혜택 스타일 (어두운 카드) */
+.qz.lp { background:radial-gradient(120% 90% at 0% 0%, #3b2fa8 0%, #15132e 55%, #0c0b1c 100%); color:#fff; border:1px solid #2c2a55; }
+.lp-top { padding:20px 18px 6px; text-align:left; }
+.lp-badge { display:inline-block; padding:3px 10px; border-radius:99px; background:linear-gradient(90deg,#ff5d7a,#ff8a5c); font-size:12px; font-weight:800; }
+.lp-top > b { display:block; margin-top:10px; font-size:24px; letter-spacing:-.6px; }
+.lp-sub { display:block; margin-top:4px; font-size:13.5px; color:#b9b6e6; }
+.lp-rows { list-style:none; margin:0; padding:10px 14px 4px; display:grid; gap:2px; }
+.lp-rows li { display:flex; align-items:center; gap:14px; padding:13px 4px; border-bottom:1px solid #2a2850; }
+.lp-rows li:last-child { border-bottom:0; }
+.lp-i { flex:none; width:44px; height:44px; border-radius:14px; display:grid; place-items:center; background:linear-gradient(145deg,#6b5cff,#b05cff); box-shadow:0 6px 16px -6px #8a5cff; }
+.lp-i svg { width:22px; height:22px; }
+.lp-rows b { display:block; font-size:15.5px; } .lp-rows span { display:block; margin-top:2px; font-size:13px; color:#b9b6e6; line-height:1.45; }
+.lp .lp-a { padding:12px 18px 4px; justify-content:flex-start; }
+.lp .lp-a .btn { background:transparent; border-color:#3a3870; color:#cfcdf5; }
+.lp .qz-n { padding:0 18px 16px; text-align:left; color:#8d8ac0; }
