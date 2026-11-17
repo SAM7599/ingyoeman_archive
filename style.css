@@ -1231,7 +1231,7 @@ html:not([data-motion="off"]) .g-tip { animation:gtipin .35s ease 1.2s both !imp
 .g-tip .g-tipoff { display:block; width:100%; margin:2px 0 6px; padding:10px 0 6px; border:0; border-top:1px solid #2a2850; background:none; color:#8d8ac0; font:inherit; font-size:12.5px; text-align:center; cursor:pointer; }
 .g-tip .g-tipoff:hover { color:#fff; }
 @media (max-width:860px) { .g-tip { position:fixed; top:66px; right:12px; } .g-tip::before { display:none; } }
-@media (max-width:860px) { .top { position:relative; z-index:45; } }
+@media (max-width:860px) { .top { position:relative; z-index:45; } .menu { z-index:50; } }
 
 /* 미니게임 */
 .play { position:fixed; inset:0; z-index:80; display:grid; place-items:center; padding:12px; background:rgba(8,9,22,.78); }
