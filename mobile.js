@@ -65,7 +65,7 @@
     var y0 = 0, pull = 0, on = false, MAX = 90, GO = 70;
     var blocked = function () { return openN() > 0 || window.scrollY > 0 || document.documentElement.classList.contains("consent-on") || document.documentElement.classList.contains("intro-on"); };
     document.addEventListener("touchstart", function (e) {
-      on = !blocked() && e.touches.length === 1; pull = 0; if (on) y0 = e.touches[0].clientY;
+      on = !blocked() && e.touches.length === 1 && !(e.target.closest && e.target.closest("#noticePop, #tourBox")); pull = 0; if (on) y0 = e.touches[0].clientY;
     }, { passive: true });
     document.addEventListener("touchmove", function (e) {
       if (!on) return;
