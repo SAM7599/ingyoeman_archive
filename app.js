@@ -84,7 +84,7 @@
 
   /* ── 별점 (구글 로그인) — 서버 주소는 config.js 의 rating ── */
   const RATE = /^(https:\/\/|http:\/\/localhost)/i.test(SITE.rating || "") ? SITE.rating.replace(/\/+$/, "") : "";
-  let meI = null, isAdm = false, ravg = {}, mine = {}, rtok = store.get("dtok", null), banI = store.get("ban1", false), isBan = !!banI;
+  let QZ = null, meI = null, isAdm = false, ravg = {}, mine = {}, rtok = store.get("dtok", null), banI = store.get("ban1", false), isBan = !!banI;
   const setBan = (v, info) => { isBan = !!v; banI = isBan ? (info && typeof info === "object" ? info : (banI && typeof banI === "object" ? banI : true)) : false; store.set("ban1", banI); };
   const rScore = v => { const a = ravg[vid(v)]; return a ? (a[0] * a[1] + 3 * 2) / (a[1] + 2) : 0; };   // 표가 적을 때 흔들리지 않게 보정
   const rStars = n => "★".repeat(Math.round(n)) + "☆".repeat(5 - Math.round(n));
@@ -110,7 +110,13 @@
   }
   /* ── 상단 구글 로그인 버튼 ── */
   let gsiTop = false;
+  function syncQuiz() {
+    const home = $("home"); if (!home || $("home").hidden) return;
+    const el = $("qz"), html = quizHtml();
+    if (el) { if (html) el.outerHTML = html; else el.remove(); } else if (html) home.insertAdjacentHTML("afterbegin", html);
+  }
   function drawLogin() {
+    try { syncQuiz(); } catch (e) {}
     const box = $("gTop"); if (!box) return;
     if (!RATE || !GID) { box.hidden = true; return; }
     box.hidden = false;
@@ -583,11 +589,10 @@
       <div class="rail-wrap">${ARR(-1)}<div class="rail">${list.slice(0, 14).map(v => cardHtml(v, true)).join("")}</div>${ARR(1)}</div></section>`;
   }
   /* ── 오늘의 한 줄 퀴즈: 하루에 하나, quiz.json에서 날짜로 골라요 (정답 기록은 이 기기에만 저장) ── */
-  let QZ = null;
   const qzDay = () => Math.floor((Date.now() + 9 * 36e5) / 864e5);
   const qzStep = n => [7, 11, 13, 17, 19, 1].find(s => { let a = s, b = n; while (b) [a, b] = [b, a % b]; return a === 1; });
   function quizHtml() {
-    if (!QZ || !QZ.length) return "";
+    if (!rtok || !QZ || !QZ.length) return "";   // 구글 로그인한 사람에게만 보여요
     const d = qzDay(), n = QZ.length, q = QZ[(d * qzStep(n)) % n], st = store.get("qz1", null), got = st && st.d === d ? st.p : -1;
     const opts = q.o.map((t, i) => `<button type="button" class="qz-o${got >= 0 ? (i === q.a ? " ok" : i === got ? " no" : "") : ""}" data-qz="${i}"${got >= 0 ? " disabled" : ""}>${esc(t)}</button>`).join("");
     const res = got >= 0 ? `<p class="qz-r ${got === q.a ? "ok" : "no"}"><b>${got === q.a ? "정답이에요! 🎉" : "아쉬워요, 정답은 \"" + esc(q.o[q.a]) + "\""}</b><span>${esc(q.e)}</span></p><p class="qz-n">내일 새 퀴즈가 나와요 · 참고: 나무위키 「잉여맨」 문서 (CC BY-NC-SA 2.0 KR)</p>` : `<p class="qz-n">매일 하나씩 바뀌어요 · 틀려도 괜찮아요</p>`;
