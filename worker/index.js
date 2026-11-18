@@ -251,6 +251,16 @@ async function handle(req, env, ctx) {
     return json(env, { ok: true, banned: b.ban !== false });
   }
 
+  if (p === "/admin/user/delete" && req.method === "POST") {   // 운영진: 로그인한 사람 지우기 (저장 자료 삭제, 정지 표시는 그대로)
+    const s = await getAuth(env, req); if (!s || !isAdmin(env, s)) return json(env, { error: "forbidden" }, 403);
+    let b; try { b = await req.json(); } catch (e) { return json(env, { error: "bad" }, 400); }
+    const uid = String(b.uid || ""); if (!/^u[\w-]{10,40}$/.test(uid)) return json(env, { error: "bad" }, 400);
+    if (uid === s.uid) return json(env, { error: "self" }, 400);
+    await udTable(env); await abTables(env);
+    await env.DB.batch([env.DB.prepare("DELETE FROM udata WHERE uid = ?").bind(uid), env.DB.prepare("DELETE FROM acct_ip WHERE uid = ?").bind(uid), env.DB.prepare("DELETE FROM abuse_log WHERE uid = ?").bind(uid)]);
+    return json(env, { ok: true });
+  }
+
   if (p === "/account/delete" && req.method === "POST") {   // 내 저장 자료와 접속 기록을 한 번에 지워요
     const s = await getAuth(env, req);
     if (!s) return json(env, { error: "login" }, 401);

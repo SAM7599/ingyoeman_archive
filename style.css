@@ -1354,6 +1354,7 @@ html:not([data-motion="off"]) .cs-box:not(.cs-bye) { animation:zoom .35s cubic-b
 #gBtnTop, #gBtnPromo, #plG, #gBtnTop iframe, #gBtnPromo iframe, #plG iframe, iframe[src*="accounts.google.com"] { color-scheme:light; }
 #gBtnTop, #gBtnPromo { background:transparent; }
 #gBtnTop > div, #gBtnTop iframe { background:transparent !important; }
-.au-h { display:flex; align-items:center; gap:6px; }
-.au-x { margin-left:auto; width:28px; height:28px; border:0; border-radius:50%; background:var(--raise); color:var(--ink); font-size:14px; cursor:pointer; }
-.au-body[hidden] { display:none; }
+.au-l li { position:relative; }
+.au-x { position:absolute; top:8px; right:8px; width:26px; height:26px; border:0; border-radius:50%; background:var(--line); color:var(--ink); font-size:13px; cursor:pointer; }
+.au-x:hover { background:#e5484d; color:#fff; }
+.au-l li b { padding-right:32px; }
