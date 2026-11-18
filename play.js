@@ -19,7 +19,7 @@
     document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !box.hidden) close(); });
     document.addEventListener("ovback", function () { if (!box.hidden) close(); });
   }
-  function setBack() { var b = $("plX"); if (b) b.textContent = st ? "← 게임 목록" : "← 사이트로"; }
+  function setBack() { var b = $("plX"); if (b) b.textContent = st ? "← 게임 목록" : "← 사이트로"; if (box) box.classList.toggle("pl-arcade", !st); }   // 목록(게임 선택) 화면일 때만 오락실 모양으로 전체를 꾸며요
   function open() { build(); var a = A(); if (!a || a.vids().length < 20) return; a.closeMenu(); box.hidden = false; document.body.style.overflow = "hidden"; home(); }
   function close() { if (!box) return; box.hidden = true; document.body.style.overflow = ""; st = null; }
   window.openPlay = open;
@@ -153,6 +153,7 @@
     return best;
   }
   function cwStart() {
+    st = { g: "cw" }; setBack();
     if (!CW) { body.innerHTML = '<p class="pl-sub">퍼즐을 만드는 중이에요…</p>'; fetch("crossword.json").then(function (r) { return r.json(); }).then(function (d) { CW = d; cwStart(); }).catch(function () { body.innerHTML = '<p class="pl-sub">퍼즐을 불러오지 못했어요. 잠시 뒤에 다시 해 주세요.</p>'; }); return; }
     var pz = cwMake(); if (!pz) { body.innerHTML = '<p class="pl-sub">퍼즐을 만들지 못했어요. 다시 눌러 주세요.</p>'; return; }
     var ans = {}; pz.list.forEach(function (p) { for (var i = 0; i < p.w.length; i++) ans[(p.r + (p.dir ? i : 0)) + "," + (p.col + (p.dir ? 0 : i))] = p.w.charAt(i); });
