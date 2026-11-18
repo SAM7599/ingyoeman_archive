@@ -117,7 +117,7 @@ let udReady = false;
 const udTable = async (env) => { if (udReady) return; await env.DB.prepare("CREATE TABLE IF NOT EXISTS udata (uid TEXT PRIMARY KEY, fav TEXT NOT NULL DEFAULT '[]', rec TEXT NOT NULL DEFAULT '[]', sov TEXT NOT NULL DEFAULT '{}', days INTEGER NOT NULL DEFAULT 0, streak INTEGER NOT NULL DEFAULT 0, last TEXT NOT NULL DEFAULT '', q_ok INTEGER NOT NULL DEFAULT 0, q_all INTEGER NOT NULL DEFAULT 0, q_streak INTEGER NOT NULL DEFAULT 0, q_last TEXT NOT NULL DEFAULT '', ts INTEGER NOT NULL DEFAULT 0)").run(); udReady = true; };
 const udGet = async (env, uid) => { await udTable(env); return (await env.DB.prepare("SELECT * FROM udata WHERE uid = ?").bind(uid).first()) || { uid, fav: "[]", rec: "[]", sov: "{}", days: 0, streak: 0, last: "", q_ok: 0, q_all: 0, q_streak: 0, q_last: "", ts: 0 }; };
 const udSave = (env, r) => env.DB.prepare("INSERT INTO udata (uid, fav, rec, sov, days, streak, last, q_ok, q_all, q_streak, q_last, ts) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(uid) DO UPDATE SET fav = excluded.fav, rec = excluded.rec, sov = excluded.sov, days = excluded.days, streak = excluded.streak, last = excluded.last, q_ok = excluded.q_ok, q_all = excluded.q_all, q_streak = excluded.q_streak, q_last = excluded.q_last, ts = excluded.ts").bind(r.uid, r.fav, r.rec, r.sov, r.days, r.streak, r.last, r.q_ok, r.q_all, r.q_streak, r.q_last, r.ts).run();
-const purgeOld = (env) => env.DB.prepare("DELETE FROM udata WHERE ts < ?").bind(Date.now() - (Number(env.RETENTION_DAYS) || 180) * 864e5).run().catch(() => {});   // 6개월 안 온 사람의 자료는 지워요
+const purgeOld = async (env) => { try { await env.DB.prepare("DELETE FROM udata WHERE ts < ?").bind(Date.now() - (Number(env.RETENTION_DAYS) || 180) * 864e5).run(); await reactTables(env); await env.DB.batch([env.DB.prepare("DELETE FROM react WHERE uid NOT IN (SELECT uid FROM udata)"), env.DB.prepare("DELETE FROM react_day WHERE day < ?").bind(kstDay(Date.now() - 3 * 864e5))]); } catch (e) {} };   // 6개월 안 온 사람의 자료는 지워요
 const udOut = (r) => ({ fav: JSON.parse(r.fav || "[]"), rec: JSON.parse(r.rec || "[]"), sov: JSON.parse(r.sov || "{}"), quiz: { ok: r.q_ok, all: r.q_all, streak: r.q_streak } });
 const idList = (a, max) => Array.isArray(a) ? [...new Set(a.filter(x => typeof x === "string" && /^[\w-]{1,24}$/.test(x)))].slice(0, max) : null;
 const sovClean = (o) => { if (!o || typeof o !== "object" || Array.isArray(o)) return null; const out = {}; let n = 0; for (const k of Object.keys(o)) { if (!/^[\w-]{1,24}$/.test(k) || !Array.isArray(o[k])) continue; const names = [...new Set(o[k].filter(x => typeof x === "string").map(x => x.trim().slice(0, 20)).filter(Boolean))].slice(0, 6); out[k] = names; if (++n >= SOV_MAX) break; } return out; };
@@ -139,6 +139,14 @@ const abroad = (env, req) => {
 };
 async function getAuth(env, req) { const s = await verify(env, (req.headers.get("Authorization") || "").replace(/^Bearer /, "")); return s && /^u[\w-]{24}$/.test(String(s.uid)) && !(await isBanned(env, s.uid)) && !(abroad(env, req) && !isAdmin(env, s)) ? s : null; }   // 예전 방식 로그인은 한 번 다시 로그인하게 해요
 
+// ── 영상 반응 (이모지 한 개, 로그인한 사람만, 하루 30번까지) ──
+// 한 사람이 영상 하나에 반응 하나만 남길 수 있고(바꾸거나 취소 가능), 누가 남겼는지는 아무에게도 보이지 않아요. 글은 받지 않아요.
+const REACTS = ["laugh", "nostalgia", "legend", "tear", "clap"], REACT_DAILY = 30;
+let reactReady = false;
+const reactTables = async (env) => { if (reactReady) return; await env.DB.batch([
+  env.DB.prepare("CREATE TABLE IF NOT EXISTS react (id TEXT NOT NULL, uid TEXT NOT NULL, r TEXT NOT NULL, ts INTEGER NOT NULL, PRIMARY KEY (id, uid))"),
+  env.DB.prepare("CREATE INDEX IF NOT EXISTS react_uid ON react (uid)"),
+  env.DB.prepare("CREATE TABLE IF NOT EXISTS react_day (uid TEXT NOT NULL, day TEXT NOT NULL, n INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (uid, day))")]); reactReady = true; };
 // ── 서버 사용량 (무료 한도 확인용) ──
 // 요청 수는 10번에 1번만 기록하고 10씩 더해서(쓰기 한도를 아끼려고) 대략의 값을 보여줘요. 하루 기준은 한국 시간 오전 9시(= 클라우드플레어 UTC 0시)에 바뀌어요.
 let useReady = false;
@@ -242,6 +250,45 @@ async function handle(req, env, ctx) {
     return json(env, { name: await nick(env, s.uid), admin: isAdmin(env, s) });
   }
 
+  if (p === "/react" && req.method === "GET") {   // 영상 하나의 반응 수 (누구나 볼 수 있고, 로그인했다면 내 반응도 같이)
+    const id = url.searchParams.get("id") || ""; if (!/^[\w-]{1,24}$/.test(id)) return json(env, { error: "bad" }, 400);
+    if (await tooFast(env, req, "reactget", 60, 60)) return slow(env);
+    try {
+      await reactTables(env);
+      const s = await getAuth(env, req);
+      const rows = (await env.DB.prepare("SELECT r, COUNT(*) AS c FROM react WHERE id = ? GROUP BY r").bind(id).all()).results || [];
+      const counts = {}; for (const r of rows) if (REACTS.includes(r.r)) counts[r.r] = r.c;
+      let mine = null, left = null;
+      if (s) {
+        const m = await env.DB.prepare("SELECT r FROM react WHERE id = ? AND uid = ?").bind(id, s.uid).first(); mine = m ? m.r : null;
+        const d = await env.DB.prepare("SELECT n FROM react_day WHERE uid = ? AND day = ?").bind(s.uid, kstDay()).first(); left = Math.max(0, REACT_DAILY - (d ? d.n : 0));
+      }
+      return json(env, { counts, mine, left, cap: REACT_DAILY }, 200, { "Cache-Control": "no-store" });
+    } catch (e) { return json(env, { error: "busy" }, 503); }
+  }
+  if (p === "/react" && req.method === "POST") {   // 반응 남기기·바꾸기·취소
+    const s = await getAuth(env, req); if (!s) return json(env, { error: "login" }, 401);
+    if (await tooFast(env, req, "react", 30, 60, s.uid, isAdmin(env, s))) return slow(env);
+    let b; try { b = await req.json(); } catch (e) { return json(env, { error: "bad" }, 400); }
+    const id = String(b.id || ""), r = b.r === "" || b.r === null ? "" : String(b.r || "x");
+    if (!/^[\w-]{1,24}$/.test(id) || (r !== "" && !REACTS.includes(r))) return json(env, { error: "bad" }, 400);
+    try {
+      await reactTables(env); await udTable(env); await env.DB.prepare("INSERT INTO udata (uid, ts) VALUES (?, ?) ON CONFLICT(uid) DO UPDATE SET ts = excluded.ts").bind(s.uid, Date.now()).run();   // 6개월 자동 삭제 기준(마지막 접속)에 반영해요
+      const day = kstDay(), cur = await env.DB.prepare("SELECT r FROM react WHERE id = ? AND uid = ?").bind(id, s.uid).first();
+      const d = await env.DB.prepare("SELECT n FROM react_day WHERE uid = ? AND day = ?").bind(s.uid, day).first(), used = d ? d.n : 0;
+      if (r === "") { if (cur) await env.DB.prepare("DELETE FROM react WHERE id = ? AND uid = ?").bind(id, s.uid).run(); }
+      else if (!cur || cur.r !== r) {
+        if (used >= REACT_DAILY) return json(env, { error: "limit", left: 0, cap: REACT_DAILY }, 429);   // 하루 한도
+        await env.DB.batch([env.DB.prepare("INSERT INTO react (id, uid, r, ts) VALUES (?, ?, ?, ?) ON CONFLICT(id, uid) DO UPDATE SET r = excluded.r, ts = excluded.ts").bind(id, s.uid, r, Date.now()),
+          env.DB.prepare("INSERT INTO react_day (uid, day, n) VALUES (?, ?, 1) ON CONFLICT(uid, day) DO UPDATE SET n = n + 1").bind(s.uid, day)]);
+        if (Math.random() < 0.02) await env.DB.prepare("DELETE FROM react_day WHERE day < ?").bind(kstDay(Date.now() - 3 * 864e5)).run().catch(() => {});
+      }
+      const rows = (await env.DB.prepare("SELECT r, COUNT(*) AS c FROM react WHERE id = ? GROUP BY r").bind(id).all()).results || [];
+      const counts = {}; for (const x of rows) if (REACTS.includes(x.r)) counts[x.r] = x.c;
+      const n2 = (r !== "" && (!cur || cur.r !== r)) ? used + 1 : used;
+      return json(env, { ok: true, counts, mine: r || null, left: Math.max(0, REACT_DAILY - n2), cap: REACT_DAILY });
+    } catch (e) { return json(env, { error: "busy" }, 503); }
+  }
   if (p === "/admin/users" && req.method === "GET") {   // 운영진: 로그인한 사람 목록
     const s = await getAuth(env, req); if (!s || !isAdmin(env, s)) return json(env, { error: "forbidden" }, 403);
     try {
@@ -293,7 +340,7 @@ async function handle(req, env, ctx) {
     if (!s) return json(env, { error: "login" }, 401);
     for (const t of ["ratings", "rating_history", "ip_seen"]) await env.DB.prepare("DELETE FROM " + t + " WHERE uid = ?").bind(s.uid).run().catch(() => {});   // 예전 기능의 기록이 남아 있으면 함께 지워요
     await env.DB.prepare("DELETE FROM reports WHERE uid = ? OR reporter = ?").bind(s.uid, s.uid).run().catch(() => {});
-    for (const t of ["acct_ip", "abuse_log"]) await env.DB.prepare("DELETE FROM " + t + " WHERE uid = ?").bind(s.uid).run().catch(() => {});   // 의심 기록에 남은 내 계정 표시도 함께 지워요
+    for (const t of ["react", "react_day", "acct_ip", "abuse_log"]) await env.DB.prepare("DELETE FROM " + t + " WHERE uid = ?").bind(s.uid).run().catch(() => {});   // 의심 기록에 남은 내 계정 표시도 함께 지워요
     await udTable(env).then(() => env.DB.prepare("DELETE FROM udata WHERE uid = ?").bind(s.uid).run()).catch(() => {});   // 저장해 둔 즐겨찾기·기록도 함께 지워요
     if (!isAdmin(env, s)) { await lockLeft(env, s.uid); await env.DB.prepare("INSERT INTO delete_lock (uid, ts) VALUES (?, ?) ON CONFLICT(uid) DO UPDATE SET ts = excluded.ts").bind(s.uid, Date.now()).run(); await env.DB.prepare("DELETE FROM delete_lock WHERE ts < ?").bind(Date.now() - LOCK_MS).run().catch(() => {}); }   // 24시간 동안 다시 로그인할 수 없어요
     return json(env, { ok: true, hours: 24 });
