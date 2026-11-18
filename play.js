@@ -11,7 +11,7 @@
   function build() {
     if ($("play")) return;
     box = document.createElement("div"); box.id = "play"; box.className = "play"; box.hidden = true;
-    box.innerHTML = '<div class="pl-page" role="dialog" aria-modal="true" aria-label="미니게임"><header class="pl-top"><button type="button" class="pl-back" id="plX">← 사이트로</button><b>🎮 잉여맨 오락실</b></header><main class="pl-main"><div id="plBody"></div></main></div>';
+    box.innerHTML = '<div class="pl-page" role="dialog" aria-modal="true" aria-label="미니게임"><header class="pl-top"><button type="button" class="pl-back" id="plX">← 사이트로</button><b>🎮 잉여맨 오락실</b></header><main class="pl-main"><div id="plBody"></div></main><footer class="pl-ai">🤖 미니게임의 문제·낱말·뜻풀이는 AI가 만들어서 어색하거나 틀린 부분이 있을 수 있어요. 양해 부탁드려요!</footer></div>';
     document.body.appendChild(box); body = $("plBody");
     $("plX").addEventListener("click", function () { if (st) home(); else close(); });   // 게임 중이면 목록으로, 목록이면 사이트로
     box.addEventListener("click", function (e) { if (e.target === box) close(); handle(e); });
@@ -19,7 +19,7 @@
     document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !box.hidden) close(); });
     document.addEventListener("ovback", function () { if (!box.hidden) close(); });
   }
-  function setBack() { var b = $("plX"); if (b) b.textContent = st ? "← 게임 목록" : "← 사이트로"; if (box) box.classList.toggle("pl-arcade", !st); }   // 목록(게임 선택) 화면일 때만 오락실 모양으로 전체를 꾸며요
+  function setBack() { var b = $("plX"); if (b) b.textContent = st ? "← 게임 목록" : "← 사이트로"; if (box) { box.classList.add("pl-arcade"); box.classList.toggle("pl-game", !!st); box.setAttribute("data-hue", st ? st.g : ""); } }   // 목록(게임 선택) 화면일 때만 오락실 모양으로 전체를 꾸며요
   function open() { build(); var a = A(); if (!a || a.vids().length < 20) return; a.closeMenu(); box.hidden = false; document.body.style.overflow = "hidden"; home(); }
   function close() { if (!box) return; box.hidden = true; document.body.style.overflow = ""; st = null; }
   window.openPlay = open;
@@ -77,23 +77,34 @@
     var qs = [], seen = {}; for (var i = 0; i < 40 && qs.length < 5; i++) { var q = makeQ(all, bank); if (q && !seen[A().key(q.v)]) { seen[A().key(q.v)] = 1; qs.push(q); } }
     st = { g: "blank", qs: qs, i: 0, ok: 0, done: false }; setBack(); blankShow();
   }
+  function confetti() {
+    var w = document.createElement("div"); w.className = "pl-conf"; var cols = ["#ffd166", "#ff5d7a", "#7b8cff", "#2fe39b", "#fff"], h = "";
+    for (var i = 0; i < 46; i++) h += '<i style="left:' + Math.round(Math.random() * 100) + '%;background:' + cols[i % 5] + ';--x:' + Math.round(Math.random() * 160 - 80) + 'px;--r:' + Math.round(Math.random() * 720 - 360) + 'deg;animation-delay:' + (Math.random() * .35).toFixed(2) + 's;animation-duration:' + (1.4 + Math.random() * 1.2).toFixed(2) + 's"></i>';
+    w.innerHTML = h; box.appendChild(w); setTimeout(function () { if (w.parentNode) w.parentNode.removeChild(w); }, 3200);
+  }
+  function floatTxt(t, cls) { var f = document.createElement("div"); f.className = "pl-fl " + (cls || ""); f.textContent = t; box.appendChild(f); setTimeout(function () { if (f.parentNode) f.parentNode.removeChild(f); }, 1200); }
+  function countUp(el, to) { if (!el) return; var n = 0, step = Math.max(1, Math.ceil(to / 14)), t = setInterval(function () { n = Math.min(to, n + step); el.textContent = n; if (n >= to) clearInterval(t); }, 60); }
   function blankShow() {
-    var q = st.qs[st.i];
-    body.innerHTML = '<p class="pl-step">제목 빈칸 채우기 · ' + (st.i + 1) + ' / ' + st.qs.length + '</p><p class="pl-q">' + q.shown + '</p>' +
-      '<div class="pl-opts">' + q.opts.map(function (o, k) { return '<button type="button" class="pl-o" data-o="' + k + '">' + A().esc(o) + '</button>'; }).join("") + '</div><div id="plRes"></div>';
+    var q = st.qs[st.i], n = st.qs.length;
+    body.innerHTML = '<div class="pl-hud"><span class="pl-lv">STAGE ' + (st.i + 1) + ' / ' + n + '</span><span class="pl-combo" id="plCombo">' + (st.combo > 1 ? "🔥 " + st.combo + "연속!" : "") + '</span><span class="pl-sc">SCORE <b>' + st.ok * 100 + '</b></span></div>' +
+      '<div class="pl-prog"><i style="width:' + Math.round(st.i / n * 100) + '%"></i></div>' +
+      '<div class="pl-card pl-in"><p class="pl-ask">영상 제목의 빈칸을 채워라!</p><p class="pl-q">' + q.shown + '</p></div>' +
+      '<div class="pl-opts">' + q.opts.map(function (o, k) { return '<button type="button" class="pl-o pl-in" style="animation-delay:' + (.12 + k * .06) + 's" data-o="' + k + '"><em>' + "ABCDEF".charAt(k) + '</em>' + A().esc(o) + '</button>'; }).join("") + '</div><div id="plRes"></div>';
   }
   function blankPick(k) {
-    if (st.done) return; var q = st.qs[st.i], got = q.opts[k], ok = got === q.ans; st.done = true; if (ok) st.ok++;
+    if (st.done) return; var q = st.qs[st.i], got = q.opts[k], ok = got === q.ans; st.done = true; if (ok) { st.ok++; st.combo = (st.combo || 0) + 1; } else st.combo = 0;
     [].forEach.call(body.querySelectorAll(".pl-o"), function (b, j) { b.disabled = true; if (q.opts[j] === q.ans) b.classList.add("ok"); else if (j === k) b.classList.add("no"); });
-    var last = st.i + 1 >= st.qs.length;
+    var last = st.i + 1 >= st.qs.length, card = body.querySelector(".pl-card"); if (card) card.classList.add(ok ? "pl-hit" : "pl-miss");
+    if (ok) { floatTxt("+100", "ok"); if (st.combo > 1) floatTxt("🔥 " + st.combo + "연속!", "cb"); var sc = body.querySelector(".pl-sc b"); if (sc) sc.textContent = st.ok * 100; } else floatTxt("MISS", "no");
     $("plRes").innerHTML = '<p class="pl-r ' + (ok ? "ok" : "no") + '">' + (ok ? "정답이에요! 👏" : "아쉬워요. 정답은 「" + A().esc(q.ans) + "」") + '</p><p class="pl-full">' + A().esc(q.v.title) + '</p>' +
       '<div class="pl-act"><a class="btn" href="' + A().esc(A().url(q.v.url)) + '" target="_blank" rel="noopener noreferrer">이 영상 보러 가기</a><button type="button" class="btn primary" data-next>' + (last ? "결과 보기" : "다음 문제") + '</button></div>';
   }
   function blankNext() {
     if (!st.done) return; st.done = false; st.i++;
     if (st.i >= st.qs.length) {
-      var s = st.ok, msg = s === st.qs.length ? "완벽해요! 진짜 잉여맨 팬이시네요 🏆" : s >= 3 ? "대단해요! 꽤 잘 아시네요 👍" : s >= 1 ? "괜찮아요, 다시 하면 더 잘할 거예요" : "다음엔 꼭 맞혀 봐요!";
-      body.innerHTML = '<div class="pl-end"><i>🎉</i><b>' + s + ' / ' + st.qs.length + '</b><p>' + msg + '</p><div class="pl-act"><button type="button" class="btn primary" data-g="blank">다시 하기</button><button type="button" class="btn" data-home>다른 게임</button></div></div>';
+      var s = st.ok, tot = st.qs.length, msg = s === tot ? "완벽해요! 진짜 잉여맨 팬이시네요 🏆" : s >= 3 ? "대단해요! 꽤 잘 아시네요 👍" : s >= 1 ? "괜찮아요, 다시 하면 더 잘할 거예요" : "다음엔 꼭 맞혀 봐요!", gr = s === tot ? "S" : s >= tot - 1 ? "A" : s >= 3 ? "B" : "C";
+      body.innerHTML = '<div class="pl-end pl-in"><p class="pl-kick2">STAGE CLEAR</p><i class="pl-trophy">' + (s >= 3 ? "🏆" : "🎮") + '</i><div class="pl-grade g' + gr + '">' + gr + '</div><b><span id="plCnt">0</span> / ' + tot + '</b><p>' + msg + '</p><div class="pl-act"><button type="button" class="btn primary" data-g="blank">다시 하기</button><button type="button" class="btn" data-home>다른 게임</button></div></div>';
+      countUp($("plCnt"), s); if (s >= 3) confetti();
     } else blankShow();
   }
 
@@ -113,7 +124,7 @@
       return cross;
     }
     function put(w, r, c, dir) { for (var i = 0; i < w.w.length; i++) cells[(r + (dir ? i : 0)) + "," + (c + (dir ? 0 : i))] = w.w.charAt(i); list.push({ w: w.w, c: w.c, r: r, col: c, dir: dir }); }
-    var pool = words.slice(), first = pool.splice(rnd(pool.length), 1)[0], limit = 14;
+    var pool = words.slice(), first = pool.splice(rnd(pool.length), 1)[0], limit = 24;
     put(first, 0, 0, 0);
     while (list.length < limit && pool.length) {   // 지금 판에 걸쳐 놓을 수 있는 낱말을 하나씩 더해요
       var opts = [];
@@ -145,10 +156,10 @@
   }
   function cwMake() {
     var best = null;
-    for (var t = 0; t < 30; t++) {
+    for (var t = 0; t < 40; t++) {
       var p = cwLayout(CW), size = Math.max(p.rows, p.cols);
-      if (p.list.length >= 8 && size <= 13 && (!best || p.list.length > best.list.length || (p.list.length === best.list.length && size < Math.max(best.rows, best.cols)))) best = p;
-      if (best && best.list.length >= 11) break;
+      if (p.list.length >= 8 && size <= 16 && (!best || p.list.length > best.list.length || (p.list.length === best.list.length && size < Math.max(best.rows, best.cols)))) best = p;
+      if (best && best.list.length >= 20) break;
     }
     return best;
   }
@@ -162,28 +173,31 @@
   function cwCellsOf(p) { var a = []; for (var i = 0; i < p.w.length; i++) a.push((p.r + (p.dir ? i : 0)) + "," + (p.col + (p.dir ? 0 : i))); return a; }
   function cwShow() {
     var pz = st.pz, sel = pz.list[st.sel], selCells = cwCellsOf(sel), esc = A().esc, h = "", r, c;
-    var cs = Math.max(24, Math.min(40, Math.floor(Math.min(innerWidth - 32, 600) / pz.cols)));
-    h += '<p class="pl-step">낱말퍼즐 · ' + pz.list.length + '개 낱말 · 칸을 누르고 답을 적어 주세요</p><div class="cw-grid" style="grid-template-columns:repeat(' + pz.cols + ',' + cs + 'px);font-size:' + Math.round(cs * .56) + 'px">';
+    var cs = Math.max(17, Math.min(40, Math.floor((Math.min(innerWidth - 32, 600) - 22 - 2 * (pz.cols - 1)) / pz.cols)));
+    var doneW = pz.list.filter(function (p) { return cwCellsOf(p).every(function (k) { return st.fill[k] === st.ans[k]; }); }).length, tw = pz.list.length;
+    h += '<div class="pl-hud"><span class="pl-lv">낱말퍼즐</span><span class="pl-sc">CLEAR <b>' + (st.done ? tw : doneW) + '</b> / ' + tw + '</span></div><div class="pl-prog"><i style="width:' + Math.round((st.done ? tw : doneW) / tw * 100) + '%"></i></div><div class="cw-grid' + (st.shown ? "" : " pl-in") + '" style="grid-template-columns:repeat(' + pz.cols + ',' + cs + 'px);font-size:' + Math.round(cs * .56) + 'px">';
     for (r = 0; r < pz.rows; r++) for (c = 0; c < pz.cols; c++) {
       var k = r + "," + c, a = st.ans[k];
       if (!a) { h += '<i class="cw-e" style="width:' + cs + 'px;height:' + cs + 'px"></i>'; continue; }
-      var f = st.fill[k] || "", cls = "cw-c" + (selCells.indexOf(k) >= 0 ? " sel" : "") + (st.checked && f ? (f === a ? " ok" : " no") : "") + (st.done ? " ok" : "");
-      h += '<button type="button" class="' + cls + '" data-cw="' + k + '" style="width:' + cs + 'px;height:' + cs + 'px">' + (pz.num[k] ? '<sup>' + pz.num[k] + '</sup>' : "") + esc(st.done ? a : f) + '</button>';
+      var f = st.fill[k] || "", pi = st.pop ? st.pop.indexOf(k) : -1, cls = "cw-c" + (pi >= 0 ? (st.popOk ? " wow" : " pop") : "") + (st.done && st.fin ? " fin" : "") + (selCells.indexOf(k) >= 0 ? " sel" : "") + (st.checked && f ? (f === a ? " ok" : " no") : "") + (st.done ? " ok" : "");
+      h += '<button type="button" class="' + cls + '" data-cw="' + k + '" style="width:' + cs + 'px;height:' + cs + 'px' + (pi >= 0 ? ';animation-delay:' + (pi * .06).toFixed(2) + 's' : '') + '">' + (pz.num[k] ? '<sup>' + pz.num[k] + '</sup>' : "") + esc(st.done ? a : f) + '</button>';
     }
     h += '</div>';
     if (!st.done) h += '<div class="cw-ask"><p class="cw-now"><b>' + sel.n + (sel.dir ? "↓ 세로" : "→ 가로") + '</b> ' + esc(sel.c) + ' <span>(' + sel.w.length + '글자)</span></p><form class="cw-form" id="cwForm"><input id="cwIn" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="' + sel.w.length + '" placeholder="' + sel.w.length + '글자로 적고 입력"><button type="submit" class="btn primary">입력</button></form></div>';
     var cl = function (dir) { return pz.list.map(function (p, i) { return [p, i]; }).filter(function (x) { return x[0].dir === dir; }).sort(function (x, y) { return x[0].n - y[0].n; }).map(function (x) { var done = cwCellsOf(x[0]).every(function (k) { return st.fill[k] === st.ans[k]; }); return '<li><button type="button" class="cw-cl' + (x[1] === st.sel ? " on" : "") + (done ? " dn" : "") + '" data-cwi="' + x[1] + '"><b>' + x[0].n + '</b> ' + esc(x[0].c) + ' <span>(' + x[0].w.length + ')</span></button></li>'; }).join(""); };
     h += '<div class="cw-cls"><div><h3>→ 가로 열쇠</h3><ul>' + cl(0) + '</ul></div><div><h3>↓ 세로 열쇠</h3><ul>' + cl(1) + '</ul></div></div>';
-    if (st.done) h += '<div class="pl-end"><i>🎉</i><b>퍼즐 완성!</b><p>옛 방송 제목에서 뽑은 낱말을 모두 맞혔어요.</p></div>';
+    if (st.done) h += '<div class="pl-end pl-in"><p class="pl-kick2">ALL CLEAR</p><i class="pl-trophy">🏆</i><b>퍼즐 완성!</b><p>옛 방송 제목에서 뽑은 낱말을 모두 맞혔어요.</p></div>';
     h += '<div class="pl-act"><button type="button" class="btn" data-cwchk="1">정답 확인</button><button type="button" class="btn" data-cwshow="1">모두 보기</button><button type="button" class="btn primary" data-cwnew="1">새 퍼즐</button></div>';
     body.innerHTML = h;
+    st.shown = true; st.pop = null; st.popOk = false; if (st.done && st.fin) { confetti(); st.fin = false; }
     var inp = $("cwIn"); if (inp && st.focus) { inp.focus(); st.focus = false; }
   }
   function cwFilled() { return Object.keys(st.ans).every(function (k) { return st.fill[k] === st.ans[k]; }); }
   function cwSubmit() {
     var inp = $("cwIn"); if (!inp) return; var w = inp.value.replace(/\s+/g, ""), p = st.pz.list[st.sel], cells = cwCellsOf(p);
     if (!w) return; for (var i = 0; i < cells.length; i++) st.fill[cells[i]] = w.charAt(i) || "";
-    st.checked = false; if (cwFilled()) { st.done = true; } else { for (var j = 1; j <= st.pz.list.length; j++) { var n = (st.sel + j) % st.pz.list.length, q = st.pz.list[n]; if (!cwCellsOf(q).every(function (k) { return st.fill[k] === st.ans[k]; })) { st.sel = n; break; } } }
+    st.pop = cells; st.popOk = cells.every(function (k) { return st.fill[k] === st.ans[k]; }); if (st.popOk) floatTxt("정답! ✨", "ok");
+    st.checked = false; if (cwFilled()) { st.done = true; st.fin = true; } else { for (var j = 1; j <= st.pz.list.length; j++) { var n = (st.sel + j) % st.pz.list.length, q = st.pz.list[n]; if (!cwCellsOf(q).every(function (k) { return st.fill[k] === st.ans[k]; })) { st.sel = n; break; } } }
     st.focus = !st.done; cwShow();
   }
   function cwPickCell(k) {

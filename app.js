@@ -55,7 +55,7 @@
   })();
   const CATS = SITE.categories || [];
 
-  let anim = false, popKey = null, gv = null, gBusy = false;
+  let anim = false, popKey = null;
   let all = [], SERIES = [], ser = "", tab = "all", cat = "", shown = PAGE, todayKey = null, menuFor = null, current = null;
   let favs = new Set(store.get("favs", []));
   let recent = store.get("recent", []);   // 열어본 영상 (자동)
@@ -456,7 +456,7 @@
     const extra = Object.keys(n).filter(c => c && c !== "undefined" && !CATS.includes(c)).sort();
     const chip = (c, label, cnt, zero) => `<button class="chip ${c === cat ? "on" : ""} ${zero ? "zero" : ""}" type="button" data-c="${esc(c)}">${c && c !== "*" ? `<i style="--c:${dot(c)}"></i>` : ""}${esc(label)}${cnt == null ? "" : `<em>${cnt}</em>`}</button>`;
     const cbox = $("chips"), sx = cbox.scrollLeft;
-    $("chips").innerHTML = (all.length > 1 && tab !== "fav" && tab !== "recent" ? `<button class="chip draw" type="button" data-draw>${CARD}랜덤 뽑기</button>` : "") + (home ? chip("", "홈") + chip("*", "전체 영상", p.length) : chip("", "전체", p.length)) + 
+    $("chips").innerHTML = (all.length > 1 && tab !== "fav" && tab !== "recent" ? `` : "") + (home ? chip("", "홈") + chip("*", "전체 영상", p.length) : chip("", "전체", p.length)) + 
       [...CATS, ...extra].map(c => chip(c, c, n[c] || 0, !n[c] && c !== cat)).join("");
     cbox.scrollLeft = sx;   // 가로로 넘겨 둔 위치를 유지 (휴대폰)
     chipHint();
@@ -472,7 +472,7 @@
       <p class="hero-meta"><span class="cat-dot" style="--c:${dot(v.category)}">${esc(v.category || "기타")}</span>${ytId(v) ? "<span>바로 재생돼요</span>" : ""}</p>
       <div class="acts"><a class="btn primary" data-go href="${esc(safeUrl(v.url))}" target="_blank" rel="noopener noreferrer">${ytId(v) ? "바로 보기" : "다시보기" + OUT}</a>
       <button class="btn glass" type="button" data-fav>${favs.has(todayKey) ? "♥ 담았어요" : "♡ 즐겨찾기"}</button>
-      ${all.length > 1 ? `<button class="btn glass" type="button" data-draw>${CARD}랜덤 뽑기</button><button class="btn glass" type="button" data-play>🎮 미니게임</button>` : ""}</div></div>`;
+      ${all.length > 1 ? `<button class="btn glass" type="button" data-play>🎮 미니게임</button>` : ""}</div></div>`;
     if (box.dataset.shown !== todayKey) { box.dataset.shown = todayKey; box.classList.remove("anim"); void box.offsetWidth; box.classList.add("anim"); }
   }
   const ARR = d => `<button class="arr ${d < 0 ? "l" : "r"}" type="button" data-dir="${d}" aria-label="${d < 0 ? "앞으로" : "뒤로"} 넘기기"><svg viewBox="0 0 24 24"><path d="${d < 0 ? "M14 6l-6 6 6 6" : "M10 6l6 6-6 6"}"/></svg></button>`;
@@ -584,7 +584,6 @@
     $("viewGuide").hidden = tab !== "guide"; $("viewAbout").hidden = tab !== "about"; $("viewNotes").hidden = tab !== "notes"; if (tab === "notes") showNotes(); $("viewAch").hidden = tab !== "ach"; if (tab === "ach") renderAch(); $("viewList").hidden = isInfo();
     document.querySelectorAll(".tab").forEach(a => a.classList.toggle("on", a.dataset.tab === (tab === "ach" ? "ach" : isInfo() ? "info" : tab === "nothumb" ? "all" : tab)));
     const pg = tab === "guide" ? $("viewGuide") : tab === "about" ? $("viewAbout") : tab === "notes" ? $("viewNotes") : tab === "ach" ? $("viewAch") : $("viewList"); pg.classList.remove("enter"); if (moved && !document.documentElement.classList.contains("vt")) { void pg.offsetWidth; pg.classList.add("enter"); }
-    if (!$("gacha").hidden) closeGacha();
     closeMenu();
     document.documentElement.classList.remove("pre-guide", "pre-about", "pre-notes", "pre-ach", "pre-rank", "pre-series", "pre-fav", "pre-recent", "pre-nothumb");
     if (!isInfo()) reset();
@@ -642,7 +641,7 @@
   }
   function toggleFav(k) {
     if (favs.has(k)) { favs.delete(k); toast("즐겨찾기에서 뺐어요"); } else { favs.add(k); toast("즐겨찾기에 담았어요"); }
-    store.set("favs", [...favs]); popKey = favs.has(k) ? k : null; render(); popKey = null; syncModalFav(); syncGachaFav(); achCheck();
+    store.set("favs", [...favs]); popKey = favs.has(k) ? k : null; render(); popKey = null; syncModalFav(); achCheck();
   }
   const canShare = !!navigator.share && matchMedia("(pointer:coarse)").matches;   // 휴대폰은 카카오톡 등으로 바로 공유
   if (canShare) $("mShare").textContent = "공유하기";
@@ -666,7 +665,7 @@
     const fit = () => { q.placeholder = m3.matches ? "제목이나 분류로 검색" : m2.matches ? "검색" : m1.matches ? "제목·분류 검색" : "제목이나 분류로 검색"; };
     [m1, m2, m3].forEach(m => m.addEventListener ? m.addEventListener("change", fit) : m.addListener(fit)); fit(); }
 
-  /* ── 뽑기 효과음 (파일 없이 브라우저가 직접 만드는 소리) ── */
+  /* ── 효과음 (파일 없이 브라우저가 직접 만드는 소리) ── */
   let actx = null;
   const soundOn = () => store.get("sound", "on") !== "off";
   function ac() {
@@ -681,116 +680,13 @@
     g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol || 0.1, t + 0.015); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
     o.connect(g); g.connect(a.destination); o.start(t); o.stop(t + dur + 0.05);
   }
-  function whoosh(at, dur, vol) {
-    const a = ac(); if (!a) return;
-    const n = Math.floor(a.sampleRate * dur), buf = a.createBuffer(1, n, a.sampleRate), d = buf.getChannelData(0);
-    for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
-    const t = a.currentTime + at, src = a.createBufferSource(), bp = a.createBiquadFilter(), g = a.createGain();
-    src.buffer = buf; bp.type = "bandpass"; bp.Q.value = 0.8;
-    bp.frequency.setValueAtTime(400, t); bp.frequency.exponentialRampToValueAtTime(5000, t + dur);
-    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + dur * 0.35); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-    src.connect(bp); bp.connect(g); g.connect(a.destination); src.start(t); src.stop(t + dur + 0.05);
-  }
-  function sfxDraw(tier, shakeMs) {   // 흔들릴 때 두근두근 → 뒤집힐 때 짠
-    if (!ac()) return;
-    const s = shakeMs / 1000, gap = tier === "legend" ? 0.085 : 0.11, steps = Math.floor(s / gap);
-    for (let i = 0; i < steps; i++) tone(200 + (i / Math.max(1, steps)) * (tier === "legend" ? 620 : tier === "rare" ? 420 : 260), i * gap, 0.06, "triangle", 0.05 + 0.05 * i / Math.max(1, steps));
-    if (tier === "legend") tone(70, 0, s, "sawtooth", 0.05, 180);
-    whoosh(Math.max(0, s - 0.12), 0.34, 0.16);
-    const notes = tier === "legend" ? [523, 659, 784, 1047, 1319, 1568] : tier === "rare" ? [523, 659, 784, 1047] : [659, 880];
-    notes.forEach((f, i) => tone(f, s + 0.1 + i * (tier === "normal" ? 0.09 : 0.075), tier === "normal" ? 0.35 : 0.55, "sine", 0.11));
-    if (tier !== "normal") tone(notes[0] / 2, s + 0.1, 0.9, "triangle", 0.07);
-    if (tier === "legend") for (let i = 0; i < 10; i++) tone(1800 + Math.random() * 2200, s + 0.55 + i * 0.07, 0.16, "sine", 0.04);
-  }
   function syncSound() {
     const on = soundOn();
     $("sound").setAttribute("aria-checked", on);
-    $("gSound").textContent = on ? "소리 켜짐" : "소리 꺼짐"; $("gSound").setAttribute("aria-pressed", on);
   }
   function toggleSound() { store.set("sound", soundOn() ? "off" : "on"); syncSound(); if (soundOn()) tone(880, 0, 0.18, "sine", 0.1); }
   $("sound").addEventListener("click", toggleSound);
-  $("gSound").addEventListener("click", toggleSound);
   syncSound();
-
-  /* ── 랜덤 뽑기 (카드 뽑기 연출) ── */
-  const calm = () => document.documentElement.getAttribute("data-motion") === "off";
-  const tierOf = v => (v.likes || 0) >= 10 ? ["legend", "전설"] : (v.likes || 0) >= 5 ? ["rare", "희귀"] : ["normal", "일반"];
-  function drawPool() { const l = isHome() || isInfo() ? all : filtered(); return l.length > 1 ? l : all; }
-  function drawLabel() {
-    if (drawPool() === all || isHome()) return "전체 영상";
-    return tab === "series" && ser ? ser : tab === "rank" ? "인기 랭킹" : tab === "fav" ? "즐겨찾기" : tab === "recent" ? "열어본 영상" : tab === "nothumb" ? "썸네일 없는 영상" : words().length ? "검색 결과" : cat && cat !== "*" ? cat : "전체 영상";
-  }
-  function gachaPick() {
-    const p = drawPool().filter(v => !gv || key(v) !== key(gv));
-    gv = p[Math.floor(Math.random() * p.length)] || gv;
-    const t = tierOf(gv), card = $("gCard");
-    card.dataset.tier = t[0];
-    card.style.setProperty("--g", grad(gv.category));
-    $("gFace").innerHTML = `<span class="g-tier">${t[1]}</span><b class="g-name">${esc(gv.title)}</b>
-      <span class="g-meta"><span class="cat-dot" style="--c:${dot(gv.category)}">${esc(gv.category || "기타")}</span>${gv.likes > 0 ? `<span>♥ ${gv.likes}</span>` : ""}</span>`;
-    $("gGo").href = safeUrl(gv.url); $("gGo").innerHTML = (ytId(gv) ? "바로 보기" : "다시보기" + OUT);
-    syncGachaFav();
-  }
-  function syncGachaFav() { if (gv) $("gFav").textContent = favs.has(key(gv)) ? "♥ 담았어요" : "♡ 즐겨찾기"; }
-  function gachaReady() {
-    const card = $("gCard");
-    card.classList.add("still"); card.classList.remove("flip", "shake", "done", "shuf"); $("gDeck").classList.remove("on"); void card.offsetWidth; card.classList.remove("still");
-    $("gActs").classList.remove("show"); $("gFx").innerHTML = "";
-    $("gTitle").textContent = "‘" + drawLabel() + "’에서 한 장 뽑아요. 카드를 눌러 보세요";
-    gachaPick();
-  }
-  function openGacha() {
-    if (all.length < 2) return;
-    closeMenu(); gBusy = false; ac();
-    $("gacha").hidden = false; document.body.style.overflow = "hidden";
-    gachaReady(); $("gCard").focus({ preventScroll: true });
-  }
-  function closeGacha() { $("gacha").hidden = true; document.body.style.overflow = ""; gBusy = false; }
-  function burst(tier) {
-    const n = tier === "legend" ? 30 : tier === "rare" ? 18 : 10, fx = $("gFx");
-    let h = `<i class="flash"></i>`;
-    for (let i = 0; i < n; i++) { const a = Math.random() * 360, d = 130 + Math.random() * (tier === "legend" ? 190 : 130); h += `<i class="sp" style="--a:${a.toFixed(0)}deg;--d:${d.toFixed(0)}px;--t:${(0.5 + Math.random() * 0.6).toFixed(2)}s;--s:${(5 + Math.random() * 7).toFixed(0)}px"></i>`; }
-    fx.innerHTML = h;
-  }
-  function gachaGo() {
-    const card = $("gCard");
-    if (gBusy || card.classList.contains("flip")) return;
-    gBusy = true;
-    const quick = calm(), tier = card.dataset.tier;
-    const shakeMs = quick ? 0 : tier === "legend" ? 1500 : tier === "rare" ? 1150 : 850;
-    const shufMs = quick ? 0 : 1300;   // 카드 섞는 연출
-    $("gTitle").textContent = quick ? "두근두근…" : "카드를 섞는 중…";
-    if (!quick) shuffleDeck(shufMs);
-    setTimeout(() => {
-    sfxDraw(tier, shakeMs);
-    $("gTitle").textContent = "두근두근…";
-    card.classList.add("shake");
-    setTimeout(() => {
-      card.classList.remove("shake"); card.classList.add("flip");
-      if (!quick) burst(tier);
-      setTimeout(() => {
-        card.classList.add("done"); achDraw(gv, tier);
-        $("gTitle").textContent = tier === "legend" ? "전설 카드가 나왔어요!" : tier === "rare" ? "희귀 카드예요!" : "이 영상이 뽑혔어요";
-        $("gActs").classList.add("show"); gBusy = false;
-      }, quick ? 0 : 620);
-    }, shakeMs);
-    }, shufMs);
-  }
-  function shuffleDeck(ms) {   // 카드 뭉치를 좌우로 갈라 섞은 뒤 한 장으로 모아요
-    const deck = $("gDeck"), card = $("gCard");
-    deck.innerHTML = Array.from({ length: 8 }, (_, i) => `<i class="g-dk" style="--i:${i};--d:${i % 2 ? -1 : 1}"><span class="dk-em"><span class="logo-mark"></span></span></i>`).join("");
-    card.classList.add("shuf"); deck.classList.add("on");
-    for (let k = 0; k < 7; k++) whoosh(0.1 + k * 0.17, 0.12, 0.05);
-    setTimeout(() => { deck.classList.remove("on"); deck.innerHTML = ""; card.classList.remove("shuf"); }, ms);
-  }
-  $("viewAbout").addEventListener("click", e => { if (e.target.closest("[data-draw-all]")) openGacha(); });
-  $("gCard").addEventListener("click", gachaGo);
-  $("gCard").addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); gachaGo(); } });
-  $("gAgain").addEventListener("click", () => { if (gBusy) return; ac(); gachaReady(); setTimeout(gachaGo, calm() ? 0 : 260); });
-  $("gFav").addEventListener("click", () => gv && toggleFav(key(gv)));
-  $("gGo").addEventListener("click", e => { if (gv) { const v = gv; if (ytId(v)) closeGacha(); follow(e, v, $("gGo").href); } });
-  $("gClose").addEventListener("click", closeGacha);
-  $("gacha").addEventListener("click", e => { if (e.target === $("gacha") && downT === e.target) closeGacha(); });
 
   /* ── 도전과제 (이 기기에만 기록돼요) ── */
   const st = Object.assign({ opened: [], draws: 0, rare: 0, legends: [], days: [], flags: {} }, store.get("stat", {}));
@@ -814,11 +710,6 @@
     { id: "owl", t: "올빼미", d: "새벽 2시에서 5시 사이에 영상 열어 보기", p: () => [st.flags.owl ? 1 : 0, 1] },
     { id: "fav1", t: "찜", d: "즐겨찾기에 처음으로 담기", p: () => [favs.size, 1] },
     { id: "fav20", t: "수집가", d: "즐겨찾기에 20개 담기", p: () => [favs.size, 20] },
-    { id: "draw1", t: "첫 뽑기", d: "랜덤 뽑기 처음 해 보기", p: () => [st.draws, 1] },
-    { id: "draw30", t: "뽑기 중독", d: "랜덤 뽑기 30번 하기", p: () => [st.draws, 30] },
-    { id: "rare", t: "희귀한 인연", d: "희귀 카드 뽑기", p: () => [st.rare ? 1 : 0, 1] },
-    { id: "legend", t: "전설을 만나다", d: "전설 카드 뽑기", p: () => [st.legends.length, 1] },
-    { id: "legend5", t: "전설 수집가", d: "서로 다른 전설 카드 5장 뽑기", p: () => [st.legends.length, 5] },
     { id: "share", t: "나눔의 기쁨", d: "영상 링크 복사하기", p: () => [st.flags.share ? 1 : 0, 1] },
     { id: "report", t: "썸네일 도우미", d: "썸네일 제보 눌러 보기", p: () => [st.flags.report ? 1 : 0, 1] },
     { id: "moved", t: "이사 완료", d: "다른 기기에서 보낸 기록 가져오기", p: () => [st.flags.moved ? 1 : 0, 1] },
@@ -855,12 +746,6 @@
     const top = ranked(all)[0]; if (top && key(top) === key(v)) st.flags.rank1 = 1;
     if (words().length && !isHome()) st.flags.search = 1;
     const h = new Date().getHours(); if (h >= 2 && h < 5) st.flags.owl = 1;
-    saveSt(); achCheck();
-  }
-  function achDraw(v, tier) {
-    if (!v) return;
-    st.draws++; if (tier === "rare") st.rare = 1;
-    if (tier === "legend" && !st.legends.includes(vid(v))) st.legends.push(vid(v));
     saveSt(); achCheck();
   }
   function renderAch() {
@@ -1022,9 +907,8 @@
     const v = byKey($("today").dataset.k); if (!v) return;
     const go = e.target.closest("[data-go]"); if (go) return follow(e, v, go.href);
     if (e.target.closest("[data-fav]")) return toggleFav(key(v));
-    if (e.target.closest("[data-draw]")) return openGacha();
   });
-  $("chips").addEventListener("click", e => { if (e.target.closest("[data-draw]")) return openGacha(); const b = e.target.closest(".chip"); if (!b) return; cat = b.dataset.c; if (b.dataset.c === "" && tab === "all") $("q").value = ""; reset(); });
+  $("chips").addEventListener("click", e => { const b = e.target.closest(".chip"); if (!b) return; cat = b.dataset.c; if (b.dataset.c === "" && tab === "all") $("q").value = ""; reset(); });
   /* ── 검색창: 최근 검색어 + 자동완성 ── */
   { const q = $("q"), box = document.createElement("div"); box.id = "sg"; box.className = "sg"; box.hidden = true; q.parentNode.appendChild(box);
     const RS = "rs1", getR = () => { const a = store.get(RS, []); return Array.isArray(a) ? a.filter(x => typeof x === "string").slice(0, 8) : []; };
@@ -1073,7 +957,7 @@
   document.addEventListener("click", e => { if (!$("menu").hidden && !e.target.closest(".menu")) closeMenu(); if (!$("setMenu").hidden && !e.target.closest(".menu")) closeSet(); });
   document.addEventListener("ovback", () => {   // 휴대폰 뒤로가기: 열려 있는 창 중 맨 위 하나만 닫기
     if (!$("noticePop").hidden && window.closeNotice) window.closeNotice(); else if (!$("serEdit").hidden) closeSerEdit(); else if (!$("dcChat").hidden) closeDc(); else if (!$("admModal").hidden && $("modal").hidden) $("admModal").hidden = true;
-    else if (!$("setMenu").hidden) closeSet(); else if (!$("menu").hidden) closeMenu(); else if (!$("modal").hidden) closeModal(); else if (!$("gacha").hidden) closeGacha(); else if (!$("xfer").hidden) closeXfer(); else if (!$("imp").hidden) closeImp(); else if (!$("admModal").hidden) $("admModal").hidden = true;
+    else if (!$("setMenu").hidden) closeSet(); else if (!$("menu").hidden) closeMenu(); else if (!$("modal").hidden) closeModal(); else if (!$("xfer").hidden) closeXfer(); else if (!$("imp").hidden) closeImp(); else if (!$("admModal").hidden) $("admModal").hidden = true;
   });
   document.addEventListener("keydown", e => {
     if (e.key === "Escape" && !$("noticePop").hidden && window.closeNotice) { window.closeNotice(); return; }
@@ -1083,7 +967,7 @@
     if (e.key === "Escape" && !$("tnPop").hidden) { tnClose(); return; }
     if (e.key === "Escape" && !$("admModal").hidden && $("menu").hidden && $("modal").hidden) { $("admModal").hidden = true; return; }
     if (e.key === "Escape") {
-      if (!$("setMenu").hidden) closeSet(); else if (!$("menu").hidden) closeMenu(); else if (!$("modal").hidden) closeModal(); else if (!$("gacha").hidden) closeGacha(); else if (!$("xfer").hidden) closeXfer(); else if (!$("imp").hidden) closeImp();
+      if (!$("setMenu").hidden) closeSet(); else if (!$("menu").hidden) closeMenu(); else if (!$("modal").hidden) closeModal(); else if (!$("xfer").hidden) closeXfer(); else if (!$("imp").hidden) closeImp();
       else if (document.activeElement === $("q")) { $("q").value = ""; $("q").blur(); reset(); }
     }
     if (e.key === "Enter" && e.target.matches && e.target.matches("[data-ser]")) { e.preventDefault(); location.hash = "series=" + encodeURIComponent(e.target.dataset.ser); }

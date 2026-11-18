@@ -1408,3 +1408,72 @@ html:has(#admModal:not([hidden])) { overflow:hidden; }   /* 대시보드를 열�
 .pl-arcade .pl-ttl { font-size:40px; }
 .pl-arcade .pl-h { color:#fff; } .pl-arcade .pl-end p, .pl-arcade .pl-sub { color:#c9ccf3; }
 @media (max-width:460px) { .pl-arcade .pl-ttl { font-size:32px; } }
+
+/* ───── 게임 화면: 오락실 분위기 + 연출 ───── */
+.play[data-hue="blank"] { --pa:#7b8cff; --pb:#b06bff; } .play[data-hue="cw"] { --pa:#ff7a8a; --pb:#ffb35c; }
+.pl-game .pl-main { display:block; } .pl-game .pl-main > div { margin:0 auto; width:min(680px,100%); }
+.pl-game .pl-top { border-bottom-color:color-mix(in srgb,var(--pa) 55%,transparent); box-shadow:0 6px 24px -14px var(--pa); }
+.pl-hud { display:flex; align-items:center; gap:10px; margin:0 0 8px; font-size:12px; font-weight:900; letter-spacing:.14em; }
+.pl-lv { padding:4px 10px; border-radius:999px; color:#10112a; background:linear-gradient(90deg,var(--pa),var(--pb)); box-shadow:0 0 14px -2px var(--pa); }
+.pl-sc { margin-left:auto; color:#cfd2ff; } .pl-sc b { color:#ffd166; font-size:15px; letter-spacing:0; text-shadow:0 0 10px rgba(255,209,102,.6); }
+.pl-combo { color:#ffd166; letter-spacing:0; animation:plBlink 1s steps(2,start) infinite; }
+.pl-prog { height:8px; margin:0 0 16px; border-radius:99px; background:rgba(255,255,255,.12); overflow:hidden; }
+.pl-prog i { display:block; height:100%; border-radius:99px; background:linear-gradient(90deg,var(--pa),var(--pb),var(--pa)); background-size:200% 100%; animation:plShine 2s linear infinite; transition:width .6s cubic-bezier(.2,.9,.3,1.2); box-shadow:0 0 12px var(--pa); }
+.pl-card { position:relative; margin-bottom:14px; padding:18px 16px 14px; border-radius:20px; border:1px solid color-mix(in srgb,var(--pa) 60%,transparent); background:linear-gradient(160deg,rgba(255,255,255,.1),rgba(255,255,255,.03)); box-shadow:0 0 0 1px rgba(255,255,255,.04) inset,0 14px 40px -18px var(--pa); }
+.pl-ask { margin:0 0 8px; font-size:12px; font-weight:800; letter-spacing:.12em; color:var(--pa); }
+.pl-game .pl-q { margin:0; color:#fff; font-size:20px; }
+.pl-game .pl-bl { color:#ffd166; background:rgba(255,209,102,.16); box-shadow:0 0 14px -2px rgba(255,209,102,.7); animation:plGlow 1.4s ease-in-out infinite; }
+.pl-game .pl-o { position:relative; display:flex; align-items:center; gap:9px; text-align:left; color:#fff; border-color:rgba(255,255,255,.22); background:rgba(255,255,255,.07); transition:transform .15s,border-color .15s,background .15s,box-shadow .15s; }
+.pl-game .pl-o em { flex:none; display:grid; place-items:center; width:24px; height:24px; border-radius:8px; background:rgba(255,255,255,.14); font-style:normal; font-size:12px; font-weight:900; color:var(--pa); }
+.pl-game .pl-o:not(:disabled):hover { transform:translateY(-2px); border-color:var(--pa); box-shadow:0 8px 20px -10px var(--pa); }
+.pl-game .pl-o:not(:disabled):active { transform:scale(.97); }
+.pl-game .pl-o.ok { background:#1fa95b; border-color:#7dffb0; box-shadow:0 0 22px rgba(47,227,155,.55); animation:plPulse .6s ease; } .pl-game .pl-o.ok em { background:#fff; color:#1fa95b; }
+.pl-game .pl-o.no { background:#c63a40; border-color:#ff9a9e; animation:plShake .45s ease; } .pl-game .pl-o.no em { background:#fff; color:#c63a40; }
+.pl-game .pl-o:disabled:not(.ok):not(.no) { opacity:.45; }
+.pl-game .pl-r.ok { color:#6dffb0; text-shadow:0 0 12px rgba(47,227,155,.6); } .pl-game .pl-r.no { color:#ff9a9e; }
+.pl-game .pl-r { font-size:18px; animation:plIn .35s both; } .pl-game .pl-full { color:#c9ccf3; animation:plIn .35s .05s both; } .pl-game .pl-act { animation:plIn .35s .1s both; }
+.pl-game .btn { color:#fff; background:rgba(255,255,255,.1); border-color:rgba(255,255,255,.28); transition:transform .15s,box-shadow .15s; } .pl-game .btn:hover { transform:translateY(-1px); border-color:#fff; }
+.pl-game .btn.primary { color:#10112a; border:0; font-weight:900; background:linear-gradient(90deg,var(--pa),var(--pb)); box-shadow:0 8px 22px -8px var(--pa); }
+.pl-hit { animation:plHit .6s ease; border-color:#7dffb0; box-shadow:0 0 30px rgba(47,227,155,.5); } .pl-miss { animation:plShake .45s ease; border-color:#ff9a9e; box-shadow:0 0 24px rgba(255,93,122,.45); }
+.pl-in { animation:plIn .45s cubic-bezier(.2,.9,.3,1.1) both; }
+/* 낱말퍼즐 */
+.pl-game .cw-grid { padding:10px; border-radius:18px; background:rgba(255,255,255,.05); border:1px solid color-mix(in srgb,var(--pa) 50%,transparent); box-shadow:0 14px 40px -20px var(--pa); width:fit-content; margin:0 auto 14px; max-width:100%; }
+.pl-game .cw-c { color:#fff; border-color:rgba(255,255,255,.28); background:rgba(255,255,255,.09); transition:transform .12s,background .15s,box-shadow .15s; } .pl-game .cw-c sup { color:#ffd166; }
+.pl-game .cw-c:hover { transform:scale(1.08); z-index:1; }
+.pl-game .cw-c.sel { background:rgba(255,209,102,.25); border-color:#ffd166; box-shadow:0 0 12px rgba(255,209,102,.55); }
+.pl-game .cw-c.ok { background:#1fa95b; border-color:#7dffb0; } .pl-game .cw-c.no { background:#c63a40; border-color:#ff9a9e; }
+.pl-game .cw-c.pop { animation:plPop .3s cubic-bezier(.2,1.6,.4,1) both; }
+.pl-game .cw-c.wow { animation:plWow .7s ease both; }
+.pl-game .cw-c.fin { animation:plWow .9s ease both; animation-delay:calc(var(--i,0)*.02s); }
+.pl-game .cw-now { color:#fff; } .pl-game .cw-now b { color:#ffd166; } .pl-game .cw-now span { color:#c9ccf3; }
+.pl-game .cw-form input { color:#fff; background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.3); } .pl-game .cw-form input:focus { border-color:#ffd166; outline:0; box-shadow:0 0 14px rgba(255,209,102,.4); }
+.pl-game .cw-cls h3 { color:var(--pa); }
+.pl-game .cw-cl { color:#e8eaff; background:rgba(255,255,255,.06); border-color:rgba(255,255,255,.18); transition:transform .12s,border-color .15s; } .pl-game .cw-cl:hover { transform:translateX(2px); border-color:var(--pa); } .pl-game .cw-cl b { color:#ffd166; } .pl-game .cw-cl span { color:#a9adda; }
+.pl-game .cw-cl.on { border-color:#ffd166; background:rgba(255,209,102,.14); } .pl-game .cw-cl.dn { opacity:.5; }
+/* 결과 */
+.pl-game .pl-end { padding:10px 0; color:#fff; } .pl-game .pl-end > b { color:#fff; } .pl-game .pl-end p { color:#c9ccf3; }
+.pl-kick2 { margin:0; font-size:12px; font-weight:900; letter-spacing:.4em; color:#ffd166 !important; animation:plBlink 1s steps(2,start) infinite; }
+.pl-trophy { animation:plBounce 1.1s ease infinite; }
+.pl-grade { width:84px; height:84px; margin:6px auto; border-radius:24px; display:grid; place-items:center; font-size:48px; font-weight:900; color:#10112a; background:linear-gradient(135deg,#ffd166,#ff8a5c); box-shadow:0 0 30px rgba(255,170,90,.6); animation:plPop .6s .2s cubic-bezier(.2,1.6,.4,1) both; }
+.pl-grade.gS { background:linear-gradient(135deg,#fff3a8,#ffb347,#ff5d7a); } .pl-grade.gB { background:linear-gradient(135deg,#9fe7ff,#7b8cff); } .pl-grade.gC { background:linear-gradient(135deg,#d7d9ee,#9a9fd0); }
+/* 떠오르는 글자 / 색종이 */
+.pl-fl { position:fixed; left:50%; top:38%; z-index:95; transform:translateX(-50%); font-size:34px; font-weight:900; pointer-events:none; color:#6dffb0; text-shadow:0 0 18px rgba(47,227,155,.8),0 3px 0 rgba(0,0,0,.4); animation:plFloat 1.1s ease-out both; }
+.pl-fl.no { color:#ff7d86; text-shadow:0 0 18px rgba(255,93,122,.8),0 3px 0 rgba(0,0,0,.4); } .pl-fl.cb { top:46%; color:#ffd166; font-size:24px; text-shadow:0 0 16px rgba(255,209,102,.8); animation-delay:.12s; }
+.pl-conf { position:fixed; inset:0; z-index:94; pointer-events:none; overflow:hidden; }
+.pl-conf i { position:absolute; top:-14px; width:9px; height:15px; border-radius:2px; animation:plConf 2s linear both; }
+@keyframes plIn { from { opacity:0; transform:translateY(14px) scale(.97); } to { opacity:1; transform:none; } }
+@keyframes plPop { 0% { transform:scale(.4); } 70% { transform:scale(1.18); } 100% { transform:scale(1); } }
+@keyframes plShake { 0%,100% { transform:translateX(0); } 20% { transform:translateX(-7px); } 40% { transform:translateX(6px); } 60% { transform:translateX(-4px); } 80% { transform:translateX(3px); } }
+@keyframes plPulse { 0% { transform:scale(1); } 40% { transform:scale(1.05); } 100% { transform:scale(1); } }
+@keyframes plHit { 0% { transform:scale(1); } 35% { transform:scale(1.03); } 100% { transform:scale(1); } }
+@keyframes plGlow { 0%,100% { box-shadow:0 0 6px -2px rgba(255,209,102,.5); } 50% { box-shadow:0 0 18px 0 rgba(255,209,102,.9); } }
+@keyframes plShine { to { background-position:-200% 0; } }
+@keyframes plBounce { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-10px); } }
+@keyframes plWow { 0% { transform:scale(1); } 35% { transform:scale(1.3); background:#ffd166; color:#10112a; } 100% { transform:scale(1); } }
+@keyframes plFloat { from { opacity:1; transform:translate(-50%,0) scale(.6); } 25% { transform:translate(-50%,-14px) scale(1.15); } to { opacity:0; transform:translate(-50%,-80px) scale(1); } }
+@keyframes plConf { from { transform:translate(0,0) rotate(0); opacity:1; } to { transform:translate(var(--x),105vh) rotate(var(--r)); opacity:.9; } }
+@media (prefers-reduced-motion:reduce) { .pl-in,.pl-hit,.pl-miss,.pl-trophy,.pl-grade,.pl-combo,.pl-kick2,.pl-prog i,.pl-game .pl-bl,.pl-game .pl-o.ok,.pl-game .pl-o.no,.pl-game .cw-c.pop,.pl-game .cw-c.wow,.pl-game .cw-c.fin,.pl-fl,.pl-conf i { animation:none !important; } }
+.pl-game .cw-ask { background:rgba(12,12,34,.92); border-top:1px solid color-mix(in srgb,var(--pa) 60%,transparent); border-radius:16px 16px 0 0; backdrop-filter:blur(6px); padding:10px 12px; margin:0 -8px 12px; }
+.pl-game .cw-grid { padding:10px 10px; }
+
+.pl-ai { flex:none; padding:8px 16px calc(8px + env(safe-area-inset-bottom)); text-align:center; font-size:11.5px; line-height:1.5; word-break:keep-all; color:#9a9fd0; border-top:1px solid rgba(255,255,255,.1); background:rgba(8,8,26,.55); }
