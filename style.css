@@ -1500,3 +1500,17 @@ html:has(#admModal:not([hidden])) { overflow:hidden; }   /* 대시보드를 열�
 .pv-p { flex:1; max-width:150px; padding:14px 8px; border-radius:18px; border:1px solid rgba(255,255,255,.25); background:rgba(255,255,255,.08); animation:plIn .5s both; } .pv-p.opp { animation-delay:.25s; border-color:#ffc23d; box-shadow:0 0 22px -4px rgba(255,194,61,.7); }
 .pv-p i { display:block; font-style:normal; font-size:38px; } .pv-p b { display:block; margin-top:4px; font-size:16px; color:#fff; word-break:keep-all; overflow-wrap:anywhere; } .pv-p small { display:block; margin-top:2px; font-size:12px; color:#ffd166; }
 .pv-x { font-size:26px; font-weight:900; color:#ff6b4a; text-shadow:0 0 16px rgba(255,107,74,.8); animation:plPop .6s .45s cubic-bezier(.2,1.6,.4,1) both; }
+
+.pl-game .btn.pl-warn { border-color:#ff9a9e; background:rgba(255,93,122,.25); animation:plShake .4s ease; }
+.pl-game .btn:disabled { opacity:.4; cursor:default; transform:none; }
+
+/* 입장 화면: 화면 한가운데를 넓게 써요 */
+.pv-stage { min-height:calc(100vh - 170px); min-height:calc(100svh - 170px); display:flex; flex-direction:column; align-items:center; justify-content:center; }
+.pv-stage .pl-kick2 { font-size:14px; }
+.pv-stage .pv-vsbox { width:100%; gap:clamp(8px,3vw,24px); margin:26px 0 28px; }
+.pv-stage .pv-p { max-width:230px; padding:clamp(22px,6vw,38px) 10px; border-radius:26px; }
+.pv-stage .pv-p i { font-size:clamp(52px,15vw,84px); }
+.pv-stage .pv-p b { margin-top:10px; font-size:clamp(18px,5vw,26px); }
+.pv-stage .pv-p small { margin-top:6px; font-size:clamp(12px,3.4vw,15px); }
+.pv-stage .pv-x { font-size:clamp(32px,9vw,52px); }
+.pv-stage > p:last-child { font-size:clamp(15px,4.2vw,19px); line-height:1.7; }

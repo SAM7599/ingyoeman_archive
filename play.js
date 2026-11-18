@@ -165,9 +165,9 @@
     list.forEach(function (p) { p.n = num[p.r + "," + p.col]; });
     return { list: list, rows: maxR - minR + 1, cols: maxC - minC + 1, num: num };
   }
-  var CWLV = { 1: { n: "쉬움", ico: "🌱", d: "쉬운 낱말만 나와요. 낱말마다 첫 글자를 알려 줘요.", lim: 12, size: 11, lv: [1], hint: true, chips: ["낱말 12개 안팎", "약 3분"] },
-    2: { n: "보통", ico: "🔥", d: "옛 방송 이야기와 일반 낱말이 섞여 나와요.", lim: 18, size: 14, lv: [1, 2, 3], chips: ["낱말 18개 안팎", "약 6분"] },
-    3: { n: "어려움", ico: "💀", d: "옛 방송·멤버·콘텐츠를 아는 사람만 풀 수 있어요. 힌트 없음!", lim: 26, size: 17, lv: [2, 3], chips: ["낱말 26개 안팎", "약 12분"] } };
+  var CWLV = { 1: { n: "쉬움", ico: "🌱", d: "쉬운 낱말만 나와요. 낱말마다 첫 글자를 알려 줘요.", lim: 12, size: 11, lv: [1], hint: true, hc: 3, chips: ["낱말 12개 안팎", "힌트 3번", "약 3분"] },
+    2: { n: "보통", ico: "🔥", d: "옛 방송 이야기와 일반 낱말이 섞여 나와요.", lim: 18, size: 14, lv: [1, 2, 3], hc: 2, chips: ["낱말 18개 안팎", "힌트 2번", "약 6분"] },
+    3: { n: "어려움", ico: "💀", d: "옛 방송·멤버·콘텐츠를 아는 사람만 풀 수 있어요. 힌트 없음!", lim: 26, size: 17, lv: [2, 3], hc: 1, chips: ["낱말 26개 안팎", "힌트 1번", "약 12분"] } };
   function cwMake(lv) {
     var cf = CWLV[lv], pool = CW.filter(function (w) { return cf.lv.indexOf(w.l || 2) >= 0; }), best = null;
     for (var t = 0; t < 150; t++) {
@@ -189,7 +189,7 @@
     var pz = cwMake(lv); if (!pz) { body.innerHTML = '<p class="pl-sub">퍼즐을 만들지 못했어요. 다시 눌러 주세요.</p>'; return; }
     var ans = {}; pz.list.forEach(function (p) { for (var i = 0; i < p.w.length; i++) ans[(p.r + (p.dir ? i : 0)) + "," + (p.col + (p.dir ? 0 : i))] = p.w.charAt(i); });
     var fill = {}; if (CWLV[lv].hint) pz.list.forEach(function (p) { fill[p.r + "," + p.col] = p.w.charAt(0); });
-    st = { g: "cw", lv: lv, pz: pz, ans: ans, fill: fill, sel: 0, checked: false, done: false }; setBack(); cwShow();
+    st = { g: "cw", lv: lv, pz: pz, ans: ans, fill: fill, sel: 0, checked: false, done: false, hints: CWLV[lv].hc, give: false }; setBack(); cwShow();
   }
   function cwCellsOf(p) { var a = []; for (var i = 0; i < p.w.length; i++) a.push((p.r + (p.dir ? i : 0)) + "," + (p.col + (p.dir ? 0 : i))); return a; }
   function cwShow() {
@@ -208,19 +208,30 @@
     var cl = function (dir) { return pz.list.map(function (p, i) { return [p, i]; }).filter(function (x) { return x[0].dir === dir; }).sort(function (x, y) { return x[0].n - y[0].n; }).map(function (x) { var done = cwCellsOf(x[0]).every(function (k) { return st.fill[k] === st.ans[k]; }); return '<li><button type="button" class="cw-cl' + (x[1] === st.sel ? " on" : "") + (done ? " dn" : "") + '" data-cwi="' + x[1] + '"><b>' + x[0].n + '</b> ' + esc(x[0].c) + ' <span>(' + x[0].w.length + ')</span></button></li>'; }).join(""); };
     h += '<div class="cw-cls"><div><h3>→ 가로 열쇠</h3><ul>' + cl(0) + '</ul></div><div><h3>↓ 세로 열쇠</h3><ul>' + cl(1) + '</ul></div></div>';
     if (st.done) h += '<div class="pl-end pl-in"><p class="pl-kick2">ALL CLEAR</p><i class="pl-trophy">🏆</i><b>퍼즐 완성!</b><p>옛 방송 제목에서 뽑은 낱말을 모두 맞혔어요.</p></div>';
-    h += '<div class="pl-act"><button type="button" class="btn" data-cwchk="1">정답 확인</button><button type="button" class="btn" data-cwlv0="1">난이도 변경</button><button type="button" class="btn primary" data-cwnew="1">새 퍼즐</button></div>';
+    h += st.done ? '<div class="pl-act"><button type="button" class="btn" data-cwlv0="1">난이도 변경</button><button type="button" class="btn primary" data-cwnew="1">다음 퍼즐 ▶</button></div>' :
+      '<div class="pl-act"><button type="button" class="btn" data-cwhint="1"' + (st.hints > 0 ? "" : " disabled") + '>💡 힌트 (' + st.hints + ')</button><button type="button" class="btn' + (st.give ? " pl-warn" : "") + '" data-cwgive="1">' + (st.give ? "정말 포기할까요? 한 번 더" : "🏳️ 포기하기") + '</button><button type="button" class="btn" data-cwlv0="1">난이도 변경</button></div>';
     body.innerHTML = h;
     st.shown = true; st.pop = null; st.popOk = false; if (st.done && st.fin) { confetti(); st.fin = false; }
     var inp = $("cwIn"); if (inp && st.focus) { inp.focus(); st.focus = false; }
   }
   function cwFilled() { return Object.keys(st.ans).every(function (k) { return st.fill[k] === st.ans[k]; }); }
   function cwSubmit() {
+    if (st) st.give = false;
     var inp = $("cwIn"); if (!inp) return; var w = inp.value.replace(/\s+/g, ""), p = st.pz.list[st.sel], cells = cwCellsOf(p);
     if (!w) return; for (var i = 0; i < cells.length; i++) st.fill[cells[i]] = w.charAt(i) || "";
     st.pop = cells; st.popOk = cells.every(function (k) { return st.fill[k] === st.ans[k]; }); if (st.popOk) floatTxt("정답! ✨", "ok");
     st.checked = false; if (cwFilled()) { st.done = true; st.fin = true; } else { for (var j = 1; j <= st.pz.list.length; j++) { var n = (st.sel + j) % st.pz.list.length, q = st.pz.list[n]; if (!cwCellsOf(q).every(function (k) { return st.fill[k] === st.ans[k]; })) { st.sel = n; break; } } }
     st.focus = !st.done; cwShow();
   }
+  function cwHint() {   // 고른 낱말에서 아직 못 맞힌 칸 하나를 알려 줘요 (횟수 제한 있음)
+    if (st.done || st.hints <= 0) return;
+    var cells = cwCellsOf(st.pz.list[st.sel]), k = null;
+    for (var i = 0; i < cells.length; i++) if (st.fill[cells[i]] !== st.ans[cells[i]]) { k = cells[i]; break; }
+    if (!k) { toast0("이 낱말은 이미 다 맞혔어요"); return; }
+    st.fill[k] = st.ans[k]; st.hints--; st.give = false; st.pop = [k]; st.popOk = true; floatTxt("💡 힌트!", "cb");
+    if (cwFilled()) { st.done = true; st.fin = true; } st.focus = !st.done; cwShow();
+  }
+  function toast0(t) { floatTxt(t, "no"); }
   function cwPickCell(k) {
     var cand = []; st.pz.list.forEach(function (p, i) { if (cwCellsOf(p).indexOf(k) >= 0) cand.push(i); });
     if (!cand.length) return; var at = cand.indexOf(st.sel); st.sel = cand[(at + 1) % cand.length] === st.sel || at < 0 ? cand[0] : cand[(at + 1) % cand.length]; st.focus = true; cwShow();
@@ -309,7 +320,7 @@
   }
   function pvVs() {
     var p = pv, e = A().esc; st = { g: "pvp", wait: 1 }; setBack();
-    body.innerHTML = '<div class="pl-end pl-in"><p class="pl-kick2">' + (p.role === "host" ? "PLAYER JOINED" : "ROOM FOUND") + '</p><div class="pv-vsbox"><div class="pv-p me"><i>🙂</i><b>' + e(p.name) + '</b><small>' + (p.role === "host" ? "방장" : "나") + '</small></div><div class="pv-x">VS</div><div class="pv-p opp"><i>😎</i><b>' + e(p.opp) + '</b><small>' + (p.role === "host" ? "입장!" : "방장") + '</small></div></div><p>' + (p.role === "host" ? "<b>" + e(p.opp) + "</b>님이 입장했어요!" : "<b>" + e(p.opp) + "</b>님의 방에 들어왔어요!") + '<br>곧 대결이 시작돼요…</p></div>';
+    body.innerHTML = '<div class="pl-end pl-in pv-stage"><p class="pl-kick2">' + (p.role === "host" ? "PLAYER JOINED" : "ROOM FOUND") + '</p><div class="pv-vsbox"><div class="pv-p me"><i>🙂</i><b>' + e(p.name) + '</b><small>' + (p.role === "host" ? "방장" : "나") + '</small></div><div class="pv-x">VS</div><div class="pv-p opp"><i>😎</i><b>' + e(p.opp) + '</b><small>' + (p.role === "host" ? "입장!" : "방장") + '</small></div></div><p>' + (p.role === "host" ? "<b>" + e(p.opp) + "</b>님이 입장했어요!" : "<b>" + e(p.opp) + "</b>님의 방에 들어왔어요!") + '<br>곧 대결이 시작돼요…</p></div>';
   }
   /* 방장(심판): 문제를 내고, 두 사람의 답을 모아 점수를 정해요 */
   function pvAgain() {
@@ -380,7 +391,7 @@
   }
 
   function handle(e) {
-    if (!A().isIn()) return; var t = e.target.closest && e.target.closest("[data-g],[data-o],[data-next],[data-home],[data-cw],[data-cwi],[data-cwchk],[data-cwnew],[data-cwlv],[data-cwlv0],[data-blv],[data-pvhost],[data-pva],[data-pvagain]"); if (!t || !st && !t.dataset.g) { if (t && t.hasAttribute("data-home")) home(); return; }
+    if (!A().isIn()) return; var t = e.target.closest && e.target.closest("[data-g],[data-o],[data-next],[data-home],[data-cw],[data-cwi],[data-cwhint],[data-cwgive],[data-cwnew],[data-cwlv],[data-cwlv0],[data-blv],[data-pvhost],[data-pva],[data-pvagain]"); if (!t || !st && !t.dataset.g) { if (t && t.hasAttribute("data-home")) home(); return; }
     if (t.dataset.g === "blank") return blankStart();
     if (t.dataset.blv) return blankStart(+t.dataset.blv);
     if (t.dataset.g === "pvp") return pvMenu();
@@ -388,9 +399,11 @@
     if (t.dataset.pva != null) return pvPick(+t.dataset.pva);
     if (t.hasAttribute("data-pvagain")) return pvAgain();
     if (t.dataset.g === "cw") return cwStart();
+    if (!t.hasAttribute("data-cwgive")) st.give = false;
     if (t.dataset.cw) return cwPickCell(t.dataset.cw);
     if (t.dataset.cwi != null) { st.sel = +t.dataset.cwi; st.focus = true; return cwShow(); }
-    if (t.hasAttribute("data-cwchk")) { st.checked = true; return cwShow(); }
+    if (t.hasAttribute("data-cwhint")) return cwHint();
+    if (t.hasAttribute("data-cwgive")) { if (!st.give) { st.give = true; return cwShow(); } return cwStart(st.lv); }   // 한 번 더 누르면 다음 새 퍼즐로 넘어가요
     if (t.hasAttribute("data-cwnew")) return cwStart(st.lv);
     if (t.dataset.cwlv) return cwStart(+t.dataset.cwlv);
     if (t.hasAttribute("data-cwlv0")) return cwMenu();
