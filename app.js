@@ -281,14 +281,13 @@
       if (!ra.ok || !ru.ok) throw 0;
       const ab = await ra.json(), us = await ru.json(), box = $("admUsers"), ul = $("admUl"); if (!box || !ul) return;
       box.innerHTML = `<h3>의심 접속 기록</h3>` + (ab.rows.length ? `<ul class="au-l">${ab.rows.map(r => `<li><b>${esc(KIND[r.kind] || r.kind)}</b><span>접속 코드 <code>${esc(r.ip)}</code>${r.name ? " · " + esc(r.name) : ""} · ${r.n}번 · 마지막 ${when(r.last)}</span>${r.uid ? `<button type="button" class="au-del" data-uid="${esc(r.uid)}" data-ban="${r.banned ? 0 : 1}">${r.banned ? "정지 풀기" : "계정 정지"}</button>` : ""}</li>`).join("")}</ul>` : `<p class="st-h">아직 없어요. 👍</p>`) + `<p class="st-h">접속 주소는 되돌릴 수 없는 짧은 코드로만 남기고, ${ab.days}일 뒤 자동으로 지워요. 같은 코드는 같은 접속 주소예요.</p>`;
-      ul.innerHTML = `<h3>로그인한 사람 <small>(${us.total}명)</small></h3><div class="au-body">` + (us.users.length ? `<ul class="au-l">${us.users.map(u => `<li${u.flag ? ' class="flag"' : ""}>${u.banned ? "" : `<button type="button" class="au-x" data-uid="${esc(u.uid)}" aria-label="이 사람 지우기" title="이 사람 지우기">✕</button>`}<b>${esc(u.name || "이름 없음")}${u.flag ? " ⚠️" : ""}${u.banned ? " · 정지됨" : ""}</b><span>즐겨찾기 ${u.fav} · 본 영상 ${u.rec} · 퀴즈 ${u.qok}/${u.qall} · 마지막 ${when(u.ts)}</span><button type="button" class="au-del" data-uid="${esc(u.uid)}" data-ban="${u.banned ? 0 : 1}">${u.banned ? "정지 풀기" : "계정 정지"}</button></li>`).join("")}</ul>` : `<p class="st-h">아직 없어요.</p>`) + `</div>`;
+      ul.innerHTML = `<h3>로그인한 사람 <small>(${us.total}명)</small></h3><div class="au-body">` + (us.users.length ? `<ul class="au-l">${us.users.filter(u => !admHide.has(u.uid)).map(u => `<li${u.flag ? ' class="flag"' : ""}><button type="button" class="au-x" data-uid="${esc(u.uid)}" aria-label="닫기" title="닫기">✕</button><b>${esc(u.name || "이름 없음")}${u.flag ? " ⚠️" : ""}${u.banned ? " · 정지됨" : ""}</b><span>즐겨찾기 ${u.fav} · 본 영상 ${u.rec} · 퀴즈 ${u.qok}/${u.qall} · 마지막 ${when(u.ts)}</span><button type="button" class="au-del" data-uid="${esc(u.uid)}" data-ban="${u.banned ? 0 : 1}">${u.banned ? "정지 풀기" : "계정 정지"}</button></li>`).join("")}</ul>` : `<p class="st-h">아직 없어요.</p>`) + `</div>`;
     } catch (e) { const b = $("admUsers"); if (b) b.innerHTML = `<h3>의심 접속 기록</h3><p class="st-h">불러오지 못했어요. 잠시 뒤 다시 열어 주세요.</p>`; const l = $("admUl"); if (l) l.innerHTML = ""; }
   }
-  document.addEventListener("click", async e => {   // 로그인한 사람 ✕: 그 사람을 목록에서 지워요 (저장된 즐겨찾기·기록 삭제)
+  const admHide = new Set();   // ✕로 닫은 사람 (화면에서만 숨겨요. 기록은 그대로예요)
+  document.addEventListener("click", e => {
     const x = e.target.closest(".au-x"); if (!x) return;
-    if (!confirm("이 사람을 지울까요?\n저장된 즐겨찾기·열어본 영상·퀴즈 기록이 모두 지워지고, 되돌릴 수 없어요.\n(다시 로그인하면 새로 시작해요)")) return;
-    x.disabled = true;
-    try { const r = await rApi("/admin/user/delete", { method: "POST", body: JSON.stringify({ uid: x.dataset.uid }) }); if (r.ok) loadAdmUsers(); else { x.disabled = false; toast("지우지 못했어요"); } } catch (err) { x.disabled = false; }
+    admHide.add(x.dataset.uid); const li = x.closest("li"); if (li) li.remove();
   });
   document.addEventListener("click", async e => {
     const b = e.target.closest(".au-del"); if (!b) return;
