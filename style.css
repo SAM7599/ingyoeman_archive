@@ -1348,3 +1348,5 @@ html:not([data-motion="off"]) .cs-box:not(.cs-bye) { animation:zoom .35s cubic-b
 .pl-cup b { font-size:20px; } .pl-cup span { font-size:12px; color:var(--sub); }
 .pl-cup:hover:not(:disabled) { border-color:var(--accent); } .pl-cup:disabled { opacity:.4; cursor:not-allowed; }
 .nt.del { background:#6b7280; color:#fff; }
+.m-tip { margin:12px 0 0; padding:10px 12px; border-radius:10px; background:var(--raise); color:var(--sub); font-size:12.5px; line-height:1.6; word-break:keep-all; }
+.m-tip b { color:var(--ink); font-weight:600; }
