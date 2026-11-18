@@ -91,7 +91,7 @@
   async function onGoogle(resp) {
     try {
       const r = await fetch(RATE + "/google", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ credential: resp.credential, adult: (() => { try { return JSON.parse(localStorage.getItem("consent1")).adult === true; } catch (e) { return false; } })() }) });
-      if (r.status === 403) { const j = await r.json().catch(() => ({})); if (j.error === "banned") return alert("운영자에 의해 정지된 계정이에요.");  if (j.error === "cooldown") return toast("내 정보를 삭제한 뒤 24시간 동안은 다시 로그인할 수 없어요. 약 " + (j.hours || 24) + "시간 뒤에 해 주세요"); return toast("이용이 제한되어 로그인할 수 없어요"); }
+      if (r.status === 403) { const j = await r.json().catch(() => ({})); if (j.error === "banned") return alert("운영자에 의해 정지된 계정이에요."); if (j.error === "abroad") return alert("해외에서는 로그인할 수 없어요. 한국에서 접속해 주세요.");  if (j.error === "cooldown") return toast("내 정보를 삭제한 뒤 24시간 동안은 다시 로그인할 수 없어요. 약 " + (j.hours || 24) + "시간 뒤에 해 주세요"); return toast("이용이 제한되어 로그인할 수 없어요"); }
       if (r.status === 400) { const j = await r.json().catch(() => ({})); if (j.error === "adult") return toast("만 19세 이상만 로그인할 수 있어요. 새로고침해서 동의 화면에서 확인해 주세요"); }
       if (!r.ok) return toast("로그인하지 못했어요. 잠시 후 다시 해 주세요");
       const d = await r.json(); rtok = { t: d.token, name: d.name || "" }; isAdm = !!d.admin; syncAdm(); store.set("dtok", rtok);

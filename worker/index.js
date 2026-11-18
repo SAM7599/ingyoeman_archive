@@ -129,7 +129,15 @@ const UID_RE = /^(g\d{5,30}|u[\w-]{24})$/;
 // ── 운영진이 정지한 계정 (계정 코드만 저장해요) ──
 let banReady = false;
 const isBanned = async (env, uid) => { try { if (!banReady) { await env.DB.prepare("CREATE TABLE IF NOT EXISTS acct_ban (uid TEXT PRIMARY KEY, ts INTEGER NOT NULL)").run(); banReady = true; } return !!(await env.DB.prepare("SELECT 1 AS x FROM acct_ban WHERE uid = ?").bind(uid).first()); } catch (e) { return false; } };
-async function getAuth(env, req) { const s = await verify(env, (req.headers.get("Authorization") || "").replace(/^Bearer /, "")); return s && /^u[\w-]{24}$/.test(String(s.uid)) && !(await isBanned(env, s.uid)) ? s : null; }   // 예전 방식 로그인은 한 번 다시 로그인하게 해요
+// ── 해외 접속 막기: 접속 나라가 허용 목록(기본 한국 KR)에 없으면 로그인·저장을 막아요. 운영진은 어디서든 쓸 수 있어요.
+// 허용 나라를 바꾸려면 변수 ALLOW_COUNTRIES (예: KR,JP) 를, 완전히 끄려면 ALLOW_COUNTRIES 를 ALL 로 두세요.
+const abroad = (env, req) => {
+  const allow = String(env.ALLOW_COUNTRIES || "KR").toUpperCase().split(",").map(x => x.trim()).filter(Boolean);
+  if (allow.includes("ALL")) return false;
+  const c = String((req.cf && req.cf.country) || req.headers.get("CF-IPCountry") || "").toUpperCase();
+  return !!c && !allow.includes(c);   // 나라를 알 수 없으면 막지 않아요
+};
+async function getAuth(env, req) { const s = await verify(env, (req.headers.get("Authorization") || "").replace(/^Bearer /, "")); return s && /^u[\w-]{24}$/.test(String(s.uid)) && !(await isBanned(env, s.uid)) && !(abroad(env, req) && !isAdmin(env, s)) ? s : null; }   // 예전 방식 로그인은 한 번 다시 로그인하게 해요
 
 // ── 서버 사용량 (무료 한도 확인용) ──
 // 요청 수는 10번에 1번만 기록하고 10씩 더해서(쓰기 한도를 아끼려고) 대략의 값을 보여줘요. 하루 기준은 한국 시간 오전 9시(= 클라우드플레어 UTC 0시)에 바뀌어요.
@@ -164,6 +172,7 @@ async function handle(req, env, ctx) {
     const uid = await newUid(env, g.sub);   // 구글 고유 번호는 저장하지 않고, 되돌릴 수 없는 코드만 써요
     { const em1 = g.email_verified === "true" || g.email_verified === true ? String(g.email || "").toLowerCase() : ""; const left = isAdmin(env, { em: em1 }) ? 0 : await lockLeft(env, uid); if (left) return coolBody(env, left); }   // 내 정보를 지운 뒤 24시간 동안은 다시 로그인할 수 없어요
     if (await isBanned(env, uid)) return json(env, { error: "banned" }, 403);   // 운영진이 정지한 계정
+    if (abroad(env, req) && !isAdmin(env, { em: g.email_verified === "true" || g.email_verified === true ? String(g.email || "").toLowerCase() : "" })) return json(env, { error: "abroad" }, 403);   // 해외 접속
     const em = g.email_verified === "true" || g.email_verified === true ? String(g.email || "").toLowerCase() : "";
     if (!isAdmin(env, { em })) await noteAcct(env, req, uid);   // 운영진 계정은 의심 기록에서 제외
     const name = await nick(env, uid);
