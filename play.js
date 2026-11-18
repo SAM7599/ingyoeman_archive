@@ -15,13 +15,13 @@
     document.body.appendChild(box); body = $("plBody");
     $("plX").addEventListener("click", function () { if (st) home(); else close(); });   // 게임 중이면 목록으로, 목록이면 사이트로
     box.addEventListener("click", function (e) { if (e.target === box) close(); handle(e); });
-    box.addEventListener("submit", function (e) { if (e.target && e.target.id === "cwForm") { e.preventDefault(); cwSubmit(); } });
+    box.addEventListener("submit", function (e) { if (e.target && e.target.id === "pvForm") { e.preventDefault(); pvJoin($("pvIn").value); return; } if (e.target && e.target.id === "cwForm") { e.preventDefault(); cwSubmit(); } });
     document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !box.hidden) close(); });
     document.addEventListener("ovback", function () { if (!box.hidden) close(); });
   }
   function setBack() { var b = $("plX"); if (b) b.textContent = st ? "← 게임 목록" : "← 사이트로"; if (box) { box.classList.add("pl-arcade"); box.classList.toggle("pl-game", !!st); box.setAttribute("data-hue", st ? st.g : ""); } }   // 목록(게임 선택) 화면일 때만 오락실 모양으로 전체를 꾸며요
   function open() { build(); var a = A(); if (!a || a.vids().length < 20) return; a.closeMenu(); box.hidden = false; document.body.style.overflow = "hidden"; home(); }
-  function close() { if (!box) return; box.hidden = true; document.body.style.overflow = ""; st = null; }
+  function close() { pvClose(); if (!box) return; box.hidden = true; document.body.style.overflow = ""; st = null; }
   window.openPlay = open;
 
   function gate() {
@@ -32,7 +32,7 @@
   document.addEventListener("dlogin", function () { if (box && !box.hidden && A().isIn() && $("plG")) home(); });
   function home() {
     if (!A().isIn()) return gate();
-    st = null;
+    pvClose(); st = null;
     setBack();
     var tile = function (g, ico, grad, title, desc, chips) {
       return '<button type="button" class="pl-tile" data-g="' + g + '" style="--g:' + grad + '"><span class="pl-ico" aria-hidden="true">' + ico + '</span><span class="pl-tt"><b>' + title + '</b><span>' + desc + '</span><span class="pl-chips">' + chips.map(function (c) { return '<i class="pl-chip">' + c + '</i>'; }).join("") + '</span></span><span class="pl-go"><em>START</em> ▶</span></button>';
@@ -40,6 +40,7 @@
     body.innerHTML = '<section class="pl-hub" aria-label="미니게임 목록"><p class="pl-kick">ARCADE</p><h2 class="pl-ttl">잉여맨 오락실</h2><p class="pl-sel">올드팬을 위한 미니게임 · 하고 싶은 게임을 골라 주세요</p>' +
       tile("blank", "✏️", "linear-gradient(135deg,#4f8bff,#7a5cff)", "제목 빈칸 채우기", "빠진 낱말을 맞혀 보세요. 쉬움·보통·어려움 중에 골라요.", ["난이도 3단계", "5~10문제", "약 1~3분"]) +
       tile("cw", "🧩", "linear-gradient(135deg,#ff8a5c,#ff5d7a)", "낱말퍼즐", "쉬움·보통·어려움 중에 골라 가로세로 열쇠로 풀어요.", ["난이도 3단계", "낱말 300개", "약 3~12분"]) +
+      tile("pvp", "⚔️", "linear-gradient(135deg,#ef4444,#f59e0b)", "퀴즈 대결 (1:1)", "방 코드로 친구를 불러 빈칸 퀴즈를 먼저 맞히는 대결이에요.", ["친구와 1:1", "7문제", "약 3분"]) +
       '<p class="pl-more">새 게임이 생기면 여기에 모여요</p></section>';
   }
 
@@ -207,7 +208,7 @@
     var cl = function (dir) { return pz.list.map(function (p, i) { return [p, i]; }).filter(function (x) { return x[0].dir === dir; }).sort(function (x, y) { return x[0].n - y[0].n; }).map(function (x) { var done = cwCellsOf(x[0]).every(function (k) { return st.fill[k] === st.ans[k]; }); return '<li><button type="button" class="cw-cl' + (x[1] === st.sel ? " on" : "") + (done ? " dn" : "") + '" data-cwi="' + x[1] + '"><b>' + x[0].n + '</b> ' + esc(x[0].c) + ' <span>(' + x[0].w.length + ')</span></button></li>'; }).join(""); };
     h += '<div class="cw-cls"><div><h3>→ 가로 열쇠</h3><ul>' + cl(0) + '</ul></div><div><h3>↓ 세로 열쇠</h3><ul>' + cl(1) + '</ul></div></div>';
     if (st.done) h += '<div class="pl-end pl-in"><p class="pl-kick2">ALL CLEAR</p><i class="pl-trophy">🏆</i><b>퍼즐 완성!</b><p>옛 방송 제목에서 뽑은 낱말을 모두 맞혔어요.</p></div>';
-    h += '<div class="pl-act"><button type="button" class="btn" data-cwchk="1">정답 확인</button><button type="button" class="btn" data-cwshow="1">모두 보기</button><button type="button" class="btn" data-cwlv0="1">난이도 변경</button><button type="button" class="btn primary" data-cwnew="1">새 퍼즐</button></div>';
+    h += '<div class="pl-act"><button type="button" class="btn" data-cwchk="1">정답 확인</button><button type="button" class="btn" data-cwlv0="1">난이도 변경</button><button type="button" class="btn primary" data-cwnew="1">새 퍼즐</button></div>';
     body.innerHTML = h;
     st.shown = true; st.pop = null; st.popOk = false; if (st.done && st.fin) { confetti(); st.fin = false; }
     var inp = $("cwIn"); if (inp && st.focus) { inp.focus(); st.focus = false; }
@@ -225,15 +226,171 @@
     if (!cand.length) return; var at = cand.indexOf(st.sel); st.sel = cand[(at + 1) % cand.length] === st.sel || at < 0 ? cand[0] : cand[(at + 1) % cand.length]; st.focus = true; cwShow();
   }
 
+  /* ───── 퀴즈 대결 (리슨서버형 1:1) ─────
+     방장의 브라우저가 심판(서버) 역할을 하고, 친구는 방 코드로 들어와요. 연결만 사이트 서버가 잠깐 이어 주고
+     그 뒤 문제·정답은 두 브라우저끼리 직접 주고받아요(WebRTC). 정답은 문제가 끝날 때까지 친구에게 보내지 않아요. */
+  var pv = null, PVN = 7, PVT = 12;
+  var ICE = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }, { urls: "stun:stun.cloudflare.com:3478" }] };
+  function pvApi(path, body) { return A().rapi(path, body ? { method: "POST", body: JSON.stringify(body) } : {}).then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { return { s: r.status, j: j }; }); }); }
+  function pvClose() {
+    if (!pv) return; var p = pv; pv = null;
+    try { clearInterval(p.poll); clearTimeout(p.tm); clearTimeout(p.rt); clearInterval(p.tick); if (p.dc && p.dc.readyState === "open") { try { p.dc.send('{"t":"bye"}'); } catch (e) {} } if (p.dc) p.dc.close(); if (p.pc) p.pc.close(); } catch (e) {}
+    if (p.code && p.role === "host" && !p.conn) pvApi("/room/close", { code: p.code }).catch(function () {});
+  }
+  function pvGather(pc) { return new Promise(function (res) { if (pc.iceGatheringState === "complete") return res(); var t = setTimeout(res, 4500); pc.addEventListener("icegatheringstatechange", function () { if (pc.iceGatheringState === "complete") { clearTimeout(t); res(); } }); }); }
+  function pvFail(msg) {
+    pvClose(); st = { g: "pvp", menu: 1 }; setBack();
+    body.innerHTML = '<div class="pl-end pl-in"><i>😢</i><h2 class="pl-h">연결하지 못했어요</h2><p>' + A().esc(msg) + '</p><div class="pl-act"><button type="button" class="btn primary" data-g="pvp">다시 해 보기</button><button type="button" class="btn" data-home>다른 게임</button></div></div>';
+  }
+  function pvMenu() {
+    pvClose(); st = { g: "pvp", menu: 1 }; setBack();
+    body.innerHTML = '<div class="pl-hub"><p class="pl-kick">VERSUS</p><h2 class="pl-ttl">퀴즈 대결</h2><p class="pl-sel">친구와 1:1 · 빈칸 퀴즈를 먼저 맞혀요</p>' +
+      '<button type="button" class="pl-tile pl-in" style="--g:linear-gradient(135deg,#ef4444,#f59e0b)" data-pvhost><span class="pl-ico">🏠</span><span class="pl-tt"><b>방 만들기</b><span>내가 방장이 돼요. 방 코드를 친구에게 알려 주세요.</span></span><span class="pl-go">만들기 ▶</span></button>' +
+      '<form id="pvForm" class="pv-join pl-in" style="animation-delay:.1s"><b>🚪 방 코드로 들어가기</b><div class="cw-form"><input id="pvIn" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" placeholder="방 코드 4자리"><button type="submit" class="btn primary">입장</button></div></form>' +
+      '<p class="pl-more">방장이 나가면 대결이 끝나요 · 두 사람 모두 구글 로그인이 필요해요<br>공유기·통신사에 따라 연결이 안 될 수도 있어요<br>직접 연결이라 상대에게 내 접속 주소(IP)가 보일 수 있어요. 아는 사람과만 하세요!</p></div>';
+  }
+  function pvHost() {
+    pvClose(); if (!window.RTCPeerConnection) return pvFail("이 브라우저는 대결을 지원하지 않아요.");
+    var me = { role: "host", name: A().name(), sh: 0, sg: 0 }; pv = me; st = { g: "pvp", wait: 1 }; setBack();
+    body.innerHTML = '<div class="pl-end pl-in"><p class="pl-kick2">ROOM</p><div class="pv-code">····</div><p>방을 만드는 중이에요…</p></div>';
+    var pc = new RTCPeerConnection(ICE); me.pc = pc; me.dc = pc.createDataChannel("g"); pvBind(me.dc, me);
+    pc.onconnectionstatechange = function () { if (pv === me && pc.connectionState === "failed" && !me.conn) pvFail("친구와 직접 연결하지 못했어요. 와이파이·통신사 환경 때문일 수 있어요."); };
+    pc.createOffer().then(function (o) { return pc.setLocalDescription(o); }).then(function () { return pvGather(pc); })
+      .then(function () { return pvApi("/room/create", { offer: JSON.stringify(pc.localDescription) }); })
+      .then(function (r) {
+        if (pv !== me) return;
+        if (r.s === 401) return pvFail("로그인이 풀렸어요. 다시 로그인해 주세요.");
+        if (r.s !== 200 || !r.j.code) return pvFail(r.s === 429 ? "너무 자주 눌렀어요. 잠시 뒤에 다시 해 주세요." : "방을 만들지 못했어요. 잠시 뒤에 다시 해 주세요.");
+        me.code = r.j.code;
+        body.innerHTML = '<div class="pl-end pl-in"><p class="pl-kick2">ROOM CODE</p><div class="pv-code">' + me.code + '</div><p>이 코드를 친구에게 알려 주세요.<br>친구가 들어오면 바로 시작해요!</p><p class="pv-wait"><i></i><i></i><i></i></p><div class="pl-act"><button type="button" class="btn" data-g="pvp">방 닫기</button></div></div>';
+        me.poll = setInterval(function () { pvApi("/room/poll?code=" + me.code).then(function (r2) { if (pv !== me || !r2.j.answer) return; clearInterval(me.poll); pc.setRemoteDescription(JSON.parse(r2.j.answer)).catch(function () { pvFail("연결 정보를 읽지 못했어요."); }); }).catch(function () {}); }, 2500);
+        me.tm = setTimeout(function () { if (pv === me && !me.conn) pvFail("5분이 지나서 방이 닫혔어요. 다시 만들어 주세요."); }, 300000);
+      }).catch(function () { if (pv === me) pvFail("방을 만들지 못했어요. 인터넷 연결을 확인해 주세요."); });
+  }
+  function pvJoin(code) {
+    code = String(code || "").replace(/\D/g, ""); if (code.length !== 4) { var f = $("pvIn"); if (f) f.focus(); return; }
+    pvClose(); if (!window.RTCPeerConnection) return pvFail("이 브라우저는 대결을 지원하지 않아요.");
+    var me = { role: "guest", name: A().name(), sh: 0, sg: 0 }; pv = me; st = { g: "pvp", wait: 1 }; setBack();
+    body.innerHTML = '<div class="pl-end pl-in"><p class="pl-kick2">JOIN</p><div class="pv-code">' + code + '</div><p>방에 들어가는 중이에요…</p><p class="pv-wait"><i></i><i></i><i></i></p></div>';
+    var pc = new RTCPeerConnection(ICE); me.pc = pc; pc.ondatachannel = function (e) { me.dc = e.channel; pvBind(e.channel, me); };
+    pc.onconnectionstatechange = function () { if (pv === me && pc.connectionState === "failed" && !me.conn) pvFail("방장과 직접 연결하지 못했어요. 와이파이·통신사 환경 때문일 수 있어요."); };
+    pvApi("/room/join", { code: code }).then(function (r) {
+      if (pv !== me) return;
+      if (r.s === 401) return pvFail("로그인이 풀렸어요. 다시 로그인해 주세요.");
+      if (r.s !== 200 || !r.j.offer) return pvFail(r.s === 429 ? "너무 자주 눌렀어요. 잠시 뒤에 다시 해 주세요." : "그 코드의 방을 찾지 못했어요. 코드를 다시 확인해 주세요.");
+      return pc.setRemoteDescription(JSON.parse(r.j.offer)).then(function () { return pc.createAnswer(); }).then(function (a) { return pc.setLocalDescription(a); }).then(function () { return pvGather(pc); })
+        .then(function () { return pvApi("/room/answer", { code: code, answer: JSON.stringify(pc.localDescription) }); })
+        .then(function (r2) { if (pv !== me) return; if (r2.s !== 200) return pvFail("이미 다른 사람이 들어갔거나 방이 닫혔어요."); me.rt = setTimeout(function () { if (pv === me && !me.conn) pvFail("방장과 연결되지 않았어요. 방장이 화면을 켜 둔 채 기다리고 있는지 확인해 주세요."); }, 20000); });
+    }).catch(function () { if (pv === me) pvFail("방에 들어가지 못했어요. 인터넷 연결을 확인해 주세요."); });
+  }
+  function pvSend(o) { if (pv && pv.dc && pv.dc.readyState === "open") { try { pv.dc.send(JSON.stringify(o)); } catch (e) {} } }
+  function pvBind(dc, me) {
+    dc.onopen = function () { if (pv !== me) return; me.conn = true; clearTimeout(me.tm); clearTimeout(me.rt); clearInterval(me.poll); pvSend({ t: "hi", n: me.name }); };
+    dc.onmessage = function (e) { if (pv !== me) return; var m; try { m = JSON.parse(e.data); } catch (x) { return; } pvMsg(m); };
+    dc.onclose = function () { if (pv === me && !me.over) pvLost(); };
+  }
+  function pvLost() {
+    var p = pv; if (!p) return; clearTimeout(p.hostTm); clearTimeout(p.nextTm); clearInterval(p.tick); p.over = true;
+    body.innerHTML = '<div class="pl-end pl-in"><i>🔌</i><h2 class="pl-h">상대와 연결이 끊겼어요</h2><p>상대가 나갔거나 인터넷이 끊겼어요.</p><div class="pl-act"><button type="button" class="btn primary" data-g="pvp">다시 하기</button><button type="button" class="btn" data-home>다른 게임</button></div></div>';
+  }
+  function pvMsg(m) {
+    var p = pv;
+    if (m.t === "hi") {   // 들어온 사람(또는 방장)의 닉네임을 잠깐 보여 주고 시작해요
+      p.opp = String(m.n || "상대").slice(0, 12); pvVs();
+      if (p.role === "host") { clearTimeout(p.nextTm); p.nextTm = setTimeout(pvAgain, 2600); }
+      return;
+    }
+    if (m.t === "bye") return pvLost();
+    if (p.role === "host") { if (m.t === "a" && m.i === p.i) pvHostAnswer("g", +m.k); return; }
+    if (m.t === "q") pvShowQ(m);
+    else if (m.t === "o" && p.v && m.i === p.v.i) { p.v.oppDone = true; pvMarkOpp(); }
+    else if (m.t === "r") pvShowR(m);
+    else if (m.t === "end") pvEnd(m);
+  }
+  function pvVs() {
+    var p = pv, e = A().esc; st = { g: "pvp", wait: 1 }; setBack();
+    body.innerHTML = '<div class="pl-end pl-in"><p class="pl-kick2">' + (p.role === "host" ? "PLAYER JOINED" : "ROOM FOUND") + '</p><div class="pv-vsbox"><div class="pv-p me"><i>🙂</i><b>' + e(p.name) + '</b><small>' + (p.role === "host" ? "방장" : "나") + '</small></div><div class="pv-x">VS</div><div class="pv-p opp"><i>😎</i><b>' + e(p.opp) + '</b><small>' + (p.role === "host" ? "입장!" : "방장") + '</small></div></div><p>' + (p.role === "host" ? "<b>" + e(p.opp) + "</b>님이 입장했어요!" : "<b>" + e(p.opp) + "</b>님의 방에 들어왔어요!") + '<br>곧 대결이 시작돼요…</p></div>';
+  }
+  /* 방장(심판): 문제를 내고, 두 사람의 답을 모아 점수를 정해요 */
+  function pvAgain() {
+    var p = pv; if (!p || p.role !== "host" || !p.conn) return;
+    var all = A().vids(), bank = []; all.forEach(function (v) { wordsOf(v.title).forEach(function (w) { bank.push(w); }); }); bank = Array.from(new Set(bank));
+    var qs = [], seen = {}, cf = BLV[2]; for (var i = 0; i < 120 && qs.length < PVN; i++) { var q = makeQ(all, bank, cf); if (q && !seen[A().key(q.v)]) { seen[A().key(q.v)] = 1; qs.push(q); } }
+    p.qs = qs; p.i = -1; p.sh = 0; p.sg = 0; p.over = false; pvNext();
+  }
+  function pvNext() {
+    var p = pv; if (!p) return; p.i++;
+    if (p.i >= p.qs.length) { p.over = true; var m = { t: "end", sh: p.sh, sg: p.sg }; pvSend(m); pvEnd(m); return; }
+    var q = p.qs[p.i]; p.ans = { h: null, g: null }; p.t0 = Date.now();
+    var m2 = { t: "q", i: p.i, n: p.qs.length, shown: q.shown, opts: q.opts, dur: PVT, sh: p.sh, sg: p.sg, on: p.name }; pvSend(m2); pvShowQ(m2);
+    clearTimeout(p.hostTm); p.hostTm = setTimeout(pvHostEnd, PVT * 1000 + 1200);
+  }
+  function pvHostAnswer(who, k) {
+    var p = pv; if (!p || p.ans[who] || p.over) return; var q = p.qs[p.i]; if (!(k >= 0 && k < q.opts.length)) return;
+    p.ans[who] = { k: k, ms: Date.now() - p.t0 };
+    if (who === "g") { p.v.oppDone = true; pvMarkOpp(); } else pvSend({ t: "o", i: p.i, w: "h" });
+    if (p.ans.h && p.ans.g) pvHostEnd();
+  }
+  function pvHostEnd() {
+    var p = pv; if (!p || p.over || p.ending === p.i) return; p.ending = p.i; clearTimeout(p.hostTm);
+    var q = p.qs[p.i], pts = function (a) { return a && q.opts[a.k] === q.ans ? 100 + Math.max(0, Math.round((PVT * 1000 - a.ms) / 1000)) * 5 : 0; };
+    var ph = pts(p.ans.h), pg = pts(p.ans.g); p.sh += ph; p.sg += pg;
+    var m = { t: "r", i: p.i, ans: q.ans, title: q.v.title, h: { k: p.ans.h ? p.ans.h.k : -1, p: ph }, g: { k: p.ans.g ? p.ans.g.k : -1, p: pg }, sh: p.sh, sg: p.sg };
+    pvSend(m); pvShowR(m); p.nextTm = setTimeout(pvNext, 4200);
+  }
+  /* 두 사람 화면 (내 입장에서 "나 : 상대"로 보여줘요) */
+  function pvScore(p, sh, sg) { return p.role === "host" ? [sh, sg] : [sg, sh]; }
+  function pvShowQ(m) {
+    var p = pv, sc = pvScore(p, m.sh || 0, m.sg || 0); if (m.on && p.role === "guest") p.opp = String(m.on).slice(0, 12);
+    p.v = { i: m.i, opts: m.opts, mine: null, oppDone: false, t0: Date.now(), dur: m.dur };
+    body.innerHTML = '<div class="pl-hud"><span class="pl-lv">ROUND ' + (m.i + 1) + ' / ' + m.n + '</span><span class="pl-sc pv-vs">나 <b>' + sc[0] + '</b> : <b>' + sc[1] + '</b> ' + A().esc(p.opp || "상대") + '</span></div>' +
+      '<div class="pl-prog pv-timer"><i id="pvBar" style="width:100%"></i></div>' +
+      '<div class="pl-card pl-in"><p class="pl-ask">⚔️ 영상 제목의 빈칸을 먼저 맞혀라! <span id="pvSec" class="pv-sec">' + m.dur + '</span></p><p class="pl-q">' + m.shown + '</p></div>' +
+      '<div class="pl-opts">' + m.opts.map(function (o, k) { return '<button type="button" class="pl-o pl-in" style="animation-delay:' + (.1 + k * .05) + 's" data-pva="' + k + '"><em>' + "ABCDEF".charAt(k) + '</em>' + A().esc(o) + '</button>'; }).join("") + '</div><p id="pvNote" class="pv-note"></p><div id="plRes"></div>';
+    requestAnimationFrame(function () { var b = $("pvBar"); if (b) { b.style.transition = "width " + m.dur + "s linear"; b.style.width = "0%"; } });
+    clearInterval(p.tick); p.tick = setInterval(function () { var s = $("pvSec"); if (!s || !pv || !pv.v) return; var left = Math.max(0, Math.ceil(pv.v.dur - (Date.now() - pv.v.t0) / 1000)); s.textContent = left; }, 250);
+  }
+  function pvMarkOpp() { var n = $("pvNote"); if (n && pv && pv.v && pv.v.oppDone && pv.v.mine == null) n.textContent = "⚡ " + (pv.opp || "상대") + "님이 먼저 골랐어요!"; }
+  function pvPick(k) {
+    var p = pv; if (!p || !p.v || p.v.mine != null) return; p.v.mine = k;
+    [].forEach.call(body.querySelectorAll(".pl-o"), function (b, j) { b.disabled = true; if (j === k) b.classList.add("pv-mine"); });
+    var n = $("pvNote"); if (n) n.textContent = "답을 보냈어요. 상대를 기다리는 중…";
+    if (p.role === "host") pvHostAnswer("h", k); else pvSend({ t: "a", i: p.v.i, k: k });
+  }
+  function pvShowR(m) {
+    var p = pv; if (!p || !p.v) return; clearInterval(p.tick);
+    var mine = p.role === "host" ? m.h : m.g, opp = p.role === "host" ? m.g : m.h, sc = pvScore(p, m.sh, m.sg), ok = false;
+    [].forEach.call(body.querySelectorAll(".pl-o"), function (b, j) {
+      b.disabled = true; var o = p.v.opts[j];
+      if (o === m.ans) b.classList.add("ok"); else if (j === mine.k) b.classList.add("no");
+      if (j === opp.k && o !== m.ans) b.classList.add("pv-opp");
+    });
+    ok = mine.p > 0; var bar = $("pvBar"); if (bar) { bar.style.transition = "none"; }
+    var sv = body.querySelector(".pv-vs"); if (sv) sv.innerHTML = '나 <b>' + sc[0] + '</b> : <b>' + sc[1] + '</b> ' + A().esc(p.opp || "상대");
+    var n = $("pvNote"); if (n) n.textContent = "";
+    if (mine.p) floatTxt("+" + mine.p, "ok"); else floatTxt(mine.k < 0 ? "TIME" : "MISS", "no");
+    $("plRes").innerHTML = '<p class="pl-r ' + (ok ? "ok" : "no") + '">' + (ok ? "정답! +" + mine.p : mine.k < 0 ? "시간 초과" : "아쉬워요. 정답은 「" + A().esc(m.ans) + "」") + '</p><p class="pv-oppr">' + A().esc(p.opp || "상대") + ' : ' + (opp.p ? "정답 +" + opp.p : opp.k < 0 ? "답 못 함" : "오답") + '</p><p class="pl-full">' + A().esc(m.title) + '</p><p class="pv-note">잠시 뒤 다음 문제가 나와요…</p>';
+    p.v.done = true;
+  }
+  function pvEnd(m) {
+    var p = pv; if (!p) return; clearInterval(p.tick); p.over = true; var sc = pvScore(p, m.sh, m.sg), r = sc[0] > sc[1] ? "win" : sc[0] < sc[1] ? "lose" : "draw";
+    body.innerHTML = '<div class="pl-end pl-in"><p class="pl-kick2">RESULT</p><i class="pl-trophy">' + (r === "win" ? "🏆" : r === "lose" ? "😵" : "🤝") + '</i><div class="pv-res ' + r + '">' + (r === "win" ? "WIN!" : r === "lose" ? "LOSE" : "DRAW") + '</div><b>' + sc[0] + ' : ' + sc[1] + '</b><p>나 vs ' + A().esc(p.opp || "상대") + '</p><div class="pl-act">' +
+      (p.role === "host" ? '<button type="button" class="btn primary" data-pvagain="1">한 판 더</button>' : '<button type="button" class="btn" disabled>방장이 다시 시작하면 이어져요</button>') + '<button type="button" class="btn" data-home>나가기</button></div></div>';
+    if (r === "win") confetti();
+  }
+
   function handle(e) {
-    if (!A().isIn()) return; var t = e.target.closest && e.target.closest("[data-g],[data-o],[data-next],[data-home],[data-cw],[data-cwi],[data-cwchk],[data-cwshow],[data-cwnew],[data-cwlv],[data-cwlv0],[data-blv]"); if (!t || !st && !t.dataset.g) { if (t && t.hasAttribute("data-home")) home(); return; }
+    if (!A().isIn()) return; var t = e.target.closest && e.target.closest("[data-g],[data-o],[data-next],[data-home],[data-cw],[data-cwi],[data-cwchk],[data-cwnew],[data-cwlv],[data-cwlv0],[data-blv],[data-pvhost],[data-pva],[data-pvagain]"); if (!t || !st && !t.dataset.g) { if (t && t.hasAttribute("data-home")) home(); return; }
     if (t.dataset.g === "blank") return blankStart();
     if (t.dataset.blv) return blankStart(+t.dataset.blv);
+    if (t.dataset.g === "pvp") return pvMenu();
+    if (t.hasAttribute("data-pvhost")) return pvHost();
+    if (t.dataset.pva != null) return pvPick(+t.dataset.pva);
+    if (t.hasAttribute("data-pvagain")) return pvAgain();
     if (t.dataset.g === "cw") return cwStart();
     if (t.dataset.cw) return cwPickCell(t.dataset.cw);
     if (t.dataset.cwi != null) { st.sel = +t.dataset.cwi; st.focus = true; return cwShow(); }
     if (t.hasAttribute("data-cwchk")) { st.checked = true; return cwShow(); }
-    if (t.hasAttribute("data-cwshow")) { st.done = true; return cwShow(); }
     if (t.hasAttribute("data-cwnew")) return cwStart(st.lv);
     if (t.dataset.cwlv) return cwStart(+t.dataset.cwlv);
     if (t.hasAttribute("data-cwlv0")) return cwMenu();

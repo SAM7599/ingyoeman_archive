@@ -93,6 +93,9 @@ const isAdmin = (env, s) => !!s && !!s.em && String(env.ADMIN_EMAILS || "").toLo
 // 차단된 계정인지
 // 접속 주소(IP)는 그대로 저장하지 않고, 되돌릴 수 없는 짧은 코드로 바꿔서만 저장해요
 
+let roomReady = false;
+const roomTable = async env => { if (roomReady) return; await env.DB.prepare("CREATE TABLE IF NOT EXISTS pvp_room (code TEXT PRIMARY KEY, host TEXT NOT NULL, offer TEXT NOT NULL, answer TEXT, ts INTEGER NOT NULL)").run(); roomReady = true; };
+
 // ── 입력 검사 ──
 function checkText(t) {   // 문제가 있으면 이유 코드를, 괜찮으면 null
   const s = String(t || "").replace(/\s+/g, " ").trim();
@@ -236,6 +239,52 @@ async function handle(req, env, ctx) {
     } catch (e) { return json(env, { error: "busy" }, 503); }
   }
 
+  // ── 대결방 (리슨서버형 PVP): 방장·친구 브라우저가 서로 바로 연결되도록 "연결 정보"만 잠깐 전달해요. 게임 내용은 이 서버를 거치지 않고, 연결되면 방 정보는 바로 지워요(최대 10분 보관).
+  if ((p === "/room/create" || p === "/room/join" || p === "/room/answer" || p === "/room/close") && req.method === "POST") {
+    const s = await getAuth(env, req); if (!s) return json(env, { error: "login" }, 401);
+    if (await tooFast(env, req, "room", 30, 600, s.uid, isAdmin(env, s))) return slow(env);
+    let b; try { const t = await req.text(); if (t.length > 20000) return json(env, { error: "big" }, 413); b = JSON.parse(t); } catch (e) { return json(env, { error: "bad" }, 400); }
+    const sdp = x => typeof x === "string" && x.length > 20 && x.length <= 12000;
+    try {
+      await roomTable(env); const now = Date.now();
+      await env.DB.prepare("DELETE FROM pvp_room WHERE ts < ?").bind(now - 6e5).run().catch(() => {});
+      if (p === "/room/create") {
+        if (!sdp(b.offer)) return json(env, { error: "bad" }, 400);
+        await env.DB.prepare("DELETE FROM pvp_room WHERE host = ?").bind(s.uid).run();
+        for (let i = 0; i < 8; i++) {
+          const code = String(Math.floor(1000 + Math.random() * 9000));
+          const r = await env.DB.prepare("INSERT OR IGNORE INTO pvp_room (code, host, offer, answer, ts) VALUES (?, ?, ?, NULL, ?)").bind(code, s.uid, b.offer, now).run();
+          if (r.meta && r.meta.changes) return json(env, { code });
+        }
+        return json(env, { error: "busy" }, 503);
+      }
+      const code = String(b.code || ""); if (!/^\d{4}$/.test(code)) return json(env, { error: "bad" }, 400);
+      if (p === "/room/join") {
+        const r = await env.DB.prepare("SELECT offer FROM pvp_room WHERE code = ? AND answer IS NULL").bind(code).first();
+        return r ? json(env, { offer: r.offer }) : json(env, { error: "none" }, 404);
+      }
+      if (p === "/room/answer") {
+        if (!sdp(b.answer)) return json(env, { error: "bad" }, 400);
+        const r = await env.DB.prepare("UPDATE pvp_room SET answer = ? WHERE code = ? AND answer IS NULL").bind(b.answer, code).run();
+        return r.meta && r.meta.changes ? json(env, { ok: true }) : json(env, { error: "none" }, 404);
+      }
+      await env.DB.prepare("DELETE FROM pvp_room WHERE code = ? AND host = ?").bind(code, s.uid).run();   // /room/close
+      return json(env, { ok: true });
+    } catch (e) { return json(env, { error: "busy" }, 503); }
+  }
+  if (p === "/room/poll" && req.method === "GET") {   // 방장이 친구의 응답을 기다려요
+    const s = await getAuth(env, req); if (!s) return json(env, { error: "login" }, 401);
+    if (await tooFast(env, req, "roompoll", 60, 60, s.uid, isAdmin(env, s))) return slow(env);
+    const code = String(url.searchParams.get("code") || ""); if (!/^\d{4}$/.test(code)) return json(env, { error: "bad" }, 400);
+    try {
+      await roomTable(env);
+      const r = await env.DB.prepare("SELECT answer FROM pvp_room WHERE code = ? AND host = ?").bind(code, s.uid).first();
+      if (!r) return json(env, { error: "none" }, 404);
+      if (r.answer) { await env.DB.prepare("DELETE FROM pvp_room WHERE code = ? AND host = ?").bind(code, s.uid).run().catch(() => {}); return json(env, { answer: r.answer }, 200, { "Cache-Control": "no-store" }); }
+      return json(env, { wait: true }, 200, { "Cache-Control": "no-store" });
+    } catch (e) { return json(env, { error: "busy" }, 503); }
+  }
+
   if (p === "/me" && req.method === "GET") {   // 내 별명과 운영진 여부
     const s = await getAuth(env, req);
     if (!s) return json(env, { error: "login" }, 401);
@@ -293,6 +342,7 @@ async function handle(req, env, ctx) {
     if (!s) return json(env, { error: "login" }, 401);
     for (const t of ["ratings", "rating_history", "ip_seen"]) await env.DB.prepare("DELETE FROM " + t + " WHERE uid = ?").bind(s.uid).run().catch(() => {});   // 예전 기능의 기록이 남아 있으면 함께 지워요
     await env.DB.prepare("DELETE FROM reports WHERE uid = ? OR reporter = ?").bind(s.uid, s.uid).run().catch(() => {});
+    await env.DB.prepare("DELETE FROM pvp_room WHERE host = ?").bind(s.uid).run().catch(() => {});   // 대결방 연결 정보도 함께 지워요
     for (const t of ["acct_ip", "abuse_log"]) await env.DB.prepare("DELETE FROM " + t + " WHERE uid = ?").bind(s.uid).run().catch(() => {});   // 의심 기록에 남은 내 계정 표시도 함께 지워요
     await udTable(env).then(() => env.DB.prepare("DELETE FROM udata WHERE uid = ?").bind(s.uid).run()).catch(() => {});   // 저장해 둔 즐겨찾기·기록도 함께 지워요
     if (!isAdmin(env, s)) { await lockLeft(env, s.uid); await env.DB.prepare("INSERT INTO delete_lock (uid, ts) VALUES (?, ?) ON CONFLICT(uid) DO UPDATE SET ts = excluded.ts").bind(s.uid, Date.now()).run(); await env.DB.prepare("DELETE FROM delete_lock WHERE ts < ?").bind(Date.now() - LOCK_MS).run().catch(() => {}); }   // 24시간 동안 다시 로그인할 수 없어요

@@ -1477,3 +1477,26 @@ html:has(#admModal:not([hidden])) { overflow:hidden; }   /* 대시보드를 열�
 .pl-game .cw-grid { padding:10px 10px; }
 
 .pl-ai { flex:none; padding:8px 16px calc(8px + env(safe-area-inset-bottom)); text-align:center; font-size:11.5px; line-height:1.5; word-break:keep-all; color:#9a9fd0; border-top:1px solid rgba(255,255,255,.1); background:rgba(8,8,26,.55); }
+/* ───── 퀴즈 대결 ───── */
+.play[data-hue="pvp"] { --pa:#ff6b4a; --pb:#ffc23d; }
+.pv-code { margin:8px 0 12px; font-size:68px; line-height:1; font-weight:900; letter-spacing:.18em; padding-left:.18em; color:#fff; text-shadow:0 0 26px rgba(255,194,61,.75),0 4px 0 rgba(0,0,0,.35); animation:plGlow2 1.6s ease-in-out infinite; }
+@keyframes plGlow2 { 0%,100% { text-shadow:0 0 14px rgba(255,194,61,.5),0 4px 0 rgba(0,0,0,.35); } 50% { text-shadow:0 0 34px rgba(255,194,61,.95),0 4px 0 rgba(0,0,0,.35); } }
+.pv-wait { display:flex; justify-content:center; gap:8px; margin:14px 0; } .pv-wait i { width:10px; height:10px; border-radius:50%; background:#ffc23d; animation:plDot 1s ease-in-out infinite; } .pv-wait i:nth-child(2) { animation-delay:.15s; } .pv-wait i:nth-child(3) { animation-delay:.3s; }
+@keyframes plDot { 0%,100% { transform:translateY(0); opacity:.4; } 50% { transform:translateY(-8px); opacity:1; } }
+.pv-join { margin-top:12px; padding:14px; border-radius:20px; border:1px solid rgba(255,255,255,.22); background:rgba(255,255,255,.07); } .pv-join b { display:block; margin-bottom:8px; color:#fff; font-size:15px; }
+.pv-join input { text-align:center; letter-spacing:.4em; font-size:20px; font-weight:800; }
+.pv-vs { letter-spacing:0; } .pv-vs b { color:#ffd166; }
+.pv-timer { height:10px; } .pv-sec { float:right; font-size:15px; color:#ffd166; letter-spacing:0; }
+.pv-note { min-height:22px; margin:10px 0 0; text-align:center; font-size:13.5px; font-weight:700; color:#ffd166; }
+.pv-oppr { margin:2px 0 8px; font-size:14px; font-weight:800; color:#cfd2ff; animation:plIn .35s .05s both; }
+.pl-game .pl-o.pv-mine { border-color:#ffd166; background:rgba(255,209,102,.2); box-shadow:0 0 16px rgba(255,209,102,.5); opacity:1 !important; }
+.pl-game .pl-o.pv-opp::after { content:"상대"; margin-left:auto; padding:1px 7px; border-radius:99px; background:#ff6b4a; color:#fff; font-size:11px; font-weight:900; }
+.pl-game .pl-o.ok.pv-mine { border-color:#7dffb0; }
+.pv-res { margin:6px auto; font-size:56px; font-weight:900; letter-spacing:.06em; animation:plPop .6s .1s cubic-bezier(.2,1.6,.4,1) both; }
+.pv-res.win { color:#ffd166; text-shadow:0 0 30px rgba(255,209,102,.8); } .pv-res.lose { color:#ff7d86; text-shadow:0 0 24px rgba(255,93,122,.6); } .pv-res.draw { color:#cfd2ff; }
+@media (prefers-reduced-motion:reduce) { .pv-code,.pv-wait i,.pv-res { animation:none !important; } }
+
+.pv-vsbox { display:flex; align-items:center; justify-content:center; gap:14px; margin:14px 0 16px; }
+.pv-p { flex:1; max-width:150px; padding:14px 8px; border-radius:18px; border:1px solid rgba(255,255,255,.25); background:rgba(255,255,255,.08); animation:plIn .5s both; } .pv-p.opp { animation-delay:.25s; border-color:#ffc23d; box-shadow:0 0 22px -4px rgba(255,194,61,.7); }
+.pv-p i { display:block; font-style:normal; font-size:38px; } .pv-p b { display:block; margin-top:4px; font-size:16px; color:#fff; word-break:keep-all; overflow-wrap:anywhere; } .pv-p small { display:block; margin-top:2px; font-size:12px; color:#ffd166; }
+.pv-x { font-size:26px; font-weight:900; color:#ff6b4a; text-shadow:0 0 16px rgba(255,107,74,.8); animation:plPop .6s .45s cubic-bezier(.2,1.6,.4,1) both; }

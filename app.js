@@ -873,7 +873,7 @@
     m.style.left = Math.max(8, Math.min(r.right - w, window.innerWidth - w - 8)) + window.scrollX + "px";
   }
   function closeMenu() { $("menu").hidden = true; menuFor = null; }
-  window.PLAYAPI = { isIn: () => !!rtok, loginBtn: el => gBtn(el, { text: "signin_with", shape: "pill", locale: "ko" }), vids: () => all, esc, url: safeUrl, key, grad, closeMenu, addFav: v => { const k = key(v); if (!favs.has(k)) { favs.add(k); store.set("favs", [...favs]); } toast("즐겨찾기에 담았어요"); } };
+  window.PLAYAPI = { isIn: () => !!rtok, name: () => (rtok && rtok.name) || "손님", rapi: (path, opt) => RATE ? rApi(path, opt) : Promise.reject(new Error("no server")), loginBtn: el => gBtn(el, { text: "signin_with", shape: "pill", locale: "ko" }), vids: () => all, esc, url: safeUrl, key, grad, closeMenu, addFav: v => { const k = key(v); if (!favs.has(k)) { favs.add(k); store.set("favs", [...favs]); } toast("즐겨찾기에 담았어요"); } };
   $("menu").addEventListener("click", e => {
     const b = e.target.closest("button"), v = menuFor; if (!b || !v) return;
     closeMenu();
