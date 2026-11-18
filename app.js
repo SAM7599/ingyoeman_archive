@@ -129,7 +129,7 @@
       box.innerHTML = `<button type="button" class="round g-me" id="gMe" aria-haspopup="true" aria-expanded="false" title="${esc(nm)} (로그인됨)"><span>${esc(String(nm).slice(0, 1))}</span></button><div class="g-menu" id="gMenu" hidden><p><small>로그인됨</small><b>${esc(nm)}</b></p><button type="button" id="gOut">로그아웃</button><button type="button" id="gDel" class="g-del">내 정보 지우기</button></div>`;
       syncPull(); return;
     }
-    box.innerHTML = '<div id="gBtnTop"></div>' + (tipOn ? '<div class="g-tip" id="gTip" role="note"><button type="button" class="g-x" id="gTipX" aria-label="닫기">✕</button><span class="lp-badge">무료 회원</span><b class="g-tt">로그인 혜택</b><ul class="lp-rows"><li><i class="lp-i" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg></i><div><b>즐겨찾기·열어본 영상 저장</b><span>기기를 바꿔도 그대로예요</span></div></li><li><i class="lp-i" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 1-1 1.7"/><path d="M12 17h.01"/></svg></i><div><b>오늘의 한 줄 퀴즈</b><span>매일 새 문제, 연속 정답·정답률 기록</span></div></li><li><i class="lp-i" aria-hidden="true">😂</i><div><b>영상 반응 남기기</b><span>웃겨요 · 추억돋아요 · 레전드</span></div></li><li><i class="lp-i" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="11" rx="5"/><path d="M8 11v5M5.5 13.5h5M15.5 12.5h.01M18 14.5h.01"/></svg></i><div><b>미니게임</b><span>제목 빈칸 채우기 · 영상 월드컵</span></div></li></ul><button type="button" class="g-tipoff" id="gTipOff">오늘 하루 보지 않기</button></div>' : "");
+    box.innerHTML = '<div id="gBtnTop"></div>' + (tipOn ? '<div class="g-tip" id="gTip" role="note"><button type="button" class="g-x" id="gTipX" aria-label="닫기">✕</button><span class="lp-badge">무료 회원</span><b class="g-tt">로그인 혜택</b><ul class="lp-rows"><li><i class="lp-i" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg></i><div><b>즐겨찾기·열어본 영상 저장</b><span>기기를 바꿔도 그대로예요</span></div></li><li><i class="lp-i" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 1-1 1.7"/><path d="M12 17h.01"/></svg></i><div><b>오늘의 한 줄 퀴즈</b><span>매일 새 문제, 연속 정답·정답률 기록</span></div></li><li><i class="lp-i" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="11" rx="5"/><path d="M8 11v5M5.5 13.5h5M15.5 12.5h.01M18 14.5h.01"/></svg></i><div><b>미니게임</b><span>제목 빈칸 채우기 · 영상 월드컵</span></div></li></ul><button type="button" class="g-tipoff" id="gTipOff">오늘 하루 보지 않기</button></div>' : "");
     const wide = window.innerWidth >= 861;
     gBtn($("gBtnTop"), wide ? { text: "signin", shape: "pill", locale: "ko" } : { type: "icon", shape: "circle" });
   }
@@ -631,48 +631,10 @@
     $("mCat").textContent = v.category || "기타"; $("mCat").style.setProperty("--c", dot(v.category));
     $("mTitle").textContent = v.title || "";
     $("mGo").href = safeUrl(v.url); $("mGo").innerHTML = (id ? "원본 글 열기" : "다시보기") + OUT; $("mGo").hidden = safeUrl(v.url) === "#";
-    $("mTip").hidden = !!id || !isPhone || safeUrl(v.url) === "#"; syncModalFav(); loadReact();
+    $("mTip").hidden = !!id || !isPhone || safeUrl(v.url) === "#"; syncModalFav();
     $("modal").hidden = false; document.body.style.overflow = "hidden"; $("mClose").focus();
     if (id) { markSeen(v); render(); }
   }
-  /* ── 영상 반응 (로그인한 분만, 영상마다 하나, 하루 30번까지) ── */
-  const REACTS = [["laugh", "😂", "웃겨요"], ["nostalgia", "🥹", "추억돋아요"], ["legend", "🔥", "레전드"], ["tear", "😭", "울컥해요"], ["clap", "👏", "최고예요"]];
-  let rx = null;   // { id, counts, mine, left, cap }
-  function drawReact() {
-    const box = $("mReact"); if (!box) return;
-    if (!RATE || !current) { box.hidden = true; return; }
-    box.hidden = false;
-    const c = (rx && rx.counts) || {}, mine = rx && rx.mine;
-    $("mrRow").innerHTML = REACTS.map(([k, e, t]) => `<button type="button" class="mr-b${mine === k ? " on" : ""}" data-rx="${k}" aria-pressed="${mine === k}"><span class="mr-e">${e}</span><span class="mr-t">${t}</span><b>${c[k] || 0}</b></button>`).join("");
-    $("mrH").textContent = !rtok ? "로그인한 분만 반응을 남길 수 있어요." : rx && rx.left != null ? `영상마다 하나씩, 하루 ${rx.cap}번까지 · 오늘 ${rx.left}번 남았어요` : "";
-  }
-  async function loadReact() {
-    const v = current; rx = null; if (!v || !RATE) return drawReact();
-    const id = vid(v); drawReact();
-    try {
-      const r = await rApi("/react?id=" + encodeURIComponent(id)); if (!r.ok) return;
-      const d = await r.json(); if (!current || vid(current) !== id) return;
-      rx = { id, counts: d.counts || {}, mine: d.mine || null, left: d.left, cap: d.cap || 30 }; drawReact();
-    } catch (e) {}
-  }
-  document.addEventListener("click", async e => {
-    const b = e.target.closest("[data-rx]"); if (!b || !current) return;
-    if (!rtok) return toast("로그인하면 반응을 남길 수 있어요 (오른쪽 위 로그인)");
-    const id = vid(current), k = b.dataset.rx, cancel = rx && rx.mine === k;
-    b.disabled = true;
-    try {
-      const r = await rApi("/react", { method: "POST", body: JSON.stringify({ id, r: cancel ? "" : k }) });
-      const d = await r.json().catch(() => ({}));
-      if (r.status === 429 && d.error === "limit") toast(`오늘은 반응을 ${d.cap || 30}번 모두 썼어요. 내일 또 남겨 주세요`);
-      else if (r.status === 429) toast("너무 빨라요. 잠시 뒤에 다시 눌러 주세요");
-      else if (r.status === 503 && d.error === "busy" && d.cap) toast("오늘은 반응이 너무 많이 몰렸어요. 내일 다시 남겨 주세요");
-      else if (r.status === 401) toast("로그인이 풀렸어요. 다시 로그인해 주세요");
-      else if (!r.ok) toast("지금은 반응을 남길 수 없어요");
-      else if (current && vid(current) === id) rx = { id, counts: d.counts || {}, mine: d.mine || null, left: d.left, cap: d.cap || 30 };
-    } catch (err) { toast("지금은 반응을 남길 수 없어요"); }
-    drawReact();
-  });
-  document.addEventListener("dlogin", () => { if (current && !$("modal").hidden) loadReact(); });
   function syncModalFav() { if (!current) return; $("mFav").textContent = favs.has(key(current)) ? "♥ 담았어요" : "♡ 즐겨찾기"; }
   function closeModal(keepHash) {
     $("modal").hidden = true; $("mScreen").innerHTML = ""; document.body.style.overflow = ""; current = null;

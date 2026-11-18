@@ -1376,12 +1376,3 @@ html:not([data-motion="off"]) .cs-box:not(.cs-bye) { animation:zoom .35s cubic-b
 .st h3 small { font-weight:400; color:var(--sub); }
 html:has(#admModal:not([hidden])) { overflow:hidden; }   /* 대시보드를 열었을 때 뒤쪽 사이트 스크롤바가 같이 보이지 않게 */
 
-/* 영상 반응 */
-.m-react { margin:14px 0 0; }
-.mr-row { display:grid; grid-template-columns:repeat(5,1fr); gap:6px; }
-.mr-b { display:flex; flex-direction:column; align-items:center; gap:1px; padding:8px 2px 7px; border:1px solid var(--line); border-radius:12px; background:var(--raise); color:var(--ink); font:inherit; cursor:pointer; min-width:0; }
-.mr-b .mr-e { font-size:20px; line-height:1.2; } .mr-b .mr-t { font-size:10.5px; color:var(--sub); white-space:nowrap; } .mr-b b { font-size:12px; }
-.mr-b.on { border-color:var(--accent); background:color-mix(in srgb, var(--accent) 14%, var(--raise)); }
-.mr-b:disabled { opacity:.6; }
-.mr-h { margin:7px 0 0; font-size:12px; color:var(--sub); text-align:center; }
-@media (max-width:400px) { .mr-b .mr-t { font-size:9.5px; } }
