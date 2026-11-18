@@ -613,7 +613,7 @@
     $("mCat").textContent = v.category || "기타"; $("mCat").style.setProperty("--c", dot(v.category));
     $("mTitle").textContent = v.title || "";
     $("mGo").href = safeUrl(v.url); $("mGo").innerHTML = (id ? "원본 글 열기" : "다시보기") + OUT; $("mGo").hidden = safeUrl(v.url) === "#";
-    $("mNeed").hidden = !!id; $("mTip").hidden = !!id || !isPhone || safeUrl(v.url) === "#"; syncModalFav();
+    $("mTip").hidden = !!id || !isPhone || safeUrl(v.url) === "#"; syncModalFav();
     $("modal").hidden = false; document.body.style.overflow = "hidden"; $("mClose").focus();
     if (id) { markSeen(v); render(); }
   }
