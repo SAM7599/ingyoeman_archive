@@ -1522,3 +1522,5 @@ html:has(#admModal:not([hidden])) { overflow:hidden; }   /* 대시보드를 열�
 .pv-ag { display:flex; align-items:center; gap:10px; margin-top:10px; padding:11px 12px; border-radius:14px; background:rgba(0,0,0,.28); font-weight:800; font-size:15px; cursor:pointer; }
 .pv-ag input { width:22px; height:22px; accent-color:#ff5d7a; flex:none; }
 .pv-shake { animation:plShake .45s ease; }
+/* 게임 화면도 위에 붙지 않게 가운데로 모아요 (내용이 길면 위에서부터 스크롤) */
+.pl-game .pl-main { display:flex; } .pl-game .pl-main > div { margin:auto; }
