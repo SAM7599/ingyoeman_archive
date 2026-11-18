@@ -1,8 +1,7 @@
-// 잉여맨추억자료실 별점 서버 (Cloudflare Worker)
-// - 구글로 로그인 → 별점 + 후기 저장 (한 계정당 영상 하나에 한 번, 후기는 꼭 써야 해요)
-// - 후기 신고 → 신고 번호를 받고, 신고자가 디스코드 신고 채널에 번호와 캡처를 직접 올려요 (웹훅 없음)
-// - 운영진(지정한 구글 계정)은 사이트에 로그인하면 신고함에서 신고 목록(현재 후기 + 고치기 전 기록)을 보고 삭제·차단해요
-// - 차단된 구글 계정은 별점·후기·신고를 할 수 없고, 그 사람의 후기는 사라져요
+// 잉여맨추억자료실 서버 (Cloudflare Worker + D1)
+// - 구글로 로그인 → 즐겨찾기·열어본 영상·오늘의 퀴즈 기록을 계정에 저장해요
+// - 운영진(지정한 구글 계정)은 유저 목록과 의심 접속 기록을 보고 계정을 정지·해제할 수 있어요
+// - 정지된 계정은 로그인할 수 없어요
 //
 // 필요한 설정(wrangler.toml / 대시보드):
 //   변수  : GOOGLE_CLIENT_ID, SITE_ORIGIN (예: https://sam7599.github.io), SITE_PATH (예: /ingyoeman_archive/)
@@ -75,7 +74,7 @@ const tooFast = async (env, req, key, max, secs, uid, noLog) => {
   } catch (e) { return false; }   // 속도 제한 장치가 고장나도 사이트는 계속 돼요
 };
 const slow = env => json(env, { error: "slow" }, 429);
-// "내 정보 전부 삭제" 뒤 24시간 동안은 다시 로그인·후기 작성을 할 수 없어요 (삭제·재가입을 반복해서 서버에 부담을 주는 것을 막아요)
+// "내 정보 전부 삭제" 뒤 24시간 동안은 다시 로그인할 수 없어요 (삭제·재가입을 반복해서 서버에 부담을 주는 것을 막아요)
 // 계정 코드(되돌릴 수 없는 코드)와 삭제한 시각만 24시간 보관하고 자동으로 지워요
 const LOCK_MS = 864e5;
 let lockReady = false;
@@ -94,7 +93,7 @@ const isAdmin = (env, s) => !!s && !!s.em && String(env.ADMIN_EMAILS || "").toLo
 // 차단된 계정인지
 // 접속 주소(IP)는 그대로 저장하지 않고, 되돌릴 수 없는 짧은 코드로 바꿔서만 저장해요
 
-// ── 후기 검사 ──
+// ── 입력 검사 ──
 function checkText(t) {   // 문제가 있으면 이유 코드를, 괜찮으면 null
   const s = String(t || "").replace(/\s+/g, " ").trim();
   if (s.length < 5) return "short";
@@ -109,7 +108,7 @@ const ADJ = ["졸린", "배고픈", "수줍은", "용감한", "느긋한", "엉�
 const NOUN = ["너구리", "고양이", "강아지", "다람쥐", "토끼", "펭귄", "수달", "부엉이", "판다", "여우", "하마", "고래", "거북이", "오리", "햄스터", "참새", "곰돌이", "사슴", "두더지", "카피바라", "미어캣", "알파카", "병아리", "청설모", "돌고래", "코알라", "앵무새", "해달", "치타", "기린"];
 const nick = async (env, uid) => { const h = await hmac(env.SESSION_SECRET, "nick:" + uid), A = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_", v = i => A.indexOf(h[i]) + 1; return ADJ[(v(0) * 7 + v(1)) % ADJ.length] + NOUN[(v(2) * 7 + v(3)) % NOUN.length] + String((v(4) * 11 + v(5)) % 100).padStart(2, "0"); };
 // 고치기 전 / 지우기 전 모습을 보관함에 남겨요 (why: edit=고침, del=본인이 지움, mod=운영진이 지움, ban=차단으로 지워짐)
-// 보관함 자동 비우기: 보관한 지 RETENTION_DAYS(기본 180일 ≈ 6개월)가 지난 기록을 지워요. 별도 설정 없이 후기가 오갈 때·보관함을 열 때 알아서 정리돼요
+// 보관함 자동 비우기: 보관한 지 RETENTION_DAYS(기본 180일 ≈ 6개월)가 지난 기록을 지워요. 별도 설정 없이 접속할 때 알아서 정리돼요
 // ── 로그인한 사람의 자료 저장 (즐겨찾기·열어본 영상·시리즈 고침 + 방문 도장 + 퀴즈 기록) ──
 // 저장량 한도: 영상 번호만 저장하고, 사람마다 상한을 둬요. 6개월(RETENTION_DAYS) 동안 오지 않으면 자동으로 지워요.
 const FAV_MAX = 300, REC_MAX = 100, SOV_MAX = 200;

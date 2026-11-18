@@ -9,7 +9,7 @@ self.addEventListener("fetch", e => {
   const r = e.request;
   if (r.method !== "GET") return;
   const u = new URL(r.url);
-  if (u.origin !== location.origin) return;                 // 다른 주소(별점 서버, 구글, 유튜브 등)는 그대로 통과
+  if (u.origin !== location.origin) return;                 // 다른 주소(서버, 구글, 유튜브 등)는 그대로 통과
   const k = u.origin + u.pathname;                          // ?v=숫자 같은 뒷부분은 빼고 저장해서 파일마다 하나씩만 남겨요
   e.respondWith(fetch(r).then(res => {
     if (res && res.ok) { const cp = res.clone(); caches.open(CACHE).then(c => c.put(k, cp)); }
