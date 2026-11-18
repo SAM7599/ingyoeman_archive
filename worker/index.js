@@ -241,9 +241,10 @@ async function handle(req, env, ctx) {
       const total = (await env.DB.prepare("SELECT COUNT(*) AS c FROM udata").first()).c || 0;
       const flags = new Set(((await env.DB.prepare("SELECT DISTINCT uid FROM abuse_log WHERE uid IS NOT NULL").all()).results || []).map(x => x.uid));
       await isBanned(env, "x"); const bans = new Map(((await env.DB.prepare("SELECT uid, ts FROM acct_ban").all()).results || []).map(x => [x.uid, x.ts]));
-      const users = []; for (const r of rows) { users.push({ uid: r.uid, name: await nick(env, r.uid), ts: r.ts, fav: JSON.parse(r.fav || "[]").length, rec: JSON.parse(r.rec || "[]").length, qok: r.q_ok, qall: r.q_all, flag: flags.has(r.uid), banned: bans.has(r.uid) }); bans.delete(r.uid); }
-      for (const [uid, ts] of bans) users.unshift({ uid, name: await nick(env, uid), ts, fav: 0, rec: 0, qok: 0, qall: 0, flag: flags.has(uid), banned: true });
-      return json(env, { total, users }, 200, { "Cache-Control": "no-store" });
+      const users = []; for (const r of rows) { if (bans.has(r.uid)) continue; users.push({ uid: r.uid, name: await nick(env, r.uid), ts: r.ts, fav: JSON.parse(r.fav || "[]").length, rec: JSON.parse(r.rec || "[]").length, qok: r.q_ok, qall: r.q_all, flag: flags.has(r.uid), banned: false }); }
+      const banned = []; for (const [uid, ts] of bans) banned.push({ uid, name: await nick(env, uid), since: ts });   // 정지된 계정 (정지한 시각 기준 최근 순)
+      banned.sort((a, b) => b.since - a.since);
+      return json(env, { total, users, banned }, 200, { "Cache-Control": "no-store" });
     } catch (e) { return json(env, { error: "busy" }, 503); }
   }
   if (p === "/admin/usage" && req.method === "GET") {   // 운영진: 오늘 서버 사용량 (무료 한도 대비)

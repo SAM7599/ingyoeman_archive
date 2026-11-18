@@ -269,7 +269,7 @@
   }
   function drawStatus(note) {
     const L = store.get("srvlog", []), okN = L.filter(x => x.s !== "down"), avg = okN.length ? Math.round(okN.reduce((s, x) => s + x.ms, 0) / okN.length) : 0, bad = L.length - okN.length;
-    $("admList").innerHTML = `<section class="st"><h3>서버 응답 속도</h3>${lineChart(L)}<p class="st-h">선이 <b>낮을수록 빨라요</b>. 점선(2초)을 넘으면 느린 거예요. 위쪽 <span class="st-red">빨간 점</span>은 연결이 안 됐던 때예요.${L.length ? ` 평균 ${avg}ms${bad ? ` · 안 된 적 ${bad}번` : ""} (이 기기에서 최근 ${L.length}번 확인 기준)` : ""}</p></section><section class="st" id="admUse"><h3>서버 사용량</h3><p class="st-h">불러오는 중…</p></section><section class="st" id="admUsers"><h3>의심 접속 기록</h3><p class="st-h">불러오는 중…</p></section><section class="st" id="admUl"><h3>로그인한 사람</h3><p class="st-h">불러오는 중…</p></section>`;
+    $("admList").innerHTML = `<section class="st"><h3>서버 응답 속도</h3>${lineChart(L)}<p class="st-h">선이 <b>낮을수록 빨라요</b>. 점선(2초)을 넘으면 느린 거예요. 위쪽 <span class="st-red">빨간 점</span>은 연결이 안 됐던 때예요.${L.length ? ` 평균 ${avg}ms${bad ? ` · 안 된 적 ${bad}번` : ""} (이 기기에서 최근 ${L.length}번 확인 기준)` : ""}</p></section><section class="st" id="admUse"><h3>서버 사용량</h3><p class="st-h">불러오는 중…</p></section><section class="st" id="admUsers"><h3>의심 접속 기록</h3><p class="st-h">불러오는 중…</p></section><section class="st" id="admBn"><h3>정지된 계정</h3><p class="st-h">불러오는 중…</p></section><section class="st" id="admUl"><h3>로그인한 사람</h3><p class="st-h">불러오는 중…</p></section>`;
     loadAdmUsers();
   }
   /* ── 운영진: 유저 관리 · 서버에 부담을 준 것으로 의심되는 접속 ── */
@@ -291,7 +291,8 @@
     try {
       const [ra, ru] = await Promise.all([rApi("/admin/abuse"), rApi("/admin/users")]);
       if (!ra.ok || !ru.ok) throw 0;
-      const ab = await ra.json(), us = await ru.json(), box = $("admUsers"), ul = $("admUl"); if (!box || !ul) return;
+      const ab = await ra.json(), us = await ru.json(), box = $("admUsers"), ul = $("admUl"), bn = $("admBn"); if (!box || !ul) return;
+      if (bn) { const B = us.banned || []; bn.innerHTML = `<h3>정지된 계정 <small>(${B.length}명)</small></h3>` + (B.length ? `<ul class="au-l">${B.map(b => `<li class="flag"><b>${esc(b.name || "이름 없음")}</b><span>정지한 날 ${when(b.since)}</span><button type="button" class="au-del" data-uid="${esc(b.uid)}" data-ban="0">정지 풀기</button></li>`).join("")}</ul>` : `<p class="st-h">정지된 계정이 없어요.</p>`); }
       box.innerHTML = `<h3>의심 접속 기록</h3>` + (ab.rows.length ? `<ul class="au-l">${ab.rows.map(r => `<li><b>${esc(KIND[r.kind] || r.kind)}</b><span>접속 코드 <code>${esc(r.ip)}</code>${r.name ? " · " + esc(r.name) : ""} · ${r.n}번 · 마지막 ${when(r.last)}</span>${r.uid ? `<button type="button" class="au-del" data-uid="${esc(r.uid)}" data-ban="${r.banned ? 0 : 1}">${r.banned ? "정지 풀기" : "계정 정지"}</button>` : ""}</li>`).join("")}</ul>` : `<p class="st-h">아직 없어요. 👍</p>`) + `<p class="st-h">접속 주소는 되돌릴 수 없는 짧은 코드로만 남기고, ${ab.days}일 뒤 자동으로 지워요. 같은 코드는 같은 접속 주소예요.</p>`;
       ul.innerHTML = `<h3>로그인한 사람 <small>(${us.total}명)</small></h3><div class="au-body">` + (us.users.length ? `<ul class="au-l">${us.users.filter(u => !admHide.has(u.uid)).map(u => `<li${u.flag ? ' class="flag"' : ""}><button type="button" class="au-x" data-uid="${esc(u.uid)}" aria-label="닫기" title="닫기">✕</button><b>${esc(u.name || "이름 없음")}${u.flag ? " ⚠️" : ""}${u.banned ? " · 정지됨" : ""}</b><span>즐겨찾기 ${u.fav} · 본 영상 ${u.rec} · 퀴즈 ${u.qok}/${u.qall} · 마지막 ${when(u.ts)}</span><button type="button" class="au-del" data-uid="${esc(u.uid)}" data-ban="${u.banned ? 0 : 1}">${u.banned ? "정지 풀기" : "계정 정지"}</button></li>`).join("")}</ul>` : `<p class="st-h">아직 없어요.</p>`) + `</div>`;
     } catch (e) { const b = $("admUsers"); if (b) b.innerHTML = `<h3>의심 접속 기록</h3><p class="st-h">불러오지 못했어요. 잠시 뒤 다시 열어 주세요.</p>`; const l = $("admUl"); if (l) l.innerHTML = ""; }
