@@ -1018,7 +1018,7 @@ body { padding-left:env(safe-area-inset-left); padding-right:env(safe-area-inset
 }
 
 /* 공지 팝업 */
-#noticePop.modal { inset:auto; left:0; top:0; width:0; height:0; padding:0; background:none; display:block; pointer-events:none; z-index:28; }
+#noticePop.modal { inset:auto; left:0; top:0; width:0; height:0; padding:0; background:none; display:block; pointer-events:none; z-index:41; }
 #noticePop[hidden] { display:none; }
 #noticePop .sheet.np { position:fixed; pointer-events:auto; width:min(400px, calc(100vw - 24px)); max-width:none; max-height:none; box-shadow:0 18px 50px rgba(0,0,0,.5); cursor:grab; touch-action:none; }
 #noticePop .sheet.np.drag { cursor:grabbing; }
@@ -1231,7 +1231,7 @@ html:not([data-motion="off"]) .g-tip { animation:gtipin .35s ease 1.2s both !imp
 .g-tip .g-tipoff { display:block; width:100%; margin:2px 0 6px; padding:10px 0 6px; border:0; border-top:1px solid #2a2850; background:none; color:#8d8ac0; font:inherit; font-size:12.5px; text-align:center; cursor:pointer; }
 .g-tip .g-tipoff:hover { color:#fff; }
 @media (max-width:860px) { .g-tip { position:fixed; top:66px; right:12px; } .g-tip::before { display:none; } }
-@media (max-width:860px) { .top { position:relative; z-index:45; } .menu { z-index:50; } }
+@media (max-width:860px) { .top { position:relative; z-index:36; } .menu { z-index:50; } }
 
 /* 미니게임 */
 .play { position:fixed; inset:0; z-index:80; display:grid; place-items:center; padding:12px; background:rgba(8,9,22,.78); }
