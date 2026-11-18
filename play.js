@@ -38,8 +38,8 @@
       return '<button type="button" class="pl-tile" data-g="' + g + '" style="--g:' + grad + '"><span class="pl-ico" aria-hidden="true">' + ico + '</span><span class="pl-tt"><b>' + title + '</b><span>' + desc + '</span><span class="pl-chips">' + chips.map(function (c) { return '<i class="pl-chip">' + c + '</i>'; }).join("") + '</span></span><span class="pl-go"><em>START</em> ▶</span></button>';
     };
     body.innerHTML = '<section class="pl-hub" aria-label="미니게임 목록"><p class="pl-kick">ARCADE</p><h2 class="pl-ttl">잉여맨 오락실</h2><p class="pl-sel">올드팬을 위한 미니게임 · 하고 싶은 게임을 골라 주세요</p>' +
-      tile("blank", "✏️", "linear-gradient(135deg,#4f8bff,#7a5cff)", "제목 빈칸 채우기", "빠진 글자를 맞혀 보세요. 보기가 비슷비슷해서 헷갈려요.", ["5문제", "약 1분", "난이도 ★★☆"]) +
-      tile("cw", "🧩", "linear-gradient(135deg,#ff8a5c,#ff5d7a)", "낱말퍼즐", "옛 방송 제목에서 뽑은 낱말을 가로세로 열쇠로 풀어요.", ["낱말 11개 안팎", "약 5분", "난이도 ★★★"]) +
+      tile("blank", "✏️", "linear-gradient(135deg,#4f8bff,#7a5cff)", "제목 빈칸 채우기", "빠진 낱말을 맞혀 보세요. 쉬움·보통·어려움 중에 골라요.", ["난이도 3단계", "5~10문제", "약 1~3분"]) +
+      tile("cw", "🧩", "linear-gradient(135deg,#ff8a5c,#ff5d7a)", "낱말퍼즐", "쉬움·보통·어려움 중에 골라 가로세로 열쇠로 풀어요.", ["난이도 3단계", "낱말 300개", "약 3~12분"]) +
       '<p class="pl-more">새 게임이 생기면 여기에 모여요</p></section>';
   }
 
@@ -54,28 +54,38 @@
     for (i = 0; i < b.length; i++) if (a.indexOf(b.charAt(i)) >= 0 && !used[b.charAt(i)]) { used[b.charAt(i)] = 1; sc += 2; }
     return sc + Math.random();
   }
-  function similar(ans, bank, title) {
-    var c = bank.filter(function (w) { return w !== ans && w.indexOf(ans) < 0 && ans.indexOf(w) < 0 && Math.abs(w.length - ans.length) <= 1 && title.indexOf(w) < 0; });
-    c = c.map(function (w) { return [simScore(ans, w), w]; }).sort(function (x, y) { return y[0] - x[0]; }).slice(0, 8).map(function (x) { return x[1]; });
-    return shuffle(c).slice(0, 3);
+  function similar(ans, bank, title, k, mode) {
+    var c = bank.filter(function (w) { return w !== ans && w.indexOf(ans) < 0 && ans.indexOf(w) < 0 && title.indexOf(w) < 0 && (mode === "same" ? w.length === ans.length : Math.abs(w.length - ans.length) <= (mode === "rand" ? 2 : 1)); });
+    if (mode === "rand") return shuffle(c).slice(0, k);   // 쉬움: 정답과 별로 안 닮은 낱말
+    c = c.map(function (w) { return [simScore(ans, w), w]; }).sort(function (x, y) { return y[0] - x[0]; }).slice(0, k + 5).map(function (x) { return x[1]; });
+    return shuffle(c).slice(0, k);
   }
-  function makeQ(pool, bank) {
+  function makeQ(pool, bank, cf) {
     for (var tries = 0; tries < 60; tries++) {
       var v = pool[rnd(pool.length)], ws = wordsOf(v.title).filter(function (w) { return w.length >= 3; });
       if (!ws.length) ws = wordsOf(v.title); if (!ws.length) continue;
       var ans = ws[rnd(ws.length)];
-      var dis = similar(ans, bank, v.title);   // 정답과 비슷하게 생긴 낱말로 헷갈리게 만들어요
-      if (dis.length < 3) continue;
+      var dis = similar(ans, bank, v.title, cf.opts - 1, cf.mode);   // 정답과 비슷하게 생긴 낱말로 헷갈리게 만들어요
+      if (dis.length < cf.opts - 1) continue;
       var shown = A().esc(v.title).replace(ans, '<mark class="pl-bl">' + new Array(ans.length + 1).join("＿") + "</mark>");
       return { v: v, ans: ans, shown: shown, opts: shuffle([ans].concat(dis)) };
     }
     return null;
   }
-  function blankStart() {
-    var all = A().vids(), bank = []; all.forEach(function (v) { wordsOf(v.title).forEach(function (w) { bank.push(w); }); });
+  var BLV = { 1: { n: "쉬움", ico: "🌱", d: "보기가 3개예요. 오답이 정답과 안 닮아서 고르기 쉬워요.", q: 5, opts: 3, mode: "rand", chips: ["5문제", "보기 3개", "약 1분"], g: "linear-gradient(135deg,#46d39a,#2a9d8f)" },
+    2: { n: "보통", ico: "🔥", d: "보기 4개가 정답과 비슷하게 생겨서 헷갈려요.", q: 5, opts: 4, mode: "sim", chips: ["5문제", "보기 4개", "약 1분"], g: "linear-gradient(135deg,#ffb35c,#ff7a8a)" },
+    3: { n: "어려움", ico: "💀", d: "10문제! 보기 5개가 글자 수까지 똑같아서 진짜 아는 사람만 맞혀요.", q: 10, opts: 5, mode: "same", chips: ["10문제", "보기 5개", "약 3분"], g: "linear-gradient(135deg,#a855f7,#ef4444)" } };
+  function blankMenu() {
+    st = { g: "blank", menu: 1 }; setBack();
+    body.innerHTML = '<div class="pl-hub"><p class="pl-kick">FILL THE BLANK</p><h2 class="pl-ttl">난이도 선택</h2><p class="pl-sel">제목 빈칸 채우기 · 도전할 단계를 골라 주세요</p>' +
+      [1, 2, 3].map(function (k) { var c = BLV[k]; return '<button type="button" class="pl-tile pl-in" style="--g:' + c.g + ';animation-delay:' + (k * .08) + 's" data-blv="' + k + '"><span class="pl-ico">' + c.ico + '</span><span class="pl-tt"><b>' + c.n + '</b><span>' + c.d + '</span><span class="pl-chips">' + c.chips.map(function (x) { return '<span class="pl-chip">' + x + '</span>'; }).join("") + '</span></span><span class="pl-go">START ▶</span></button>'; }).join("") + '</div>';
+  }
+  function blankStart(lv) {
+    if (!lv) return blankMenu();
+    var cf = BLV[lv], all = A().vids(), bank = []; all.forEach(function (v) { wordsOf(v.title).forEach(function (w) { bank.push(w); }); });
     bank = Array.from(new Set(bank));
-    var qs = [], seen = {}; for (var i = 0; i < 40 && qs.length < 5; i++) { var q = makeQ(all, bank); if (q && !seen[A().key(q.v)]) { seen[A().key(q.v)] = 1; qs.push(q); } }
-    st = { g: "blank", qs: qs, i: 0, ok: 0, done: false }; setBack(); blankShow();
+    var qs = [], seen = {}; for (var i = 0; i < 120 && qs.length < cf.q; i++) { var q = makeQ(all, bank, cf); if (q && !seen[A().key(q.v)]) { seen[A().key(q.v)] = 1; qs.push(q); } }
+    st = { g: "blank", lv: lv, qs: qs, i: 0, ok: 0, done: false }; setBack(); blankShow();
   }
   function confetti() {
     var w = document.createElement("div"); w.className = "pl-conf"; var cols = ["#ffd166", "#ff5d7a", "#7b8cff", "#2fe39b", "#fff"], h = "";
@@ -88,7 +98,7 @@
     var q = st.qs[st.i], n = st.qs.length;
     body.innerHTML = '<div class="pl-hud"><span class="pl-lv">STAGE ' + (st.i + 1) + ' / ' + n + '</span><span class="pl-combo" id="plCombo">' + (st.combo > 1 ? "🔥 " + st.combo + "연속!" : "") + '</span><span class="pl-sc">SCORE <b>' + st.ok * 100 + '</b></span></div>' +
       '<div class="pl-prog"><i style="width:' + Math.round(st.i / n * 100) + '%"></i></div>' +
-      '<div class="pl-card pl-in"><p class="pl-ask">영상 제목의 빈칸을 채워라!</p><p class="pl-q">' + q.shown + '</p></div>' +
+      '<div class="pl-card pl-in"><p class="pl-ask">' + BLV[st.lv].ico + ' ' + BLV[st.lv].n + ' · 영상 제목의 빈칸을 채워라!</p><p class="pl-q">' + q.shown + '</p></div>' +
       '<div class="pl-opts">' + q.opts.map(function (o, k) { return '<button type="button" class="pl-o pl-in" style="animation-delay:' + (.12 + k * .06) + 's" data-o="' + k + '"><em>' + "ABCDEF".charAt(k) + '</em>' + A().esc(o) + '</button>'; }).join("") + '</div><div id="plRes"></div>';
   }
   function blankPick(k) {
@@ -103,14 +113,14 @@
     if (!st.done) return; st.done = false; st.i++;
     if (st.i >= st.qs.length) {
       var s = st.ok, tot = st.qs.length, msg = s === tot ? "완벽해요! 진짜 잉여맨 팬이시네요 🏆" : s >= 3 ? "대단해요! 꽤 잘 아시네요 👍" : s >= 1 ? "괜찮아요, 다시 하면 더 잘할 거예요" : "다음엔 꼭 맞혀 봐요!", gr = s === tot ? "S" : s >= tot - 1 ? "A" : s >= 3 ? "B" : "C";
-      body.innerHTML = '<div class="pl-end pl-in"><p class="pl-kick2">STAGE CLEAR</p><i class="pl-trophy">' + (s >= 3 ? "🏆" : "🎮") + '</i><div class="pl-grade g' + gr + '">' + gr + '</div><b><span id="plCnt">0</span> / ' + tot + '</b><p>' + msg + '</p><div class="pl-act"><button type="button" class="btn primary" data-g="blank">다시 하기</button><button type="button" class="btn" data-home>다른 게임</button></div></div>';
+      body.innerHTML = '<div class="pl-end pl-in"><p class="pl-kick2">STAGE CLEAR</p><i class="pl-trophy">' + (s >= 3 ? "🏆" : "🎮") + '</i><div class="pl-grade g' + gr + '">' + gr + '</div><b><span id="plCnt">0</span> / ' + tot + '</b><p>' + msg + '</p><div class="pl-act"><button type="button" class="btn primary" data-blv="' + st.lv + '">다시 하기</button><button type="button" class="btn" data-g="blank">난이도 변경</button><button type="button" class="btn" data-home>다른 게임</button></div></div>';
       countUp($("plCnt"), s); if (s >= 3) confetti();
     } else blankShow();
   }
 
   /* ───── 낱말퍼즐 (2017년 이전 옛 자료로만 만든 낱말·뜻풀이) ───── */
   var CW = null;
-  function cwLayout(words) {   // 낱말을 서로 걸치게 놓아 퍼즐 판을 만들어요
+  function cwLayout(words, limit) {   // 낱말을 서로 걸치게 놓아 퍼즐 판을 만들어요
     var cells = {}, list = [];
     function get(r, c) { return cells[r + "," + c]; }
     function fits(w, r, c, dir) {
@@ -124,7 +134,7 @@
       return cross;
     }
     function put(w, r, c, dir) { for (var i = 0; i < w.w.length; i++) cells[(r + (dir ? i : 0)) + "," + (c + (dir ? 0 : i))] = w.w.charAt(i); list.push({ w: w.w, c: w.c, r: r, col: c, dir: dir }); }
-    var pool = words.slice(), first = pool.splice(rnd(pool.length), 1)[0], limit = 24;
+    var pool = words.slice(), first = pool.splice(rnd(pool.length), 1)[0];
     put(first, 0, 0, 0);
     while (list.length < limit && pool.length) {   // 지금 판에 걸쳐 놓을 수 있는 낱말을 하나씩 더해요
       var opts = [];
@@ -154,28 +164,38 @@
     list.forEach(function (p) { p.n = num[p.r + "," + p.col]; });
     return { list: list, rows: maxR - minR + 1, cols: maxC - minC + 1, num: num };
   }
-  function cwMake() {
-    var best = null;
-    for (var t = 0; t < 40; t++) {
-      var p = cwLayout(CW), size = Math.max(p.rows, p.cols);
-      if (p.list.length >= 8 && size <= 16 && (!best || p.list.length > best.list.length || (p.list.length === best.list.length && size < Math.max(best.rows, best.cols)))) best = p;
-      if (best && best.list.length >= 20) break;
+  var CWLV = { 1: { n: "쉬움", ico: "🌱", d: "쉬운 낱말만 나와요. 낱말마다 첫 글자를 알려 줘요.", lim: 12, size: 11, lv: [1], hint: true, chips: ["낱말 12개 안팎", "약 3분"] },
+    2: { n: "보통", ico: "🔥", d: "옛 방송 이야기와 일반 낱말이 섞여 나와요.", lim: 18, size: 14, lv: [1, 2, 3], chips: ["낱말 18개 안팎", "약 6분"] },
+    3: { n: "어려움", ico: "💀", d: "옛 방송·멤버·콘텐츠를 아는 사람만 풀 수 있어요. 힌트 없음!", lim: 26, size: 17, lv: [2, 3], chips: ["낱말 26개 안팎", "약 12분"] } };
+  function cwMake(lv) {
+    var cf = CWLV[lv], pool = CW.filter(function (w) { return cf.lv.indexOf(w.l || 2) >= 0; }), best = null;
+    for (var t = 0; t < 150; t++) {
+      var p = cwLayout(pool, cf.lim), size = Math.max(p.rows, p.cols);
+      if (p.list.length >= 8 && size <= cf.size && (!best || p.list.length > best.list.length || (p.list.length === best.list.length && size < Math.max(best.rows, best.cols)))) best = p;
+      if (best && best.list.length >= cf.lim - 1) break;
     }
     return best;
   }
-  function cwStart() {
+  function cwMenu() {
+    st = { g: "cw", menu: 1 }; setBack();
+    body.innerHTML = '<div class="pl-hub"><p class="pl-kick">PUZZLE</p><h2 class="pl-ttl">난이도 선택</h2><p class="pl-sel">낱말퍼즐 · 도전할 단계를 골라 주세요</p>' +
+      [1, 2, 3].map(function (k) { var c = CWLV[k]; return '<button type="button" class="pl-tile pl-in" style="--g:' + (k === 1 ? "linear-gradient(135deg,#46d39a,#2a9d8f)" : k === 2 ? "linear-gradient(135deg,#ffb35c,#ff7a8a)" : "linear-gradient(135deg,#a855f7,#ef4444)") + ';animation-delay:' + (k * .08) + 's" data-cwlv="' + k + '"><span class="pl-ico">' + c.ico + '</span><span class="pl-tt"><b>' + c.n + '</b><span>' + c.d + '</span><span class="pl-chips">' + c.chips.map(function (x) { return '<span class="pl-chip">' + x + '</span>'; }).join("") + '</span></span><span class="pl-go">START ▶</span></button>'; }).join("") + '</div>';
+  }
+  function cwStart(lv) {
+    if (!CW) { st = { g: "cw", menu: 1 }; setBack(); body.innerHTML = '<p class="pl-sub">퍼즐을 만드는 중이에요…</p>'; fetch("crossword.json").then(function (r) { return r.json(); }).then(function (d) { CW = d; lv ? cwStart(lv) : cwMenu(); }).catch(function () { body.innerHTML = '<p class="pl-sub">퍼즐을 불러오지 못했어요. 잠시 뒤에 다시 해 주세요.</p>'; }); return; }
+    if (!lv) return cwMenu();
     st = { g: "cw" }; setBack();
-    if (!CW) { body.innerHTML = '<p class="pl-sub">퍼즐을 만드는 중이에요…</p>'; fetch("crossword.json").then(function (r) { return r.json(); }).then(function (d) { CW = d; cwStart(); }).catch(function () { body.innerHTML = '<p class="pl-sub">퍼즐을 불러오지 못했어요. 잠시 뒤에 다시 해 주세요.</p>'; }); return; }
-    var pz = cwMake(); if (!pz) { body.innerHTML = '<p class="pl-sub">퍼즐을 만들지 못했어요. 다시 눌러 주세요.</p>'; return; }
+    var pz = cwMake(lv); if (!pz) { body.innerHTML = '<p class="pl-sub">퍼즐을 만들지 못했어요. 다시 눌러 주세요.</p>'; return; }
     var ans = {}; pz.list.forEach(function (p) { for (var i = 0; i < p.w.length; i++) ans[(p.r + (p.dir ? i : 0)) + "," + (p.col + (p.dir ? 0 : i))] = p.w.charAt(i); });
-    st = { g: "cw", pz: pz, ans: ans, fill: {}, sel: 0, checked: false, done: false }; setBack(); cwShow();
+    var fill = {}; if (CWLV[lv].hint) pz.list.forEach(function (p) { fill[p.r + "," + p.col] = p.w.charAt(0); });
+    st = { g: "cw", lv: lv, pz: pz, ans: ans, fill: fill, sel: 0, checked: false, done: false }; setBack(); cwShow();
   }
   function cwCellsOf(p) { var a = []; for (var i = 0; i < p.w.length; i++) a.push((p.r + (p.dir ? i : 0)) + "," + (p.col + (p.dir ? 0 : i))); return a; }
   function cwShow() {
     var pz = st.pz, sel = pz.list[st.sel], selCells = cwCellsOf(sel), esc = A().esc, h = "", r, c;
     var cs = Math.max(17, Math.min(40, Math.floor((Math.min(innerWidth - 32, 600) - 22 - 2 * (pz.cols - 1)) / pz.cols)));
     var doneW = pz.list.filter(function (p) { return cwCellsOf(p).every(function (k) { return st.fill[k] === st.ans[k]; }); }).length, tw = pz.list.length;
-    h += '<div class="pl-hud"><span class="pl-lv">낱말퍼즐</span><span class="pl-sc">CLEAR <b>' + (st.done ? tw : doneW) + '</b> / ' + tw + '</span></div><div class="pl-prog"><i style="width:' + Math.round((st.done ? tw : doneW) / tw * 100) + '%"></i></div><div class="cw-grid' + (st.shown ? "" : " pl-in") + '" style="grid-template-columns:repeat(' + pz.cols + ',' + cs + 'px);font-size:' + Math.round(cs * .56) + 'px">';
+    h += '<div class="pl-hud"><span class="pl-lv">🧩 ' + CWLV[st.lv].n + '</span><span class="pl-sc">CLEAR <b>' + (st.done ? tw : doneW) + '</b> / ' + tw + '</span></div><div class="pl-prog"><i style="width:' + Math.round((st.done ? tw : doneW) / tw * 100) + '%"></i></div><div class="cw-grid' + (st.shown ? "" : " pl-in") + '" style="grid-template-columns:repeat(' + pz.cols + ',' + cs + 'px);font-size:' + Math.round(cs * .56) + 'px">';
     for (r = 0; r < pz.rows; r++) for (c = 0; c < pz.cols; c++) {
       var k = r + "," + c, a = st.ans[k];
       if (!a) { h += '<i class="cw-e" style="width:' + cs + 'px;height:' + cs + 'px"></i>'; continue; }
@@ -187,7 +207,7 @@
     var cl = function (dir) { return pz.list.map(function (p, i) { return [p, i]; }).filter(function (x) { return x[0].dir === dir; }).sort(function (x, y) { return x[0].n - y[0].n; }).map(function (x) { var done = cwCellsOf(x[0]).every(function (k) { return st.fill[k] === st.ans[k]; }); return '<li><button type="button" class="cw-cl' + (x[1] === st.sel ? " on" : "") + (done ? " dn" : "") + '" data-cwi="' + x[1] + '"><b>' + x[0].n + '</b> ' + esc(x[0].c) + ' <span>(' + x[0].w.length + ')</span></button></li>'; }).join(""); };
     h += '<div class="cw-cls"><div><h3>→ 가로 열쇠</h3><ul>' + cl(0) + '</ul></div><div><h3>↓ 세로 열쇠</h3><ul>' + cl(1) + '</ul></div></div>';
     if (st.done) h += '<div class="pl-end pl-in"><p class="pl-kick2">ALL CLEAR</p><i class="pl-trophy">🏆</i><b>퍼즐 완성!</b><p>옛 방송 제목에서 뽑은 낱말을 모두 맞혔어요.</p></div>';
-    h += '<div class="pl-act"><button type="button" class="btn" data-cwchk="1">정답 확인</button><button type="button" class="btn" data-cwshow="1">모두 보기</button><button type="button" class="btn primary" data-cwnew="1">새 퍼즐</button></div>';
+    h += '<div class="pl-act"><button type="button" class="btn" data-cwchk="1">정답 확인</button><button type="button" class="btn" data-cwshow="1">모두 보기</button><button type="button" class="btn" data-cwlv0="1">난이도 변경</button><button type="button" class="btn primary" data-cwnew="1">새 퍼즐</button></div>';
     body.innerHTML = h;
     st.shown = true; st.pop = null; st.popOk = false; if (st.done && st.fin) { confetti(); st.fin = false; }
     var inp = $("cwIn"); if (inp && st.focus) { inp.focus(); st.focus = false; }
@@ -206,14 +226,17 @@
   }
 
   function handle(e) {
-    if (!A().isIn()) return; var t = e.target.closest && e.target.closest("[data-g],[data-o],[data-next],[data-home],[data-cw],[data-cwi],[data-cwchk],[data-cwshow],[data-cwnew]"); if (!t || !st && !t.dataset.g) { if (t && t.hasAttribute("data-home")) home(); return; }
+    if (!A().isIn()) return; var t = e.target.closest && e.target.closest("[data-g],[data-o],[data-next],[data-home],[data-cw],[data-cwi],[data-cwchk],[data-cwshow],[data-cwnew],[data-cwlv],[data-cwlv0],[data-blv]"); if (!t || !st && !t.dataset.g) { if (t && t.hasAttribute("data-home")) home(); return; }
     if (t.dataset.g === "blank") return blankStart();
+    if (t.dataset.blv) return blankStart(+t.dataset.blv);
     if (t.dataset.g === "cw") return cwStart();
     if (t.dataset.cw) return cwPickCell(t.dataset.cw);
     if (t.dataset.cwi != null) { st.sel = +t.dataset.cwi; st.focus = true; return cwShow(); }
     if (t.hasAttribute("data-cwchk")) { st.checked = true; return cwShow(); }
     if (t.hasAttribute("data-cwshow")) { st.done = true; return cwShow(); }
-    if (t.hasAttribute("data-cwnew")) return cwStart();
+    if (t.hasAttribute("data-cwnew")) return cwStart(st.lv);
+    if (t.dataset.cwlv) return cwStart(+t.dataset.cwlv);
+    if (t.hasAttribute("data-cwlv0")) return cwMenu();
     if (t.hasAttribute("data-home")) return home();
     if (t.dataset.o != null && st && st.g === "blank") return blankPick(+t.dataset.o);
     if (t.hasAttribute("data-next") && st && st.g === "blank") return blankNext();
