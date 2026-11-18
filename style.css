@@ -1374,3 +1374,4 @@ html:not([data-motion="off"]) .cs-box:not(.cs-bye) { animation:zoom .35s cubic-b
 .us-bar i { display:block; height:100%; border-radius:99px; }
 .us-t { margin:5px 0 0; font-size:13px; }
 .st h3 small { font-weight:400; color:var(--sub); }
+html:has(#admModal:not([hidden])) { overflow:hidden; }   /* 대시보드를 열었을 때 뒤쪽 사이트 스크롤바가 같이 보이지 않게 */
