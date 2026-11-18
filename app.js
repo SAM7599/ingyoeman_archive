@@ -665,6 +665,7 @@
       const d = await r.json().catch(() => ({}));
       if (r.status === 429 && d.error === "limit") toast(`오늘은 반응을 ${d.cap || 30}번 모두 썼어요. 내일 또 남겨 주세요`);
       else if (r.status === 429) toast("너무 빨라요. 잠시 뒤에 다시 눌러 주세요");
+      else if (r.status === 503 && d.error === "busy" && d.cap) toast("오늘은 반응이 너무 많이 몰렸어요. 내일 다시 남겨 주세요");
       else if (r.status === 401) toast("로그인이 풀렸어요. 다시 로그인해 주세요");
       else if (!r.ok) toast("지금은 반응을 남길 수 없어요");
       else if (current && vid(current) === id) rx = { id, counts: d.counts || {}, mine: d.mine || null, left: d.left, cap: d.cap || 30 };
