@@ -131,9 +131,24 @@ let banReady = false;
 const isBanned = async (env, uid) => { try { if (!banReady) { await env.DB.prepare("CREATE TABLE IF NOT EXISTS acct_ban (uid TEXT PRIMARY KEY, ts INTEGER NOT NULL)").run(); banReady = true; } return !!(await env.DB.prepare("SELECT 1 AS x FROM acct_ban WHERE uid = ?").bind(uid).first()); } catch (e) { return false; } };
 async function getAuth(env, req) { const s = await verify(env, (req.headers.get("Authorization") || "").replace(/^Bearer /, "")); return s && /^u[\w-]{24}$/.test(String(s.uid)) && !(await isBanned(env, s.uid)) ? s : null; }   // 예전 방식 로그인은 한 번 다시 로그인하게 해요
 
+// ── 서버 사용량 (무료 한도 확인용) ──
+// 요청 수는 10번에 1번만 기록하고 10씩 더해서(쓰기 한도를 아끼려고) 대략의 값을 보여줘요. 하루 기준은 한국 시간 오전 9시(= 클라우드플레어 UTC 0시)에 바뀌어요.
+let useReady = false;
+const utcDay = () => new Date().toISOString().slice(0, 10);
+const countReq = (env, ctx, p) => {
+  if (Math.random() >= 0.1) return;
+  const job = (async () => {
+    try {
+      if (!useReady) { await env.DB.prepare("CREATE TABLE IF NOT EXISTS req_count (day TEXT PRIMARY KEY, n INTEGER NOT NULL DEFAULT 0)").run(); useReady = true; }
+      await env.DB.prepare("INSERT INTO req_count (day, n) VALUES (?, 10) ON CONFLICT(day) DO UPDATE SET n = n + 10").bind(utcDay()).run();
+    } catch (e) {}
+  })();
+  try { ctx.waitUntil(job); } catch (e) {}
+};
 async function handle(req, env, ctx) {
   const url = new URL(req.url), p = url.pathname;
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: cors(env) });
+  countReq(env, ctx, p);
   const redirect = `${url.origin}/callback`;
 
   if (p === "/google" && req.method === "POST") {   // 구글 로그인 확인 → 우리 사이트용 로그인 토큰
@@ -229,6 +244,18 @@ async function handle(req, env, ctx) {
       const users = []; for (const r of rows) { users.push({ uid: r.uid, name: await nick(env, r.uid), ts: r.ts, fav: JSON.parse(r.fav || "[]").length, rec: JSON.parse(r.rec || "[]").length, qok: r.q_ok, qall: r.q_all, flag: flags.has(r.uid), banned: bans.has(r.uid) }); bans.delete(r.uid); }
       for (const [uid, ts] of bans) users.unshift({ uid, name: await nick(env, uid), ts, fav: 0, rec: 0, qok: 0, qall: 0, flag: flags.has(uid), banned: true });
       return json(env, { total, users }, 200, { "Cache-Control": "no-store" });
+    } catch (e) { return json(env, { error: "busy" }, 503); }
+  }
+  if (p === "/admin/usage" && req.method === "GET") {   // 운영진: 오늘 서버 사용량 (무료 한도 대비)
+    const s = await getAuth(env, req); if (!s || !isAdmin(env, s)) return json(env, { error: "forbidden" }, 403);
+    try {
+      await udTable(env); await abTables(env);
+      await env.DB.prepare("CREATE TABLE IF NOT EXISTS req_count (day TEXT PRIMARY KEY, n INTEGER NOT NULL DEFAULT 0)").run(); useReady = true;
+      const q = await env.DB.prepare("SELECT (SELECT COUNT(*) FROM udata) AS users, (SELECT n FROM req_count WHERE day = ?) AS today").bind(utcDay()).all();
+      const hist = ((await env.DB.prepare("SELECT day, n FROM req_count ORDER BY day DESC LIMIT 7").all()).results || []).reverse();
+      const r = (q.results || [])[0] || {};
+      const now = new Date(), next = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1);
+      return json(env, { reqToday: r.today || 0, reqLimit: Number(env.REQ_LIMIT) || 100000, dbBytes: (q.meta && q.meta.size_after) || 0, dbLimit: (Number(env.DB_LIMIT_MB) || 500) * 1048576, users: r.users || 0, resetAt: next, hist }, 200, { "Cache-Control": "no-store" });
     } catch (e) { return json(env, { error: "busy" }, 503); }
   }
   if (p === "/admin/abuse" && req.method === "GET") {   // 운영진: 서버에 부담을 준 것으로 의심되는 기록

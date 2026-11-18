@@ -1369,3 +1369,8 @@ html:not([data-motion="off"]) .cs-box:not(.cs-bye) { animation:zoom .35s cubic-b
 #admModal .au-l { max-height:none; overflow:visible; }
 #admModal .sheet.adm { border:0 !important; background:transparent !important; }
 #admModal .sheet.adm::before, #admModal .sheet.adm::after { display:none; }
+.us-k { margin:8px 0 4px; font-size:13px; color:var(--sub); }
+.us-bar { height:10px; border-radius:99px; background:var(--raise); overflow:hidden; }
+.us-bar i { display:block; height:100%; border-radius:99px; }
+.us-t { margin:5px 0 0; font-size:13px; }
+.st h3 small { font-weight:400; color:var(--sub); }

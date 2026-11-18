@@ -269,13 +269,25 @@
   }
   function drawStatus(note) {
     const L = store.get("srvlog", []), okN = L.filter(x => x.s !== "down"), avg = okN.length ? Math.round(okN.reduce((s, x) => s + x.ms, 0) / okN.length) : 0, bad = L.length - okN.length;
-    $("admList").innerHTML = `<section class="st"><h3>서버 응답 속도</h3>${lineChart(L)}<p class="st-h">선이 <b>낮을수록 빨라요</b>. 점선(2초)을 넘으면 느린 거예요. 위쪽 <span class="st-red">빨간 점</span>은 연결이 안 됐던 때예요.${L.length ? ` 평균 ${avg}ms${bad ? ` · 안 된 적 ${bad}번` : ""} (이 기기에서 최근 ${L.length}번 확인 기준)` : ""}</p></section><section class="st" id="admUsers"><h3>의심 접속 기록</h3><p class="st-h">불러오는 중…</p></section><section class="st" id="admUl"><h3>로그인한 사람</h3><p class="st-h">불러오는 중…</p></section>`;
+    $("admList").innerHTML = `<section class="st"><h3>서버 응답 속도</h3>${lineChart(L)}<p class="st-h">선이 <b>낮을수록 빨라요</b>. 점선(2초)을 넘으면 느린 거예요. 위쪽 <span class="st-red">빨간 점</span>은 연결이 안 됐던 때예요.${L.length ? ` 평균 ${avg}ms${bad ? ` · 안 된 적 ${bad}번` : ""} (이 기기에서 최근 ${L.length}번 확인 기준)` : ""}</p></section><section class="st" id="admUse"><h3>서버 사용량</h3><p class="st-h">불러오는 중…</p></section><section class="st" id="admUsers"><h3>의심 접속 기록</h3><p class="st-h">불러오는 중…</p></section><section class="st" id="admUl"><h3>로그인한 사람</h3><p class="st-h">불러오는 중…</p></section>`;
     loadAdmUsers();
   }
   /* ── 운영진: 유저 관리 · 서버에 부담을 준 것으로 의심되는 접속 ── */
   const KIND = { many_accounts: "한 접속 주소에서 하루에 계정 3개 이상 로그인", sync: "저장 요청을 너무 자주 보냄", login: "로그인 시도를 너무 자주 함", quiz: "퀴즈 기록 요청을 너무 자주 보냄" };
   const when = t => { const z = new Date(t); return `${z.getMonth() + 1}/${z.getDate()} ${String(z.getHours()).padStart(2, "0")}:${String(z.getMinutes()).padStart(2, "0")}`; };
+  const bar = (pct, label) => { const c = pct >= 90 ? "#e5484d" : pct >= 70 ? "#f0a020" : "#2fb86b"; return `<div class="us-bar"><i style="width:${Math.min(100, Math.max(2, pct))}%;background:${c}"></i></div><p class="us-t">${label}</p>`; };
+  const mb = n => n >= 1048576 ? (n / 1048576).toFixed(1) + "MB" : Math.max(1, Math.round(n / 1024)) + "KB";
+  async function loadUsage() {
+    const box = $("admUse"); if (!box) return;
+    try {
+      const r = await rApi("/admin/usage"); if (!r.ok) throw 0; const u = await r.json(), reqP = u.reqToday / u.reqLimit * 100, dbP = u.dbBytes / u.dbLimit * 100, left = Math.max(0, u.resetAt - Date.now()), h = Math.floor(left / 36e5), m = Math.floor(left % 36e5 / 6e4);
+      box.innerHTML = `<h3>서버 사용량 <small>(무료 한도 기준)</small></h3><p class="us-k">오늘 요청 수</p>` + bar(reqP, `약 <b>${u.reqToday.toLocaleString()}</b> / ${u.reqLimit.toLocaleString()}회 · 남은 한도 약 <b>${Math.max(0, 100 - reqP).toFixed(1)}%</b>`) +
+        `<p class="us-k">저장 공간</p>` + bar(dbP, `<b>${mb(u.dbBytes)}</b> / ${mb(u.dbLimit)} · 로그인한 사람 ${u.users}명`) +
+        `<p class="st-h">요청 수는 일부만 세어 계산한 <b>대략의 값</b>이에요(실제와 조금 다를 수 있어요). 하루 한도는 <b>한국 시간 오전 9시</b>에 새로 시작해요(${h}시간 ${m}분 남음). 정확한 값은 Cloudflare 사이트의 Workers 사용량에서 볼 수 있어요.</p>`;
+    } catch (e) { box.innerHTML = `<h3>서버 사용량</h3><p class="st-h">불러오지 못했어요. 서버 파일을 새로 올린 뒤 다시 열어 주세요.</p>`; }
+  }
   async function loadAdmUsers() {
+    loadUsage();
     try {
       const [ra, ru] = await Promise.all([rApi("/admin/abuse"), rApi("/admin/users")]);
       if (!ra.ok || !ru.ok) throw 0;
