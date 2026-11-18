@@ -11,7 +11,7 @@
   function build() {
     if ($("play")) return;
     box = document.createElement("div"); box.id = "play"; box.className = "play"; box.hidden = true;
-    box.innerHTML = '<div class="pl-page" role="dialog" aria-modal="true" aria-label="미니게임"><header class="pl-top"><button type="button" class="pl-back" id="plX">← 사이트로</button><b>🎮 미니게임</b></header><main class="pl-main"><div id="plBody"></div></main></div>';
+    box.innerHTML = '<div class="pl-page" role="dialog" aria-modal="true" aria-label="미니게임"><header class="pl-top"><button type="button" class="pl-back" id="plX">← 사이트로</button><b>🎮 잉여맨 오락실</b></header><main class="pl-main"><div id="plBody"></div></main></div>';
     document.body.appendChild(box); body = $("plBody");
     $("plX").addEventListener("click", function () { if (st) home(); else close(); });   // 게임 중이면 목록으로, 목록이면 사이트로
     box.addEventListener("click", function (e) { if (e.target === box) close(); handle(e); });
@@ -33,11 +33,14 @@
   function home() {
     if (!A().isIn()) return gate();
     st = null;
-    setBack(); body.innerHTML = '<h2 class="pl-h">게임을 골라 주세요</h2><p class="pl-sub">그 시절 영상 제목으로 올드팬의 실력을 뽐내 보세요!</p>' +
-      '<button type="button" class="pl-card c1" data-g="blank"><i>✏️</i><b>제목 빈칸 채우기</b><span>빠진 글자를 맞혀 보세요 · 5문제</span></button>' +
-      '<button type="button" class="pl-card c2" data-g="cw"><i>🧩</i><b>낱말퍼즐</b><span>옛 방송 제목에서 뽑은 낱말을 가로세로로 맞혀 보세요</span></button>' +
-      '<button type="button" class="pl-card c3" data-g="daily"><i>📅</i><b>오늘의 한 줄 퀴즈</b><span>하루에 한 문제, 홈 화면에서 풀어요</span></button>' +
-      '<p class="pl-more">새 게임이 생기면 여기에 모여요.</p>';
+    setBack();
+    var tile = function (g, ico, grad, title, desc, chips) {
+      return '<button type="button" class="pl-tile" data-g="' + g + '" style="--g:' + grad + '"><span class="pl-ico" aria-hidden="true">' + ico + '</span><span class="pl-tt"><b>' + title + '</b><span>' + desc + '</span><span class="pl-chips">' + chips.map(function (c) { return '<i class="pl-chip">' + c + '</i>'; }).join("") + '</span></span><span class="pl-go"><em>START</em> ▶</span></button>';
+    };
+    body.innerHTML = '<section class="pl-hub" aria-label="미니게임 목록"><p class="pl-kick">ARCADE</p><h2 class="pl-ttl">잉여맨 오락실</h2><p class="pl-sel">올드팬을 위한 미니게임 · 하고 싶은 게임을 골라 주세요</p>' +
+      tile("blank", "✏️", "linear-gradient(135deg,#4f8bff,#7a5cff)", "제목 빈칸 채우기", "빠진 글자를 맞혀 보세요. 보기가 비슷비슷해서 헷갈려요.", ["5문제", "약 1분", "난이도 ★★☆"]) +
+      tile("cw", "🧩", "linear-gradient(135deg,#ff8a5c,#ff5d7a)", "낱말퍼즐", "옛 방송 제목에서 뽑은 낱말을 가로세로 열쇠로 풀어요.", ["낱말 11개 안팎", "약 5분", "난이도 ★★★"]) +
+      '<p class="pl-more">새 게임이 생기면 여기에 모여요</p></section>';
   }
 
   /* ───── 제목 빈칸 채우기 ───── */
@@ -191,7 +194,6 @@
     if (!A().isIn()) return; var t = e.target.closest && e.target.closest("[data-g],[data-o],[data-next],[data-home],[data-cw],[data-cwi],[data-cwchk],[data-cwshow],[data-cwnew]"); if (!t || !st && !t.dataset.g) { if (t && t.hasAttribute("data-home")) home(); return; }
     if (t.dataset.g === "blank") return blankStart();
     if (t.dataset.g === "cw") return cwStart();
-    if (t.dataset.g === "daily") { close(); var qz = $("qz"); if (qz && qz.scrollIntoView) qz.scrollIntoView({ behavior: "smooth", block: "center" }); return; }
     if (t.dataset.cw) return cwPickCell(t.dataset.cw);
     if (t.dataset.cwi != null) { st.sel = +t.dataset.cwi; st.focus = true; return cwShow(); }
     if (t.hasAttribute("data-cwchk")) { st.checked = true; return cwShow(); }
