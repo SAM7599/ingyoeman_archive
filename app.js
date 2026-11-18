@@ -257,7 +257,7 @@
   /* ── 운영진 서버 상태 (지정한 구글 계정만) ── */
   let tmap = null;
   const vTitle = id => { if (!tmap) { tmap = {}; all.forEach(v => { tmap[vid(v)] = v.title || ""; }); } return tmap[id] || "(목록에서 사라진 영상)"; };
-  function openStatus() { $("admModal").hidden = false; drawStatus(); }
+  function openStatus() { $("admModal").hidden = false; $("admModal").scrollTop = 0; drawStatus(); }
   function lineChart(L) {
     if (L.length < 2) return `<p class="ch-empty">확인 기록이 쌓이면 그래프가 나와요. (1분마다 자동으로 확인해요)</p>`;
     const W = 600, H = 170, P = { l: 56, r: 14, t: 14, b: 26 }, ok = L.filter(x => x.s !== "down"), top = Math.max(500, ...ok.map(x => x.ms)) * 1.1;
@@ -1047,8 +1047,7 @@
   $("mGo").addEventListener("click", e => current && follow(e, current, $("mGo").href));
   $("admBtn").addEventListener("click", openDash);
   $("admSrvGo").addEventListener("click", () => { $("admSrvT").textContent = "확인하는 중…"; srvCheck(); });
-  $("admClose").addEventListener("click", () => { $("admModal").hidden = true; });
-  $("admModal").addEventListener("click", e => { if (e.target === $("admModal") && downT === e.target) $("admModal").hidden = true; });
+  $("admBack").addEventListener("click", () => { $("admModal").hidden = true; });
   $("mClose").addEventListener("click", () => closeModal());
   let downT = null;   // 마지막으로 누른 곳 (창 바깥을 눌렀다 뗄 때만 닫기 위해)
   document.addEventListener("mousedown", e => { downT = e.target; }, true);

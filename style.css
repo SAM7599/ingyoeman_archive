@@ -1358,3 +1358,14 @@ html:not([data-motion="off"]) .cs-box:not(.cs-bye) { animation:zoom .35s cubic-b
 .au-x { position:absolute; top:8px; right:8px; width:26px; height:26px; border:0; border-radius:50%; background:var(--line); color:var(--ink); font-size:13px; cursor:pointer; }
 .au-x:hover { background:#e5484d; color:#fff; }
 .au-l li b { padding-right:32px; }
+
+/* 운영진 대시보드: 팝업이 아니라 화면 전체를 쓰는 한 페이지 */
+#admModal { display:block; padding:0; background:var(--bg); overflow-y:auto; overscroll-behavior:contain; z-index:48; }
+#admModal[hidden] { display:none; }
+#admModal .sheet.adm { width:min(860px,100%); max-height:none; margin:0 auto; border-radius:0; box-shadow:none; background:transparent; overflow:visible; padding:0 0 60px; }
+#admModal .adm-top { position:sticky; top:0; z-index:2; padding:12px 16px; background:color-mix(in srgb, var(--bg) 90%, transparent); backdrop-filter:blur(12px); border-bottom:1px solid var(--line); }
+#admModal .m-body { padding:20px 16px 0; }
+#admModal .m-body h2 { font-size:24px; }
+#admModal .au-l { max-height:none; overflow:visible; }
+#admModal .sheet.adm { border:0 !important; background:transparent !important; }
+#admModal .sheet.adm::before, #admModal .sheet.adm::after { display:none; }
