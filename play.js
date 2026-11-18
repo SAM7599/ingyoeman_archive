@@ -256,11 +256,18 @@
   function pvMenu() {
     pvClose(); st = { g: "pvp", menu: 1 }; setBack();
     body.innerHTML = '<div class="pl-hub"><p class="pl-kick">VERSUS</p><h2 class="pl-ttl">퀴즈 대결</h2><p class="pl-sel">친구와 1:1 · 빈칸 퀴즈를 먼저 맞혀요</p>' +
+      '<div class="pv-warn pl-in" id="pvWarn"><b>⚠️ 꼭 읽어 주세요</b><p>이 대결은 두 사람의 브라우저가 <u>직접 연결</u>돼요.<br>그래서 <u>상대에게 내 접속 주소(IP)가 보일 수 있어요.</u></p><p class="pv-warn-s">IP로는 대략의 지역·통신사 정도만 알 수 있지만, 모르는 사람과는 하지 마세요. 꼭 아는 사람과만 하세요!</p><label class="pv-ag"><input type="checkbox" id="pvAgree"><span>위 내용을 이해했어요</span></label></div>' +
       '<button type="button" class="pl-tile pl-in" style="--g:linear-gradient(135deg,#ef4444,#f59e0b)" data-pvhost><span class="pl-ico">🏠</span><span class="pl-tt"><b>방 만들기</b><span>내가 방장이 돼요. 방 코드를 친구에게 알려 주세요.</span></span><span class="pl-go">만들기 ▶</span></button>' +
       '<form id="pvForm" class="pv-join pl-in" style="animation-delay:.1s"><b>🚪 방 코드로 들어가기</b><div class="cw-form"><input id="pvIn" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" placeholder="방 코드 4자리"><button type="submit" class="btn primary">입장</button></div></form>' +
-      '<p class="pl-more">방장이 나가면 대결이 끝나요 · 두 사람 모두 구글 로그인이 필요해요<br>공유기·통신사에 따라 연결이 안 될 수도 있어요<br>직접 연결이라 상대에게 내 접속 주소(IP)가 보일 수 있어요. 아는 사람과만 하세요!</p></div>';
+      '<p class="pl-more">방장이 나가면 대결이 끝나요 · 두 사람 모두 구글 로그인이 필요해요<br>공유기·통신사에 따라 연결이 안 될 수도 있어요</p></div>';
+  }
+  function pvAgreed() {   // 접속 주소 안내를 읽고 체크해야 시작할 수 있어요
+    var c = $("pvAgree"); if (c && c.checked) return true;
+    var w = $("pvWarn"); if (w) { w.classList.remove("pv-shake"); void w.offsetWidth; w.classList.add("pv-shake"); w.scrollIntoView({ block: "center", behavior: "smooth" }); }
+    return false;
   }
   function pvHost() {
+    if (!pvAgreed()) return;
     pvClose(); if (!window.RTCPeerConnection) return pvFail("이 브라우저는 대결을 지원하지 않아요.");
     var me = { role: "host", name: A().name(), sh: 0, sg: 0 }; pv = me; st = { g: "pvp", wait: 1 }; setBack();
     body.innerHTML = '<div class="pl-end pl-in"><p class="pl-kick2">ROOM</p><div class="pv-code">····</div><p>방을 만드는 중이에요…</p></div>';
@@ -279,6 +286,7 @@
       }).catch(function () { if (pv === me) pvFail("방을 만들지 못했어요. 인터넷 연결을 확인해 주세요."); });
   }
   function pvJoin(code) {
+    if (!pvAgreed()) return;
     code = String(code || "").replace(/\D/g, ""); if (code.length !== 4) { var f = $("pvIn"); if (f) f.focus(); return; }
     pvClose(); if (!window.RTCPeerConnection) return pvFail("이 브라우저는 대결을 지원하지 않아요.");
     var me = { role: "guest", name: A().name(), sh: 0, sg: 0 }; pv = me; st = { g: "pvp", wait: 1 }; setBack();
