@@ -1,4 +1,4 @@
-/* 미니게임: 제목 빈칸 채우기 · 영상 월드컵 */
+/* 미니게임: 제목 빈칸 채우기 */
 (function () {
   "use strict";
   var $ = function (id) { return document.getElementById(id); };
@@ -11,19 +11,21 @@
   function build() {
     if ($("play")) return;
     box = document.createElement("div"); box.id = "play"; box.className = "play"; box.hidden = true;
-    box.innerHTML = '<div class="pl-sheet" role="dialog" aria-modal="true" aria-label="미니게임"><button type="button" class="x pl-x" id="plX" aria-label="닫기">✕</button><div id="plBody"></div></div>';
+    box.innerHTML = '<div class="pl-page" role="dialog" aria-modal="true" aria-label="미니게임"><header class="pl-top"><button type="button" class="pl-back" id="plX">← 사이트로</button><b>🎮 미니게임</b></header><main class="pl-main"><div id="plBody"></div></main></div>';
     document.body.appendChild(box); body = $("plBody");
-    $("plX").addEventListener("click", close);
+    $("plX").addEventListener("click", function () { if (st) home(); else close(); });   // 게임 중이면 목록으로, 목록이면 사이트로
     box.addEventListener("click", function (e) { if (e.target === box) close(); handle(e); });
+    box.addEventListener("submit", function (e) { if (e.target && e.target.id === "cwForm") { e.preventDefault(); cwSubmit(); } });
     document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !box.hidden) close(); });
     document.addEventListener("ovback", function () { if (!box.hidden) close(); });
   }
+  function setBack() { var b = $("plX"); if (b) b.textContent = st ? "← 게임 목록" : "← 사이트로"; }
   function open() { build(); var a = A(); if (!a || a.vids().length < 20) return; a.closeMenu(); box.hidden = false; document.body.style.overflow = "hidden"; home(); }
   function close() { if (!box) return; box.hidden = true; document.body.style.overflow = ""; st = null; }
   window.openPlay = open;
 
   function gate() {
-    st = null;
+    st = null; setBack();
     body.innerHTML = '<div class="pl-end pl-gate"><i>🔐</i><h2 class="pl-h">로그인하고 즐겨요</h2><p>미니게임은 구글 로그인을 한 올드팬만 할 수 있어요.<br>로그인하면 즐겨찾기 저장, 오늘의 퀴즈도 함께 쓸 수 있어요.</p><div class="pl-act" style="justify-content:center"><div id="plG"></div></div></div>';
     A().loginBtn($("plG"));
   }
@@ -31,19 +33,35 @@
   function home() {
     if (!A().isIn()) return gate();
     st = null;
-    body.innerHTML = '<h2 class="pl-h">🎮 미니게임</h2><p class="pl-sub">그 시절 영상 제목으로 올드팬의 실력을 뽐내 보세요!</p>' +
+    setBack(); body.innerHTML = '<h2 class="pl-h">게임을 골라 주세요</h2><p class="pl-sub">그 시절 영상 제목으로 올드팬의 실력을 뽐내 보세요!</p>' +
       '<button type="button" class="pl-card c1" data-g="blank"><i>✏️</i><b>제목 빈칸 채우기</b><span>빠진 글자를 맞혀 보세요 · 5문제</span></button>' +
-      '<button type="button" class="pl-card c2" data-g="cup"><i>🏆</i><b>영상 월드컵</b><span>둘 중 끌리는 제목을 골라 우승 영상을 가려요 · 최대 128강</span></button>';
+      '<button type="button" class="pl-card c2" data-g="cw"><i>🧩</i><b>낱말퍼즐</b><span>옛 방송 제목에서 뽑은 낱말을 가로세로로 맞혀 보세요</span></button>' +
+      '<button type="button" class="pl-card c3" data-g="daily"><i>📅</i><b>오늘의 한 줄 퀴즈</b><span>하루에 한 문제, 홈 화면에서 풀어요</span></button>' +
+      '<p class="pl-more">새 게임이 생기면 여기에 모여요.</p>';
   }
 
   /* ───── 제목 빈칸 채우기 ───── */
   function wordsOf(t) { return (String(t).replace(/\[[^\]]*\]|\([^)]*\)/g, " ").match(/[가-힣]{2,6}/g) || []).filter(function (w) { return !SKIP.test(w); }); }
+  /* 정답과 글자 수·글자·앞뒤 글자가 비슷한 낱말을 점수로 골라요 */
+  function simScore(a, b) {
+    var sc = 0, i, used = {};
+    if (a.length === b.length) sc += 3; else if (Math.abs(a.length - b.length) === 1) sc += 1;
+    if (a.charAt(0) === b.charAt(0)) sc += 3;
+    if (a.charAt(a.length - 1) === b.charAt(b.length - 1)) sc += 3;
+    for (i = 0; i < b.length; i++) if (a.indexOf(b.charAt(i)) >= 0 && !used[b.charAt(i)]) { used[b.charAt(i)] = 1; sc += 2; }
+    return sc + Math.random();
+  }
+  function similar(ans, bank, title) {
+    var c = bank.filter(function (w) { return w !== ans && w.indexOf(ans) < 0 && ans.indexOf(w) < 0 && Math.abs(w.length - ans.length) <= 1 && title.indexOf(w) < 0; });
+    c = c.map(function (w) { return [simScore(ans, w), w]; }).sort(function (x, y) { return y[0] - x[0]; }).slice(0, 8).map(function (x) { return x[1]; });
+    return shuffle(c).slice(0, 3);
+  }
   function makeQ(pool, bank) {
     for (var tries = 0; tries < 60; tries++) {
       var v = pool[rnd(pool.length)], ws = wordsOf(v.title).filter(function (w) { return w.length >= 3; });
       if (!ws.length) ws = wordsOf(v.title); if (!ws.length) continue;
       var ans = ws[rnd(ws.length)];
-      var dis = shuffle(bank.filter(function (w) { return w !== ans && Math.abs(w.length - ans.length) <= 1 && v.title.indexOf(w) < 0; })).slice(0, 3);
+      var dis = similar(ans, bank, v.title);   // 정답과 비슷하게 생긴 낱말로 헷갈리게 만들어요
       if (dis.length < 3) continue;
       var shown = A().esc(v.title).replace(ans, '<mark class="pl-bl">' + new Array(ans.length + 1).join("＿") + "</mark>");
       return { v: v, ans: ans, shown: shown, opts: shuffle([ans].concat(dis)) };
@@ -54,7 +72,7 @@
     var all = A().vids(), bank = []; all.forEach(function (v) { wordsOf(v.title).forEach(function (w) { bank.push(w); }); });
     bank = Array.from(new Set(bank));
     var qs = [], seen = {}; for (var i = 0; i < 40 && qs.length < 5; i++) { var q = makeQ(all, bank); if (q && !seen[A().key(q.v)]) { seen[A().key(q.v)] = 1; qs.push(q); } }
-    st = { g: "blank", qs: qs, i: 0, ok: 0, done: false }; blankShow();
+    st = { g: "blank", qs: qs, i: 0, ok: 0, done: false }; setBack(); blankShow();
   }
   function blankShow() {
     var q = st.qs[st.i];
@@ -76,51 +94,112 @@
     } else blankShow();
   }
 
-  /* ───── 영상 월드컵 ───── */
-  var CUPS = [8, 16, 32, 64, 128];
-  function cupMenu() {   // 몇 강으로 할지 고르기
-    st = null; var have = A().vids().length;
-    body.innerHTML = '<h2 class="pl-h">🏆 영상 월드컵</h2><p class="pl-sub">몇 강으로 할까요? 강수가 클수록 오래 걸려요.</p><div class="pl-cups">' +
-      CUPS.map(function (n) { return '<button type="button" class="pl-cup" data-cup="' + n + '"' + (have < n ? " disabled" : "") + "><b>" + n + '강</b><span>' + (n - 1) + "번 선택</span></button>"; }).join("") + '</div><div class="pl-act"><button type="button" class="btn" data-home>뒤로</button></div>';
-  }
-  function cupStart(n) {
-    var pool = A().vids().slice().sort(function (a, b) { return ((b.views || 0) + (b.likes || 0) * 5) - ((a.views || 0) + (a.likes || 0) * 5); }).slice(0, Math.max(80, n * 2));   // 인기 영상 중에서 무작위로 뽑아요
-    st = { g: "cup", n: n, cur: shuffle(pool).slice(0, n), next: [], i: 0 }; cupShow();
-  }
-  function cupCard(v, k) {
-    var a = A();
-    return '<button type="button" class="pl-v" data-v="' + k + '" style="--g:' + a.grad(v.category) + '">' + (v.thumb ? '<img src="' + a.esc(v.thumb) + '" alt="" loading="lazy">' : "") + '<span class="pl-vt">' + a.esc(v.title) + '</span><span class="pl-vm">' + a.esc(v.category || "기타") + "</span></button>";
-  }
-  function cupShow() {
-    var n = st.cur.length, label = n === 2 ? "결승" : n + "강", m = n / 2, a = st.cur[st.i * 2], b = st.cur[st.i * 2 + 1];
-    body.innerHTML = '<p class="pl-step">영상 월드컵 · ' + label + ' ' + (st.i + 1) + ' / ' + m + '</p><p class="pl-q small">끌리는 영상을 골라 주세요</p><div class="pl-vs">' + cupCard(a, 0) + '<i class="pl-vsb">VS</i>' + cupCard(b, 1) + "</div>";
-  }
-  function cupPick(k) {
-    st.next.push(st.cur[st.i * 2 + k]); st.i++;
-    if (st.i * 2 >= st.cur.length) {
-      if (st.next.length === 1) return cupWin(st.next[0]);
-      st.cur = st.next; st.next = []; st.i = 0;
+  /* ───── 낱말퍼즐 (2017년 이전 옛 자료로만 만든 낱말·뜻풀이) ───── */
+  var CW = null;
+  function cwLayout(words) {   // 낱말을 서로 걸치게 놓아 퍼즐 판을 만들어요
+    var cells = {}, list = [];
+    function get(r, c) { return cells[r + "," + c]; }
+    function fits(w, r, c, dir) {
+      var dr = dir ? 1 : 0, dc = dir ? 0 : 1, i, cross = 0;
+      if (get(r - dr, c - dc) || get(r + dr * w.length, c + dc * w.length)) return -1;
+      for (i = 0; i < w.length; i++) {
+        var rr = r + dr * i, cc = c + dc * i, ex = get(rr, cc);
+        if (ex) { if (ex !== w.charAt(i)) return -1; cross++; }
+        else if (get(rr + dc, cc + dr) || get(rr - dc, cc - dr)) return -1;   // 옆 칸이 붙으면 안 돼요
+      }
+      return cross;
     }
-    cupShow();
+    function put(w, r, c, dir) { for (var i = 0; i < w.w.length; i++) cells[(r + (dir ? i : 0)) + "," + (c + (dir ? 0 : i))] = w.w.charAt(i); list.push({ w: w.w, c: w.c, r: r, col: c, dir: dir }); }
+    var pool = words.slice(), first = pool.splice(rnd(pool.length), 1)[0], limit = 14;
+    put(first, 0, 0, 0);
+    while (list.length < limit && pool.length) {   // 지금 판에 걸쳐 놓을 수 있는 낱말을 하나씩 더해요
+      var opts = [];
+      pool.forEach(function (w, wi) {
+        var bestW = null;
+        list.forEach(function (p) {
+          for (var i = 0; i < w.w.length; i++) for (var j = 0; j < p.w.length; j++) {
+            if (w.w.charAt(i) !== p.w.charAt(j)) continue;
+            var dir = p.dir ? 0 : 1, r = dir ? p.r - i : p.r + j, c = dir ? p.col + j : p.col - i;
+            var x = fits(w.w, r, c, dir); if (x < 1) continue;
+            var h0 = 0; for (var q = 0; q < list.length; q++) { h0 = Math.max(h0, Math.abs(list[q].r - r), Math.abs(list[q].col - c)); }
+            var score = x * 10 - h0 + Math.random() * 4; if (!bestW || score > bestW.score) bestW = { score: score, wi: wi, r: r, c: c, dir: dir };
+          }
+        });
+        if (bestW) opts.push(bestW);
+      });
+      if (!opts.length) break;
+      opts.sort(function (x, y) { return y.score - x.score; });
+      var o = opts[0]; put(pool[o.wi], o.r, o.c, o.dir); pool.splice(o.wi, 1);
+    }
+    var minR = 1e9, minC = 1e9, maxR = -1e9, maxC = -1e9;
+    list.forEach(function (p) { var er = p.r + (p.dir ? p.w.length - 1 : 0), ec = p.col + (p.dir ? 0 : p.w.length - 1); minR = Math.min(minR, p.r); minC = Math.min(minC, p.col); maxR = Math.max(maxR, er); maxC = Math.max(maxC, ec); });
+    list.forEach(function (p) { p.r -= minR; p.col -= minC; });
+    var starts = {}; list.forEach(function (p) { starts[p.r + "," + p.col] = 1; });
+    var order = Object.keys(starts).map(function (s) { var a = s.split(","); return [+a[0], +a[1]]; }).sort(function (a, b) { return a[0] - b[0] || a[1] - b[1]; }), num = {};
+    order.forEach(function (o, i) { num[o[0] + "," + o[1]] = i + 1; });
+    list.forEach(function (p) { p.n = num[p.r + "," + p.col]; });
+    return { list: list, rows: maxR - minR + 1, cols: maxC - minC + 1, num: num };
   }
-  function cupWin(v) {
-    var a = A();
-    body.innerHTML = '<div class="pl-end"><i>🏆</i><p class="pl-step">우승 영상</p><div class="pl-win" style="--g:' + a.grad(v.category) + '">' + (v.thumb ? '<img src="' + a.esc(v.thumb) + '" alt="">' : "") + '<b>' + a.esc(v.title) + '</b></div>' +
-      '<div class="pl-act"><a class="btn primary" href="' + a.esc(a.url(v.url)) + '" target="_blank" rel="noopener noreferrer">다시보기</a><button type="button" class="btn" data-fav2="1">♡ 즐겨찾기</button></div>' +
-      '<div class="pl-act"><button type="button" class="btn" data-g="cup">강수 다시 고르기</button><button type="button" class="btn" data-home>다른 게임</button></div></div>';
-    st.win = v;
+  function cwMake() {
+    var best = null;
+    for (var t = 0; t < 30; t++) {
+      var p = cwLayout(CW), size = Math.max(p.rows, p.cols);
+      if (p.list.length >= 8 && size <= 13 && (!best || p.list.length > best.list.length || (p.list.length === best.list.length && size < Math.max(best.rows, best.cols)))) best = p;
+      if (best && best.list.length >= 11) break;
+    }
+    return best;
+  }
+  function cwStart() {
+    if (!CW) { body.innerHTML = '<p class="pl-sub">퍼즐을 만드는 중이에요…</p>'; fetch("crossword.json").then(function (r) { return r.json(); }).then(function (d) { CW = d; cwStart(); }).catch(function () { body.innerHTML = '<p class="pl-sub">퍼즐을 불러오지 못했어요. 잠시 뒤에 다시 해 주세요.</p>'; }); return; }
+    var pz = cwMake(); if (!pz) { body.innerHTML = '<p class="pl-sub">퍼즐을 만들지 못했어요. 다시 눌러 주세요.</p>'; return; }
+    var ans = {}; pz.list.forEach(function (p) { for (var i = 0; i < p.w.length; i++) ans[(p.r + (p.dir ? i : 0)) + "," + (p.col + (p.dir ? 0 : i))] = p.w.charAt(i); });
+    st = { g: "cw", pz: pz, ans: ans, fill: {}, sel: 0, checked: false, done: false }; setBack(); cwShow();
+  }
+  function cwCellsOf(p) { var a = []; for (var i = 0; i < p.w.length; i++) a.push((p.r + (p.dir ? i : 0)) + "," + (p.col + (p.dir ? 0 : i))); return a; }
+  function cwShow() {
+    var pz = st.pz, sel = pz.list[st.sel], selCells = cwCellsOf(sel), esc = A().esc, h = "", r, c;
+    var cs = Math.max(24, Math.min(40, Math.floor(Math.min(innerWidth - 32, 600) / pz.cols)));
+    h += '<p class="pl-step">낱말퍼즐 · ' + pz.list.length + '개 낱말 · 칸을 누르고 답을 적어 주세요</p><div class="cw-grid" style="grid-template-columns:repeat(' + pz.cols + ',' + cs + 'px);font-size:' + Math.round(cs * .56) + 'px">';
+    for (r = 0; r < pz.rows; r++) for (c = 0; c < pz.cols; c++) {
+      var k = r + "," + c, a = st.ans[k];
+      if (!a) { h += '<i class="cw-e" style="width:' + cs + 'px;height:' + cs + 'px"></i>'; continue; }
+      var f = st.fill[k] || "", cls = "cw-c" + (selCells.indexOf(k) >= 0 ? " sel" : "") + (st.checked && f ? (f === a ? " ok" : " no") : "") + (st.done ? " ok" : "");
+      h += '<button type="button" class="' + cls + '" data-cw="' + k + '" style="width:' + cs + 'px;height:' + cs + 'px">' + (pz.num[k] ? '<sup>' + pz.num[k] + '</sup>' : "") + esc(st.done ? a : f) + '</button>';
+    }
+    h += '</div>';
+    if (!st.done) h += '<div class="cw-ask"><p class="cw-now"><b>' + sel.n + (sel.dir ? "↓ 세로" : "→ 가로") + '</b> ' + esc(sel.c) + ' <span>(' + sel.w.length + '글자)</span></p><form class="cw-form" id="cwForm"><input id="cwIn" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="' + sel.w.length + '" placeholder="' + sel.w.length + '글자로 적고 입력"><button type="submit" class="btn primary">입력</button></form></div>';
+    var cl = function (dir) { return pz.list.map(function (p, i) { return [p, i]; }).filter(function (x) { return x[0].dir === dir; }).sort(function (x, y) { return x[0].n - y[0].n; }).map(function (x) { var done = cwCellsOf(x[0]).every(function (k) { return st.fill[k] === st.ans[k]; }); return '<li><button type="button" class="cw-cl' + (x[1] === st.sel ? " on" : "") + (done ? " dn" : "") + '" data-cwi="' + x[1] + '"><b>' + x[0].n + '</b> ' + esc(x[0].c) + ' <span>(' + x[0].w.length + ')</span></button></li>'; }).join(""); };
+    h += '<div class="cw-cls"><div><h3>→ 가로 열쇠</h3><ul>' + cl(0) + '</ul></div><div><h3>↓ 세로 열쇠</h3><ul>' + cl(1) + '</ul></div></div>';
+    if (st.done) h += '<div class="pl-end"><i>🎉</i><b>퍼즐 완성!</b><p>옛 방송 제목에서 뽑은 낱말을 모두 맞혔어요.</p></div>';
+    h += '<div class="pl-act"><button type="button" class="btn" data-cwchk="1">정답 확인</button><button type="button" class="btn" data-cwshow="1">모두 보기</button><button type="button" class="btn primary" data-cwnew="1">새 퍼즐</button></div>';
+    body.innerHTML = h;
+    var inp = $("cwIn"); if (inp && st.focus) { inp.focus(); st.focus = false; }
+  }
+  function cwFilled() { return Object.keys(st.ans).every(function (k) { return st.fill[k] === st.ans[k]; }); }
+  function cwSubmit() {
+    var inp = $("cwIn"); if (!inp) return; var w = inp.value.replace(/\s+/g, ""), p = st.pz.list[st.sel], cells = cwCellsOf(p);
+    if (!w) return; for (var i = 0; i < cells.length; i++) st.fill[cells[i]] = w.charAt(i) || "";
+    st.checked = false; if (cwFilled()) { st.done = true; } else { for (var j = 1; j <= st.pz.list.length; j++) { var n = (st.sel + j) % st.pz.list.length, q = st.pz.list[n]; if (!cwCellsOf(q).every(function (k) { return st.fill[k] === st.ans[k]; })) { st.sel = n; break; } } }
+    st.focus = !st.done; cwShow();
+  }
+  function cwPickCell(k) {
+    var cand = []; st.pz.list.forEach(function (p, i) { if (cwCellsOf(p).indexOf(k) >= 0) cand.push(i); });
+    if (!cand.length) return; var at = cand.indexOf(st.sel); st.sel = cand[(at + 1) % cand.length] === st.sel || at < 0 ? cand[0] : cand[(at + 1) % cand.length]; st.focus = true; cwShow();
   }
 
   function handle(e) {
-    if (!A().isIn()) return; var t = e.target.closest && e.target.closest("[data-g],[data-cup],[data-o],[data-next],[data-home],[data-v],[data-fav2]"); if (!t || !st && !t.dataset.g && !t.dataset.cup) { if (t && t.hasAttribute("data-home")) home(); return; }
+    if (!A().isIn()) return; var t = e.target.closest && e.target.closest("[data-g],[data-o],[data-next],[data-home],[data-cw],[data-cwi],[data-cwchk],[data-cwshow],[data-cwnew]"); if (!t || !st && !t.dataset.g) { if (t && t.hasAttribute("data-home")) home(); return; }
     if (t.dataset.g === "blank") return blankStart();
-    if (t.dataset.g === "cup") return cupMenu();
-    if (t.dataset.cup) return cupStart(+t.dataset.cup);
+    if (t.dataset.g === "cw") return cwStart();
+    if (t.dataset.g === "daily") { close(); var qz = $("qz"); if (qz && qz.scrollIntoView) qz.scrollIntoView({ behavior: "smooth", block: "center" }); return; }
+    if (t.dataset.cw) return cwPickCell(t.dataset.cw);
+    if (t.dataset.cwi != null) { st.sel = +t.dataset.cwi; st.focus = true; return cwShow(); }
+    if (t.hasAttribute("data-cwchk")) { st.checked = true; return cwShow(); }
+    if (t.hasAttribute("data-cwshow")) { st.done = true; return cwShow(); }
+    if (t.hasAttribute("data-cwnew")) return cwStart();
     if (t.hasAttribute("data-home")) return home();
     if (t.dataset.o != null && st && st.g === "blank") return blankPick(+t.dataset.o);
     if (t.hasAttribute("data-next") && st && st.g === "blank") return blankNext();
-    if (t.dataset.v != null && st && st.g === "cup") return cupPick(+t.dataset.v);
-    if (t.hasAttribute("data-fav2") && st && st.win) { A().addFav(st.win); t.textContent = "♥ 담았어요"; }
   }
   document.addEventListener("click", function (e) { if (e.target.closest && e.target.closest("[data-play]")) { e.preventDefault(); open(); } });
 })();
