@@ -200,7 +200,7 @@
     for (r = 0; r < pz.rows; r++) for (c = 0; c < pz.cols; c++) {
       var k = r + "," + c, a = st.ans[k];
       if (!a) { h += '<i class="cw-e" style="width:' + cs + 'px;height:' + cs + 'px"></i>'; continue; }
-      var f = st.fill[k] || "", pi = st.pop ? st.pop.indexOf(k) : -1, cls = "cw-c" + (pi >= 0 ? (st.popOk ? " wow" : " pop") : "") + (st.done && st.fin ? " fin" : "") + (selCells.indexOf(k) >= 0 ? " sel" : "") + (st.checked && f ? (f === a ? " ok" : " no") : "") + (st.done ? " ok" : "");
+      var f = st.fill[k] || "", pi = st.pop ? st.pop.indexOf(k) : -1, cls = "cw-c" + (pi >= 0 ? (st.popOk ? " wow" : " pop") : "") + (st.done && st.fin ? " fin" : "") + (selCells.indexOf(k) >= 0 ? " sel" : "") + (f && f === a ? " ok lock" : "") + (st.done ? " ok" : "");
       h += '<button type="button" class="' + cls + '" data-cw="' + k + '" style="width:' + cs + 'px;height:' + cs + 'px' + (pi >= 0 ? ';animation-delay:' + (pi * .06).toFixed(2) + 's' : '') + '">' + (pz.num[k] ? '<sup>' + pz.num[k] + '</sup>' : "") + esc(st.done ? a : f) + '</button>';
     }
     h += '</div>';
@@ -218,8 +218,10 @@
   function cwSubmit() {
     if (st) st.give = false;
     var inp = $("cwIn"); if (!inp) return; var w = inp.value.replace(/\s+/g, ""), p = st.pz.list[st.sel], cells = cwCellsOf(p);
-    if (!w) return; for (var i = 0; i < cells.length; i++) st.fill[cells[i]] = w.charAt(i) || "";
-    st.pop = cells; st.popOk = cells.every(function (k) { return st.fill[k] === st.ans[k]; }); if (st.popOk) floatTxt("정답! ✨", "ok");
+    if (!w) return;
+    if (cells.every(function (k) { return st.fill[k] === st.ans[k]; })) { floatTxt("이미 맞힌 낱말이에요 🔒", "no"); inp.value = ""; return; }
+    var chg = []; for (var i = 0; i < cells.length; i++) { var ck = cells[i]; if (st.fill[ck] === st.ans[ck]) continue; st.fill[ck] = w.charAt(i) || ""; chg.push(ck); }   // 이미 맞힌 칸은 고정(수정 불가)
+    st.pop = chg; st.popOk = chg.length > 0 && chg.every(function (k) { return st.fill[k] === st.ans[k]; }); if (st.popOk) floatTxt("정답! ✨", "ok");
     st.checked = false; if (cwFilled()) { st.done = true; st.fin = true; } else { for (var j = 1; j <= st.pz.list.length; j++) { var n = (st.sel + j) % st.pz.list.length, q = st.pz.list[n]; if (!cwCellsOf(q).every(function (k) { return st.fill[k] === st.ans[k]; })) { st.sel = n; break; } } }
     st.focus = !st.done; cwShow();
   }

@@ -1524,3 +1524,4 @@ html:has(#admModal:not([hidden])) { overflow:hidden; }   /* 대시보드를 열�
 .pv-shake { animation:plShake .45s ease; }
 /* 게임 화면도 위에 붙지 않게 가운데로 모아요 (내용이 길면 위에서부터 스크롤) */
 .pl-game .pl-main { display:flex; } .pl-game .pl-main > div { margin:auto; }
+.pl-game .cw-c.lock { cursor:default; }
