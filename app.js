@@ -362,6 +362,17 @@
   let rankWas = false;
   const IMG = `<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="14" rx="2.5"/><circle cx="9" cy="10.5" r="1.6"/><path d="M4 17l5-4.5 3.5 3 3-2.5 4.5 4"/></svg>`;
   const CROWN = `<svg class="crown" viewBox="0 0 24 24" aria-hidden="true"><path d="M13 1.5c.7 3.4-.9 5.3-2.5 7.300C9 10.700 7.500 12.200 7.500 14.800a4.700 4.700 0 009.400 0c0-2-.9-3.500-2-4.800-.3 1.100-.8 1.800-1.600 2.200.5-3.700-.2-7.300-.3-10.700z"/></svg>`;   // 불꽃 아이콘 (이름은 옛날 왕관 때문에 그대로)
+  // 1~3위 썸네일 윗변에서 타오르는 불꽃 (위치·크기·박자를 다르게 해서 진짜 불처럼 일렁여요)
+  const FIRE_N = { 1: 10, 2: 7, 3: 6 };
+  const fireHtml = rank => {
+    const n = FIRE_N[rank]; let h = "";
+    for (let i = 0; i < n; i++) {
+      const mid = 1 - Math.abs((i - (n - 1) / 2) / ((n - 1) / 2 || 1));   // 가운데일수록 크게
+      const w = Math.round((rank === 1 ? 19 : rank === 2 ? 15 : 13) * (0.65 + 0.55 * mid + ((i * 7) % 3) * 0.08));
+      h += `<i style="--x:${(2 + i * (96 / (n - 1))).toFixed(1)}%;--w:${w}px;--d:${((i * 0.37) % 1.1).toFixed(2)}s;--t:${(0.7 + ((i * 5) % 4) * 0.17).toFixed(2)}s"></i>`;
+    }
+    return `<span class="fire f${rank}" aria-hidden="true">${h}</span>`;
+  };
   function cardHtml(v, shelf, rank) {
     const k = key(v), on = favs.has(k), seen = recent.includes(k) && tab !== "recent" && !shelf, rows = (view === "rows" || tab === "rank") && !shelf;
     const sn = v._s && v._s.find(n => n !== ser), showLikes = pop(v) > 0 && (rank || $("sort").value === "likes" && !shelf);
@@ -369,7 +380,7 @@
     const info = `<div class="t"><h3>${shelf ? esc(v.title) : mark(v.title)}</h3>${meta}</div>`;
     const dots = `<button class="dots" type="button" aria-label="더 보기 메뉴" aria-haspopup="menu">${DOTS}</button>`;
     const heart = `<button class="heart ${on ? "on" : ""} ${k === popKey ? "pop" : ""}" type="button" aria-label="${on ? "즐겨찾기에서 빼기" : "즐겨찾기에 담기"}" title="즐겨찾기">${HEART}</button>`;
-    const thumb = `<div class="thumb" style="--g:${grad(v.category)}">${picHtml(v, !shelf)}${rank && !rows ? `<span class="rkb">${rank === 1 ? CROWN : ""}${rank}</span>` : seen ? `<span class="seen">열어봄</span>` : ""}${v.duration ? `<span class="dur">${esc(v.duration)}</span>` : ""}</div>`;
+    const thumb = `<div class="thumb" style="--g:${grad(v.category)}">${rank && rank <= 3 && !shelf ? fireHtml(rank) : ""}${picHtml(v, !shelf)}${rank && !rows ? `<span class="rkb">${rank === 1 ? CROWN : ""}${rank}</span>` : seen ? `<span class="seen">열어봄</span>` : ""}${v.duration ? `<span class="dur">${esc(v.duration)}</span>` : ""}</div>`;
     const a = `href="${esc(safeUrl(v.url))}" target="_blank" rel="noopener noreferrer"`;
     const tier = rank && rank <= 3 ? " r" + rank : rank && rank <= 10 ? " rt10" : "";
     return `<article class="card ${v.thumb ? "" : "no-thumb"}${tier}" data-k="${esc(k)}" style="--i:${rank ? Math.min(rank, 24) - 1 : 0}">` + (rows

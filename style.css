@@ -1559,3 +1559,26 @@ html[data-motion="off"] .hol-fl i { top:50%; transform:translateY(-50%); opacity
 .logo[data-hol] .logo-t { color:var(--hc); }
 .logo[data-hol] .logo-t b { color:var(--ink); }
 .logo[data-hol="mem"] .logo-t { color:inherit; }
+
+/* ── 진짜 불꽃: 1~3위 썸네일 윗변에서 타오르는 불길 ── */
+.card.r1 .thumb, .card.r2 .thumb, .card.r3 .thumb { overflow:visible; }
+.card.r1 .thumb > img, .card.r2 .thumb > img, .card.r3 .thumb > img, .card.r1 .thumb > .ph, .card.r2 .thumb > .ph, .card.r3 .thumb > .ph { border-radius:inherit; }
+.card.r1 .thumb::before, .card.r2 .thumb::before, .card.r3 .thumb::before, .card.r1 .thumb::after, .card.r2 .thumb::after, .card.r3 .thumb::after { border-radius:inherit; }
+.fire { position:absolute; left:0; right:0; bottom:calc(100% - 7px); height:0; z-index:3; pointer-events:none; filter:drop-shadow(0 0 7px rgba(255,110,20,.85)); }
+.fire i { position:absolute; bottom:0; left:var(--x); width:var(--w); height:calc(var(--w) * 2.5); margin-left:calc(var(--w) / -2); transform-origin:50% 100%; }
+.fire i::before, .fire i::after { content:""; position:absolute; left:0; bottom:0; width:100%; aspect-ratio:1; border-radius:0 50% 50% 50%; rotate:45deg; transform-origin:50% 50%; translate:0 -2%; }
+.fire i::before { height:auto; background:radial-gradient(circle at 50% 62%,#ffe45c 0,#ff9a1f 40%,#ee3b0e 78%,#b3200a 100%); scale:1.0 1.0; }
+.fire i::after { width:52%; left:24%; bottom:2px; background:radial-gradient(circle at 50% 60%,#fffbe0 0,#fff08a 55%,#ffc233 100%); }
+.fire.f2 i::before { background:radial-gradient(circle at 50% 62%,#ffd45a 0,#ff8a1f 42%,#e5400f 80%,#a81c08 100%); }
+.fire.f3 i::before { background:radial-gradient(circle at 50% 62%,#ffbb55 0,#ff6a1f 42%,#d3300f 80%,#8f1606 100%); }
+.fire.f3 i::after { background:radial-gradient(circle at 50% 60%,#ffe8a8 0,#ffc04a 60%,#ff8a2a 100%); }
+html:not([data-motion="off"]) .fire i { animation:tongue var(--t) ease-in-out var(--d) infinite alternate; }
+@keyframes tongue {
+  0% { transform:scale(1,.72) skewX(-6deg); opacity:.85; }
+  25% { transform:scale(.92,1.18) skewX(5deg); opacity:1; }
+  55% { transform:scale(1.06,.9) skewX(-3deg); opacity:.92; }
+  80% { transform:scale(.88,1.3) skewX(7deg); opacity:1; }
+  100% { transform:scale(1,.8) skewX(-5deg); opacity:.88; }
+}
+.rail .fire { display:none; }
+@media (max-width:640px) { .fire { bottom:calc(100% - 5px); } }
