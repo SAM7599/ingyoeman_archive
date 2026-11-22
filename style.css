@@ -1541,7 +1541,7 @@ html:has(#admModal:not([hidden])) { overflow:hidden; }   /* 대시보드를 열�
 /* ── 기념일 로고: 로고 그림 전체 + 맨 위 기념일 띠 ── */
 .logo { position:relative; }
 .logo[data-hol] .logo-mark { background:var(--hl) center/contain no-repeat; -webkit-mask:none; mask:none; width:50px; height:36px; margin-right:2px; filter:drop-shadow(0 2px 6px rgba(0,0,0,.22)); }
-@media (max-width:640px) { .logo[data-hol] .logo-mark { width:44px; height:32px; } }
+@media (max-width:640px) { .logo[data-hol] .logo-mark { width:38px; height:27px; margin-right:0; } }
 html:not([data-motion="off"]) .logo[data-hol]:not([data-hol="mem"]) .logo-mark { animation:holpulse 2.2s ease-in-out infinite; }
 @keyframes holpulse { 0%,100% { transform:scale(1) rotate(0); } 50% { transform:scale(1.1) rotate(-4deg); } }
 .hol-bar { position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center; gap:10px; padding:9px 16px; background:linear-gradient(90deg,var(--b1),var(--b2),var(--b1)); background-size:200% 100%; color:#fff; font-size:14px; line-height:1.4; text-align:center; text-shadow:0 1px 3px rgba(0,0,0,.35); z-index:30; }
