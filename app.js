@@ -665,6 +665,7 @@
     const fit = () => { q.placeholder = m3.matches ? "제목이나 분류로 검색" : m2.matches ? "검색" : m1.matches ? "제목·분류 검색" : "제목이나 분류로 검색"; };
     [m1, m2, m3].forEach(m => m.addEventListener ? m.addEventListener("change", fit) : m.addListener(fit)); fit(); }
 
+  const calm = () => document.documentElement.getAttribute("data-motion") === "off";   // 「움직임 줄이기」를 켰는지
   /* ── 효과음 (파일 없이 브라우저가 직접 만드는 소리) ── */
   let actx = null;
   const soundOn = () => store.get("sound", "on") !== "off";
