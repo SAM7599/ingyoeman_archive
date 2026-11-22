@@ -261,8 +261,34 @@
     set.hidden = !on; $("sideSetV").textContent = SIDE_T[pos];
     el.hidden = !on || pos === "off";
     el.classList.toggle("l", pos === "left"); el.classList.toggle("r", pos !== "left");
-    el.classList.toggle("on", tab === "fav");
+    $("sideDr").classList.toggle("l", pos === "left"); $("sideDr").classList.toggle("r", pos !== "left");
+    if (!on || pos === "off") { if (sdOpen) setDr(false); } else if (sdOpen) drawDr();
   }
+  // 옆 탭을 누르면 페이지를 옮기지 않고 그 자리에서 즐겨찾기 패널이 옆에서 열려요
+  let sdOpen = false;
+  function drawDr() {
+    const list = [...favs].reverse().map(byKey).filter(Boolean);
+    $("sdN").textContent = list.length ? list.length + "개" : "";
+    $("sdL").innerHTML = list.length ? list.map(v => `<div class="sd-i" data-k="${esc(key(v))}"><button class="sd-go" type="button"><span class="sd-th" style="--g:${grad(v.category)}">${v.thumb ? `<img src="${esc(v.thumb)}" alt="" loading="lazy">` : ""}</span><span class="sd-t"><b>${esc(v.title)}</b><small>${esc(v.category || "기타")}</small></span></button><button class="sd-x" type="button" aria-label="즐겨찾기에서 빼기" title="즐겨찾기에서 빼기">${HEART}</button></div>`).join("") : `<p class="sd-e"><b>아직 비어 있어요</b>영상의 하트(♡)를 누르면 여기에 모여요.</p>`;
+  }
+  function setDr(on) {
+    sdOpen = !!on && !!rtok;
+    const dr = $("sideDr"); if (!dr) return;
+    if (sdOpen) drawDr();
+    dr.classList.toggle("open", sdOpen); dr.setAttribute("aria-hidden", String(!sdOpen)); document.body.classList.toggle("sd-open", sdOpen);
+    $("sideFav").setAttribute("aria-expanded", String(sdOpen)); $("sideFav").classList.toggle("on", sdOpen);
+  }
+  $("sideFav").addEventListener("click", e => { e.stopPropagation(); setDr(!sdOpen); });
+  $("sdX").addEventListener("click", () => setDr(false));
+  $("sdAll").addEventListener("click", () => setDr(false));
+  $("sdL").addEventListener("click", e => {
+    const it = e.target.closest(".sd-i"); if (!it) return;
+    const k = it.dataset.k, v = byKey(k); if (!v) return;
+    if (e.target.closest(".sd-x")) return toggleFav(k);
+    openModal(v);
+  });
+  document.addEventListener("click", e => { if (sdOpen && !e.target.closest("#sideDr, #sideFav, .modal")) setDr(false); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && sdOpen && $("modal").hidden) setDr(false); });
   function syncAdm() { $("admBtn").hidden = !isAdm; srvWatch(isAdm); syncSide(); }
   function openDash() { if (!isAdm) return; openStatus(); srvCheck(); }
   /* ── 운영진 서버 상태 (지정한 구글 계정만) ── */
