@@ -978,25 +978,47 @@
   window.addEventListener("resize", () => { closeMenu(); closeSet(); $("home").querySelectorAll(".rail-wrap").forEach(syncArrows); });
   // ── 기념일 로고: 한국 기념일에는 로고 옆에 작은 장식이 붙고 색이 바뀌어요 ──
   (function holidayLogo() {
-    const TG = `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#fff"/><path d="M12 4a8 8 0 010 16a4 4 0 010-8a4 4 0 000-8z" fill="#1f4fd8"/><path d="M12 4a8 8 0 000 16a4 4 0 000-8a4 4 0 010-8z" fill="#e5322d"/></svg>`;
+    // 로고(40x28) 도안: 왼쪽 릴(11.5,12) · 오른쪽 릴(28.5,12) · 아래 줄 · 재생 버튼. 기념일마다 이 모양을 그날에 맞게 다시 그려요.
+    const W = 3.4, L = "stroke-linecap='round'";
+    const ring = (cx, c) => `<circle cx='${cx}' cy='12' r='8' fill='none' stroke='${c}' stroke-width='${W}'/>`;
+    const base = c => `<path d='M11.5 24.6h17' stroke='${c}' stroke-width='${W}' ${L}/>`;
+    const play = c => `<path d='M26.3 8.6l5 3.4-5 3.4z' fill='${c}' stroke='${c}' stroke-width='1.2' stroke-linejoin='round'/>`;
+    const tg = cx => `<circle cx='${cx}' cy='12' r='8' fill='#fff' stroke='#2a2f45' stroke-width='1'/><path d='M${cx} 4A8 8 0 0 1 ${cx} 20A4 4 0 0 1 ${cx} 12A4 4 0 0 0 ${cx} 4Z' fill='#e5322d'/><path d='M${cx} 20A8 8 0 0 1 ${cx} 4A4 4 0 0 1 ${cx} 12A4 4 0 0 0 ${cx} 20Z' fill='#1f4fd8'/>`;
+    const flower = cx => [0, 1, 2, 3, 4].map(i => { const a = i * 1.2566 - 1.5708; return `<circle cx='${(cx + 4.9 * Math.cos(a)).toFixed(1)}' cy='${(12 + 4.9 * Math.sin(a)).toFixed(1)}' r='3.7' fill='#ff6f91'/>`; }).join("") + `<circle cx='${cx}' cy='12' r='3.2' fill='#ffd54a'/>`;
+    const lotus = cx => `<ellipse cx='${cx - 4.2}' cy='13' rx='2.8' ry='6.2' transform='rotate(-35 ${cx - 4.2} 13)' fill='#ff9ec7' stroke='#d63384' stroke-width='.8'/><ellipse cx='${cx + 4.2}' cy='13' rx='2.8' ry='6.2' transform='rotate(35 ${cx + 4.2} 13)' fill='#ff9ec7' stroke='#d63384' stroke-width='.8'/><ellipse cx='${cx}' cy='11' rx='3.2' ry='7' fill='#ff6fb0' stroke='#d63384' stroke-width='.8'/>`;
+    const star = (x, y, r, c) => `<path d='M${x} ${y - r}Q${x + r * .22} ${y - r * .22} ${x + r} ${y}Q${x + r * .22} ${y + r * .22} ${x} ${y + r}Q${x - r * .22} ${y + r * .22} ${x - r} ${y}Q${x - r * .22} ${y - r * .22} ${x} ${y - r}Z' fill='${c}'/>`;
+    const sun = [0, 1, 2, 3, 4, 5, 6, 7].map(i => { const a = i * .7854; return `<path d='M${(11.5 + 6.6 * Math.cos(a)).toFixed(1)} ${(12 + 6.6 * Math.sin(a)).toFixed(1)}L${(11.5 + 9 * Math.cos(a)).toFixed(1)} ${(12 + 9 * Math.sin(a)).toFixed(1)}' stroke='#ffb300' stroke-width='1.8' ${L}/>`; }).join("") + `<circle cx='11.5' cy='12' r='5' fill='#ffb300'/>`;
+    const LOGO = {
+      chu: `<circle cx='11.5' cy='12' r='8.4' fill='#ffd54a' stroke='#f2a900' stroke-width='1.2'/><circle cx='28.5' cy='12' r='8.4' fill='#ffd54a' stroke='#f2a900' stroke-width='1.2'/><circle cx='9' cy='9.5' r='1.7' fill='#f2c230'/><circle cx='14.5' cy='15.5' r='1.3' fill='#f2c230'/><circle cx='31.5' cy='15' r='1.8' fill='#f2c230'/>${base("#f2b01e")}${play("#7a4400")}`,
+      seol: `<circle cx='11.5' cy='12.5' r='8' fill='#e8453c'/><circle cx='28.5' cy='12.5' r='8' fill='#e8453c'/><path d='M8 4.4h7l-1.2 2.6H9.2z' fill='#ffc93c'/><path d='M25 4.4h7l-1.2 2.6h-4.6z' fill='#ffc93c'/><circle cx='11.5' cy='13' r='2.6' fill='#ffc93c'/>${base("#ffc93c")}${play("#ffc93c")}`,
+      kids: `<circle cx='11.5' cy='11' r='8.4' fill='#ff5a6e'/><circle cx='28.5' cy='11' r='8.4' fill='#3aa0ff'/><circle cx='8.6' cy='7.8' r='2' fill='#fff' opacity='.55'/><circle cx='25.6' cy='7.8' r='2' fill='#fff' opacity='.55'/><path d='M11.5 19.4l-1.8 3.4h3.6z' fill='#ff5a6e'/><path d='M28.5 19.4l-1.8 3.4h3.6z' fill='#3aa0ff'/><path d='M11.5 22.8c-1 1.6 2 2.2 0 4M28.5 22.8c-1 1.6 2 2.2 0 4' fill='none' stroke='#ffb300' stroke-width='1.4' ${L}/>${play("#fff")}`,
+      par: `${flower(11.5)}${flower(28.5)}${base("#3fa34d")}`,
+      buddha: `${lotus(11.5)}${lotus(28.5)}${base("#3fa34d")}`,
+      mar1: `${tg(11.5)}${tg(28.5)}${base("#1f4fd8")}${play("#fff")}`,
+      gae: `${sun}${ring(28.5, "#2d8cff")}${base("#2d8cff")}${play("#2d8cff")}`,
+      han: `${ring(11.5, "#2d4de0")}${ring(28.5, "#2d4de0")}${base("#2d4de0")}<path d='M27.6 7.2v9.6M27.6 12h4.4' stroke='#2d4de0' stroke-width='2.4' ${L} fill='none'/>`,
+      xmas: `${ring(11.5, "#e5322d")}${ring(28.5, "#1f9d55")}${base("#e5322d")}${play("#1f9d55")}<path d='M4.4 9.6Q7 -.4 14.6 2.4Q11.6 3.8 12.4 8.4Z' fill='#e5322d'/><path d='M3.8 9.4L13 8.2' stroke='#fff' stroke-width='2.4' ${L}/><circle cx='15' cy='2.6' r='2' fill='#fff' stroke='#c5cdd9' stroke-width='.6'/><circle cx='34' cy='4' r='1' fill='#9ecbff'/><circle cx='37' cy='9' r='.8' fill='#9ecbff'/><circle cx='20' cy='6' r='.9' fill='#9ecbff'/>`,
+      ny: `${ring(11.5, "#ff5d73")}${ring(28.5, "#ffb300")}${base("#ff5d73")}${play("#ff5d73")}${star(20, 5, 3.2, "#ffd54a")}${star(35.5, 3.2, 2.4, "#ff5d73")}${star(4.2, 3, 2.2, "#ffb300")}`,
+      mem: `${ring(11.5, "#6b7280")}${ring(28.5, "#6b7280")}${base("#6b7280")}${play("#6b7280")}<path d='M17.2 .6L20 6.2 22.8 .6M20 6.2l-2.2 4.2M20 6.2l2.2 4.2' fill='none' stroke='#15171c' stroke-width='1.9' ${L} stroke-linejoin='round'/>`
+    };
+    const H = {   // t: 인사말, n: 기념일 이름, c: 대표색, e: 배너에 떠다닐 그림
+      ny: { n: "새해", t: "새해 복 많이 받으세요!", c: ["#ff5d73", "#ffb300"], e: "🎊 ✨ 🎉" },
+      seol: { n: "설날", t: "설날 잘 보내세요! 새해 복 많이 받으세요", c: ["#e8453c", "#ff9a3c"], e: "🧧 🎎 🧧" },
+      mar1: { n: "3·1절", t: "오늘은 3·1절이에요. 그날의 만세를 기억해요", c: ["#1f4fd8", "#e5322d"], e: "🕊️ ✊ 🕊️" },
+      kids: { n: "어린이날", t: "오늘은 어린이날! 모두가 어린이처럼 즐거운 하루 되세요", c: ["#ff5a6e", "#3aa0ff"], e: "🎈 🎠 🎈" },
+      par: { n: "어버이날", t: "오늘은 어버이날이에요. 부모님께 감사 인사 전해 보세요", c: ["#e8527f", "#ff8fab"], e: "🌷 🌸 🌷" },
+      buddha: { n: "부처님오신날", t: "부처님 오신 날을 축하드려요", c: ["#d63384", "#ff9ec7"], e: "🪷 🏮 🪷" },
+      mem: { n: "현충일", t: "오늘은 현충일이에요. 나라를 위해 헌신하신 분들을 기억해요", c: ["#3b4150", "#6b7280"], e: "🎗️", calm: 1 },
+      lib: { n: "광복절", t: "오늘은 광복절이에요. 되찾은 빛을 기억해요", c: ["#1f4fd8", "#e5322d"], e: "🕊️ 🌺 🕊️", g: "mar1" },
+      chu: { n: "추석", t: "풍성한 한가위 보내세요! 추석 잘 보내세요", c: ["#e08a00", "#ffc93c"], e: "🌕 🍂 🌕" },
+      gae: { n: "개천절", t: "오늘은 개천절이에요", c: ["#1f6fe0", "#5db8ff"], e: "☀️ ⛰️ ☀️" },
+      han: { n: "한글날", t: "오늘은 한글날! 세종대왕님 감사합니다", c: ["#2d4de0", "#6f86ff"], e: "ㄱ ㅏ ㄴ ㅏ ㄷ ㅏ" },
+      xmas: { n: "성탄절", t: "메리 크리스마스! 즐거운 성탄절 보내세요", c: ["#c62828", "#1f9d55"], e: "❄️ 🎄 ❄️ 🎁 ❄️" }
+    };
     const SEOL = { 2026: "02-17", 2027: "02-07", 2028: "01-27", 2029: "02-13", 2030: "02-03", 2031: "01-23", 2032: "02-11", 2033: "01-31", 2034: "02-19", 2035: "02-08" };      // 설날(음력 1/1)
     const BUDDHA = { 2026: "05-24", 2027: "05-13", 2028: "05-02", 2029: "05-20", 2030: "05-09", 2031: "05-28", 2032: "05-16", 2033: "05-06", 2034: "05-25", 2035: "05-15" };   // 부처님오신날(음력 4/8)
     const CHU = { 2026: "09-25", 2027: "09-15", 2028: "10-03", 2029: "09-22", 2030: "09-12", 2031: "10-01", 2032: "09-19", 2033: "09-08", 2034: "09-27", 2035: "09-16" };       // 추석(음력 8/15)
     const FIX = { "01-01": "ny", "03-01": "mar1", "05-05": "kids", "05-08": "par", "06-06": "mem", "08-15": "lib", "10-03": "gae", "10-09": "han", "12-24": "xmas", "12-25": "xmas", "12-31": "ny" };
-    const H = {
-      ny: { i: "🎊", c: "#ff5d73", t: "새해 복 많이 받으세요!" },
-      seol: { i: "🧧", c: "#e8453c", t: "설날 잘 보내세요!" },
-      mar1: { i: TG, c: "#2d5be3", t: "오늘은 3·1절이에요" },
-      kids: { i: "🎈", c: "#ff8a3d", t: "오늘은 어린이날이에요" },
-      par: { i: "🌷", c: "#e8527f", t: "오늘은 어버이날이에요" },
-      buddha: { i: "🪷", c: "#e86fa8", t: "부처님 오신 날이에요" },
-      mem: { i: "🎗️", c: "#7a8294", t: "오늘은 현충일이에요. 호국영령을 기억해요", calm: 1 },
-      lib: { i: TG, c: "#2d5be3", t: "오늘은 광복절이에요" },
-      chu: { i: "🌕", c: "#f2b01e", t: "추석 잘 보내세요!" },
-      gae: { i: "☀️", c: "#3aa0ff", t: "오늘은 개천절이에요" },
-      han: { i: "한", c: "#3d6df0", t: "오늘은 한글날이에요", txt: 1 },
-      xmas: { i: "🎄", c: "#2fa564", t: "메리 크리스마스!" }
-    };
     const p = new URLSearchParams(location.search).get("hol");   // 미리보기용: ?hol=chu 처럼 주소 뒤에 붙이면 그 기념일 모습을 볼 수 있어요
     const kst = new Intl.DateTimeFormat("sv-SE", { timeZone: "Asia/Seoul" }).format(new Date());   // 2026-11-22
     const y = +kst.slice(0, 4), md = kst.slice(5);
@@ -1008,10 +1030,15 @@
     const lg = document.querySelector(".logo");
     if (!k || !lg) return;
     const h = H[k];
-    lg.dataset.hol = k; lg.style.setProperty("--hol", h.c); lg.title = h.t;
-    const s = document.createElement("span");
-    s.className = "logo-hol" + (h.txt ? " txt" : "") + (h.calm ? " calm" : ""); s.setAttribute("aria-hidden", "true"); s.innerHTML = h.i;
-    lg.appendChild(s);
+    lg.dataset.hol = k; lg.title = h.t;
+    const bar = document.createElement("div");   // 맨 위 기념일 띠: 오늘이 무슨 날인지 한눈에 보여요
+    bar.className = "hol-bar" + (h.calm ? " calm" : ""); bar.setAttribute("role", "status");
+    bar.style.setProperty("--b1", h.c[0]); bar.style.setProperty("--b2", h.c[1]);
+    const em = h.e.split(" ");
+    bar.innerHTML = `<span class="hol-fl" aria-hidden="true">${Array.from({ length: 14 }, (_, i) => `<i style="--x:${(i * 7.3 + 3) % 100}%;--d:${(i * 0.9) % 6}s;--s:${(10 + (i * 5) % 9)}px">${em[i % em.length]}</i>`).join("")}</span><b>${esc(h.n)}</b><span>${esc(h.t)}</span>`;
+    document.body.insertBefore(bar, document.body.firstChild);
+    const svg = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='-1 -2 42 31'>" + LOGO[h.g || k] + "</svg>";
+    lg.style.setProperty("--hl", 'url("data:image/svg+xml,' + encodeURIComponent(svg) + '")');   // 로고 전체를 이 그림으로 바꿔요
     lg.setAttribute("aria-label", "잉여맨 추억자료실 처음으로. " + h.t);
   })();
   document.querySelector(".logo").addEventListener("click", e => {   // 로고·이름을 누르면 어디서든 처음 화면(홈)으로

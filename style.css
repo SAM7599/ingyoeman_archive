@@ -1538,12 +1538,21 @@ html:has(#admModal:not([hidden])) { overflow:hidden; }   /* 대시보드를 열�
 
 .dc-ic { -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4 4h16a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1h-8l-5 4v-4H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z'/%3E%3C/svg%3E") center/contain no-repeat; mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4 4h16a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1h-8l-5 4v-4H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z'/%3E%3C/svg%3E") center/contain no-repeat; }
 
-/* ── 기념일 로고 ── */
+/* ── 기념일 로고: 로고 그림 전체 + 맨 위 기념일 띠 ── */
 .logo { position:relative; }
-.logo[data-hol] .logo-mark { background:var(--hol); }
-.logo-hol { position:absolute; left:25px; top:-4px; width:19px; height:19px; display:grid; place-items:center; font-size:15px; line-height:1; pointer-events:none; filter:drop-shadow(0 1px 2px rgba(0,0,0,.35)); transform-origin:50% 100%; }
-.logo-hol svg { width:17px; height:17px; }
-.logo-hol.txt { width:18px; height:18px; border-radius:50%; background:var(--hol); color:#fff; font-size:12px; font-weight:900; filter:none; box-shadow:0 1px 3px rgba(0,0,0,.35); }
-html:not([data-motion="off"]) .logo-hol:not(.calm) { animation:holbob 1.8s ease-in-out infinite; }
-@keyframes holbob { 0%,100% { transform:translateY(0) rotate(-8deg); } 50% { transform:translateY(-3px) rotate(8deg); } }
-@media (max-width:640px) { .logo-hol { left:21px; top:-3px; } }
+.logo[data-hol] .logo-mark { background:var(--hl) center/contain no-repeat; -webkit-mask:none; mask:none; width:50px; height:36px; margin-right:2px; filter:drop-shadow(0 2px 6px rgba(0,0,0,.22)); }
+@media (max-width:640px) { .logo[data-hol] .logo-mark { width:44px; height:32px; } }
+html:not([data-motion="off"]) .logo[data-hol]:not([data-hol="mem"]) .logo-mark { animation:holpulse 2.2s ease-in-out infinite; }
+@keyframes holpulse { 0%,100% { transform:scale(1) rotate(0); } 50% { transform:scale(1.1) rotate(-4deg); } }
+.hol-bar { position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center; gap:10px; padding:9px 16px; background:linear-gradient(90deg,var(--b1),var(--b2),var(--b1)); background-size:200% 100%; color:#fff; font-size:14px; line-height:1.4; text-align:center; text-shadow:0 1px 3px rgba(0,0,0,.35); z-index:30; }
+.hol-bar b { flex:none; font-size:14px; font-weight:900; padding:2px 11px; border-radius:99px; background:rgba(255,255,255,.95); color:var(--b1); text-shadow:none; }
+.hol-bar > span:not(.hol-fl) { position:relative; font-weight:700; word-break:keep-all; }
+.hol-bar b { position:relative; }
+.hol-fl { position:absolute; inset:0; pointer-events:none; }
+.hol-fl i { position:absolute; top:-20px; left:var(--x); font-style:normal; font-size:var(--s); opacity:.85; }
+html:not([data-motion="off"]) .hol-bar:not(.calm) { animation:holflow 6s linear infinite; }
+html:not([data-motion="off"]) .hol-fl i { animation:holfall 4.5s linear var(--d) infinite; }
+html[data-motion="off"] .hol-fl i { top:50%; transform:translateY(-50%); opacity:.4; }
+@keyframes holflow { to { background-position:200% 0; } }
+@keyframes holfall { 0% { transform:translateY(0) rotate(0); opacity:0; } 12% { opacity:.9; } 100% { transform:translateY(62px) rotate(200deg); opacity:0; } }
+@media (max-width:640px) { .hol-bar { font-size:12.5px; padding:8px 12px; gap:7px; } .hol-bar b { font-size:12.5px; padding:2px 9px; } }
