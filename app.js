@@ -976,6 +976,44 @@
   });
   window.addEventListener("scroll", () => { $("totop").hidden = window.scrollY < 700; if (!$("menu").hidden && Math.abs(window.scrollY - openMenu.y) > 60) closeMenu(); }, { passive: true });
   window.addEventListener("resize", () => { closeMenu(); closeSet(); $("home").querySelectorAll(".rail-wrap").forEach(syncArrows); });
+  // ── 기념일 로고: 한국 기념일에는 로고 옆에 작은 장식이 붙고 색이 바뀌어요 ──
+  (function holidayLogo() {
+    const TG = `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#fff"/><path d="M12 4a8 8 0 010 16a4 4 0 010-8a4 4 0 000-8z" fill="#1f4fd8"/><path d="M12 4a8 8 0 000 16a4 4 0 000-8a4 4 0 010-8z" fill="#e5322d"/></svg>`;
+    const SEOL = { 2026: "02-17", 2027: "02-07", 2028: "01-27", 2029: "02-13", 2030: "02-03", 2031: "01-23", 2032: "02-11", 2033: "01-31", 2034: "02-19", 2035: "02-08" };      // 설날(음력 1/1)
+    const BUDDHA = { 2026: "05-24", 2027: "05-13", 2028: "05-02", 2029: "05-20", 2030: "05-09", 2031: "05-28", 2032: "05-16", 2033: "05-06", 2034: "05-25", 2035: "05-15" };   // 부처님오신날(음력 4/8)
+    const CHU = { 2026: "09-25", 2027: "09-15", 2028: "10-03", 2029: "09-22", 2030: "09-12", 2031: "10-01", 2032: "09-19", 2033: "09-08", 2034: "09-27", 2035: "09-16" };       // 추석(음력 8/15)
+    const FIX = { "01-01": "ny", "03-01": "mar1", "05-05": "kids", "05-08": "par", "06-06": "mem", "08-15": "lib", "10-03": "gae", "10-09": "han", "12-24": "xmas", "12-25": "xmas", "12-31": "ny" };
+    const H = {
+      ny: { i: "🎊", c: "#ff5d73", t: "새해 복 많이 받으세요!" },
+      seol: { i: "🧧", c: "#e8453c", t: "설날 잘 보내세요!" },
+      mar1: { i: TG, c: "#2d5be3", t: "오늘은 3·1절이에요" },
+      kids: { i: "🎈", c: "#ff8a3d", t: "오늘은 어린이날이에요" },
+      par: { i: "🌷", c: "#e8527f", t: "오늘은 어버이날이에요" },
+      buddha: { i: "🪷", c: "#e86fa8", t: "부처님 오신 날이에요" },
+      mem: { i: "🎗️", c: "#7a8294", t: "오늘은 현충일이에요. 호국영령을 기억해요", calm: 1 },
+      lib: { i: TG, c: "#2d5be3", t: "오늘은 광복절이에요" },
+      chu: { i: "🌕", c: "#f2b01e", t: "추석 잘 보내세요!" },
+      gae: { i: "☀️", c: "#3aa0ff", t: "오늘은 개천절이에요" },
+      han: { i: "한", c: "#3d6df0", t: "오늘은 한글날이에요", txt: 1 },
+      xmas: { i: "🎄", c: "#2fa564", t: "메리 크리스마스!" }
+    };
+    const p = new URLSearchParams(location.search).get("hol");   // 미리보기용: ?hol=chu 처럼 주소 뒤에 붙이면 그 기념일 모습을 볼 수 있어요
+    const kst = new Intl.DateTimeFormat("sv-SE", { timeZone: "Asia/Seoul" }).format(new Date());   // 2026-11-22
+    const y = +kst.slice(0, 4), md = kst.slice(5);
+    const near = (base, before, after) => { if (!base) return false; const d0 = Date.parse(y + "-" + base + "T00:00:00Z"), d1 = Date.parse(kst + "T00:00:00Z"); return d1 >= d0 - before * 864e5 && d1 <= d0 + after * 864e5; };
+    let k = p && H[p] ? p : FIX[md] || "";
+    if (!k && near(SEOL[y], 1, 1)) k = "seol";
+    if (!k && near(CHU[y], 1, 1)) k = "chu";
+    if (!k && near(BUDDHA[y], 0, 0)) k = "buddha";
+    const lg = document.querySelector(".logo");
+    if (!k || !lg) return;
+    const h = H[k];
+    lg.dataset.hol = k; lg.style.setProperty("--hol", h.c); lg.title = h.t;
+    const s = document.createElement("span");
+    s.className = "logo-hol" + (h.txt ? " txt" : "") + (h.calm ? " calm" : ""); s.setAttribute("aria-hidden", "true"); s.innerHTML = h.i;
+    lg.appendChild(s);
+    lg.setAttribute("aria-label", "잉여맨 추억자료실 처음으로. " + h.t);
+  })();
   document.querySelector(".logo").addEventListener("click", e => {   // 로고·이름을 누르면 어디서든 처음 화면(홈)으로
     if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return;
     e.preventDefault(); $("q").value = ""; cat = "";

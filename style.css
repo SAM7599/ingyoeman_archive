@@ -1537,3 +1537,13 @@ html:has(#admModal:not([hidden])) { overflow:hidden; }   /* 대시보드를 열�
 .pl-game .cw-c.lock { cursor:default; }
 
 .dc-ic { -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4 4h16a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1h-8l-5 4v-4H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z'/%3E%3C/svg%3E") center/contain no-repeat; mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4 4h16a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1h-8l-5 4v-4H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z'/%3E%3C/svg%3E") center/contain no-repeat; }
+
+/* ── 기념일 로고 ── */
+.logo { position:relative; }
+.logo[data-hol] .logo-mark { background:var(--hol); }
+.logo-hol { position:absolute; left:25px; top:-4px; width:19px; height:19px; display:grid; place-items:center; font-size:15px; line-height:1; pointer-events:none; filter:drop-shadow(0 1px 2px rgba(0,0,0,.35)); transform-origin:50% 100%; }
+.logo-hol svg { width:17px; height:17px; }
+.logo-hol.txt { width:18px; height:18px; border-radius:50%; background:var(--hol); color:#fff; font-size:12px; font-weight:900; filter:none; box-shadow:0 1px 3px rgba(0,0,0,.35); }
+html:not([data-motion="off"]) .logo-hol:not(.calm) { animation:holbob 1.8s ease-in-out infinite; }
+@keyframes holbob { 0%,100% { transform:translateY(0) rotate(-8deg); } 50% { transform:translateY(-3px) rotate(8deg); } }
+@media (max-width:640px) { .logo-hol { left:21px; top:-3px; } }
