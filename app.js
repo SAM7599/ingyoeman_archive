@@ -361,7 +361,7 @@
   const picHtml = (v, hl) => v.thumb ? `<img src="${esc(v.thumb)}" alt="" loading="lazy">` : `<div class="ph"><b>${hl ? mark(v.title) : esc(v.title)}</b></div>`;   // 썸네일이 없으면 제목 카드
   let rankWas = false;
   const IMG = `<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="14" rx="2.5"/><circle cx="9" cy="10.5" r="1.6"/><path d="M4 17l5-4.5 3.5 3 3-2.5 4.5 4"/></svg>`;
-  const CROWN = `<svg class="crown" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8l4.5 4L12 5l4.5 7L21 8l-2 11H5z"/></svg>`;
+  const CROWN = `<svg class="crown" viewBox="0 0 24 24" aria-hidden="true"><path d="M13 1.5c.7 3.4-.9 5.3-2.5 7.300C9 10.700 7.500 12.200 7.500 14.800a4.700 4.700 0 009.400 0c0-2-.9-3.500-2-4.800-.3 1.100-.8 1.800-1.600 2.200.5-3.700-.2-7.300-.3-10.700z"/></svg>`;   // 불꽃 아이콘 (이름은 옛날 왕관 때문에 그대로)
   function cardHtml(v, shelf, rank) {
     const k = key(v), on = favs.has(k), seen = recent.includes(k) && tab !== "recent" && !shelf, rows = (view === "rows" || tab === "rank") && !shelf;
     const sn = v._s && v._s.find(n => n !== ser), showLikes = pop(v) > 0 && (rank || $("sort").value === "likes" && !shelf);
