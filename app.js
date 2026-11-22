@@ -252,7 +252,18 @@
     $("admBtn").title = "운영진 대시보드 · 서버 " + msg;
   }
   function srvWatch(on) { clearInterval(srvTimer); srvTimer = null; if (on) { srvCheck(); srvTimer = setInterval(() => { if (!document.hidden) srvCheck(); }, 60000); } else srv = null; }
-  function syncAdm() { $("admBtn").hidden = !isAdm; srvWatch(isAdm); }
+  // ── 즐겨찾기 옆 탭: 구글 로그인한 사람에게만, 화면 왼쪽/오른쪽 가장자리에 붙어요 (위치는 설정에서 바꿔요) ──
+  const SIDES = ["right", "left", "off"], SIDE_T = { right: "오른쪽", left: "왼쪽", off: "끄기" };
+  const sidePos = () => { const v = store.get("sidefav", "right"); return SIDES.includes(v) ? v : "right"; };
+  function syncSide() {
+    const el = $("sideFav"), set = $("sideSet"); if (!el || !set) return;
+    const pos = sidePos(), on = !!rtok;
+    set.hidden = !on; $("sideSetV").textContent = SIDE_T[pos];
+    el.hidden = !on || pos === "off";
+    el.classList.toggle("l", pos === "left"); el.classList.toggle("r", pos !== "left");
+    el.classList.toggle("on", tab === "fav");
+  }
+  function syncAdm() { $("admBtn").hidden = !isAdm; srvWatch(isAdm); syncSide(); }
   function openDash() { if (!isAdm) return; openStatus(); srvCheck(); }
   /* ── 운영진 서버 상태 (지정한 구글 계정만) ── */
   let tmap = null;
@@ -553,6 +564,7 @@
     const home = isHome(), list = home ? [] : filtered(), q = $("q").value.trim();
     const tiles = tab === "series" && !ser && !q, rank = tab === "rank";
     document.querySelectorAll(".nFav").forEach(el => { el.textContent = favs.size || ""; });
+    syncSide();
     $("home").hidden = !home; $("browse").hidden = home;
     renderChips(); renderToday();
     $("chips").hidden = tiles || tab === "nothumb";
@@ -1137,8 +1149,9 @@
     $("motion").setAttribute("aria-checked", root.getAttribute("data-motion") === "off");
     $("popup").setAttribute("aria-checked", popupOn()); $("popup").hidden = isPhone;
   }
+  $("sideSet").addEventListener("click", () => { const n = SIDES[(SIDES.indexOf(sidePos()) + 1) % SIDES.length]; store.set("sidefav", n); syncSide(); toast("즐겨찾기 옆 탭: " + SIDE_T[n]); });
   $("popup").addEventListener("click", () => { store.set("popup", popupOn() ? "off" : "on"); syncSet(); toast(popupOn() ? "카페 글을 팝업 창으로 열어요" : "카페 글을 새 탭으로 열어요"); });
-  syncSet();
+  syncSet(); syncSide();
   $("theme").addEventListener("click", () => {
     const t = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
     root.setAttribute("data-theme", t); try { localStorage.setItem("theme", t); } catch (e) {} syncSet();
