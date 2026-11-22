@@ -526,10 +526,7 @@
     const sorted = all.slice().sort((a, b) => order(b) - order(a));
     const extra = [...new Set(all.map(v => v.category).filter(c => c && !CATS.includes(c)))].sort();
     const top = ranked(all).slice(0, 10);
-    const cnt = {}; all.forEach(v => { const c = v.category || "기타"; cnt[c] = (cnt[c] || 0) + 1; });
-    const catTiles = [...CATS, ...extra].filter(c => cnt[c]).map(c => `<button class="tile ctile" type="button" data-cat="${esc(c)}" style="--g:${grad(c)}"><b>${esc(c)}</b><span>영상 ${nf(cnt[c])}개</span></button>`).join("");
-    const catSec = catTiles ? `<section class="row cat-find" aria-label="분류로 영상 찾기"><div class="row-h"><h2>분류로 찾기<em>보고 싶은 분류를 눌러요</em></h2></div><div class="grid tiles ctiles"><button class="tile ctile ctile-all" type="button" data-cat="*" style="--g:linear-gradient(135deg,#4a52d6,#23266b)"><b>전체 영상</b><span>${nf(all.length)}개 모두 보기</span></button>${catTiles}</div></section>` : "";
-    $("home").innerHTML = quizHtml() + catSec +
+    $("home").innerHTML = quizHtml() +
       (top.length ? `<section class="row"><div class="row-h"><h2>인기 영상</h2><a class="more" href="#rank">랭킹 전체 보기</a></div>
         <div class="rail-wrap">${ARR(-1)}<div class="rail">${top.map((v, i) => cardHtml(v, true, i + 1)).join("")}</div>${ARR(1)}</div></section>` : "") +
       (() => { const b = promoHtml(); return b ? `<div class="promos">${b}</div>` : ""; })() +
