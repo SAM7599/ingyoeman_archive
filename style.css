@@ -1577,3 +1577,11 @@ html:not([data-motion="off"]) .fire i { animation:tongue var(--t) ease-in-out va
 }
 .rail .fire { display:none; }
 @media (max-width:640px) { .fire { bottom:calc(100% - 5px); } }
+
+.crown .fo { fill:var(--c2,#ff5a14); }
+.crown .fm { fill:#ff9a1f; }
+.crown .fi { fill:#ffe770; }
+.rk.hot .crown .fo { fill:var(--c2); }
+.rkb .crown .fo { fill:#d8300a; } .rkb .crown .fm { fill:#ff8a1f; }
+.rk.t1 .crown { width:26px; height:30px; filter:drop-shadow(0 0 6px rgba(255,120,20,.8)); }
+@media (max-width:860px) { .rk.t1 .crown { width:22px; height:26px; } }
