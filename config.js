@@ -5,8 +5,8 @@ window.SITE = {
   repo: "SAM7599/ingyoeman_archive",
   cafe: "https://cafe.naver.com/youtubecreateringyoe",   // 네이버 카페 주소
   youtube: "https://www.youtube.com/@잉여맨유튜브",   // 잉여맨 유튜브 채널 (첫 화면 배너)
-  feedback: "https://talk.cafe.naver.com/channels/3001014569445",   // 피드백 / 버그 제보 (카페 공개 채팅방)
-  discord: "https://discord.gg/PNYHFfeXZQ",   // 디스코드 서버 초대 링크 (https://discord.gg/...) — 넣으면 피드백 버튼이 디스코드로 연결돼요. 비우면 위 카페 채팅방으로 가요
+  feedback: "https://cafe.naver.com/f-e/cafes/28908924/menus/244",   // 버그·건의 제보 (네이버 카페 「다시보기 사이트 제보」 게시판)
+  discord: "",   // (사용 안 함) 비워 두면 제보 버튼이 위 카페 게시판으로 연결돼요
   google: "313175138585-0lj420uspicahtk0nutdpvlp8rgqk5mc.apps.googleusercontent.com",   // 구글 로그인 클라이언트 ID (....apps.googleusercontent.com)
   rating: "https://ingyoeman-rating.programguy53.workers.dev",   // 로그인·저장 서버 주소 (https://....workers.dev) — 비우면 로그인 기능이 꺼져 있어요
   categories: [

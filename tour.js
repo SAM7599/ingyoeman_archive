@@ -14,7 +14,7 @@
     { t: "분류로 골라 보세요", d: function () { return "분류 버튼을 누르면 그 분류의 영상만 모아 볼 수 있어요." + (mobile() ? " 옆으로 밀면 더 많은 분류가 나와요." : ""); }, el: function () { return pick("#chips"); } },
     { t: "영상을 눌러 보세요", d: function () { return "영상을 누르면 바로 재생돼요. 하트(♡)를 누르면 즐겨찾기에 담겨요. 카페에서만 열리는 영상은 카페 가입이 필요하다고 안내가 나와요."; }, el: function () { return pick("#viewList .card"); } },
     { t: "메뉴로 이동해요", d: function () { return "인기 랭킹, 시리즈, 즐겨찾기, 열어본 영상으로 이동할 수 있어요."; }, el: function () { return mobile() ? pick(".bottom") : pick(".top .nav"); } },
-    { t: "불편한 점은 알려 주세요", d: function () { return "사이트 문제나 잘못된 분류는 \"디스코드 참여하기\"로 알려 주세요. 이 안내는 오른쪽 위 설정(⚙) 메뉴의 \"사용법 보기\"에서 다시 볼 수 있어요."; }, el: function () { return null; } }
+    { t: "불편한 점은 알려 주세요", d: function () { return "버그나 건의, 잘못된 분류는 \"제보하기\" 버튼으로 카페 「다시보기 사이트 제보」 게시판에 남겨 주세요. 이 안내는 오른쪽 위 설정(⚙) 메뉴의 \"사용법 보기\"에서 다시 볼 수 있어요."; }, el: function () { return null; } }
   ];
 
   var root = null, hole = null, tip = null, idx = 0, steps = [], cur = null;

@@ -422,7 +422,7 @@
   $("seNew").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); $("seAdd").click(); } });
   $("seSave").addEventListener("click", () => { if (!seV) return; seApply([...seSel()]); closeSerEdit(); toast("이 기기에 저장했어요"); });
   $("seReset").addEventListener("click", () => { if (!seV) return; seApply(autoVis(seV)); closeSerEdit(); toast("처음 분류로 되돌렸어요"); });
-  $("seCopy").addEventListener("click", () => { if (seV) copyText("[시리즈 분류 제보]\n" + seLine(seV, [...seSel()]), "제보 문구를 복사했어요. 디스코드에 붙여 넣어 주세요"); });
+  $("seCopy").addEventListener("click", () => { if (seV) copyText("[시리즈 분류 제보]\n" + seLine(seV, [...seSel()]), "제보 문구를 복사했어요. 제보 게시판(카페)에 붙여 넣어 주세요"); });
   $("seCopyAll").addEventListener("click", () => {
     const ov = store.get("sov1", {}) || {}, out = [];
     all.forEach(v => { const o = ov[vid(v)]; if (Array.isArray(o)) out.push(seLine(v, v._s)); });
@@ -430,7 +430,7 @@
     let t = "[시리즈 분류 제보 " + out.length + "건]", n = 0;
     for (const x of out) { if ((t + "\n\n" + x).length > 1800) break; t += "\n\n" + x; n++; }
     if (n < out.length) t += "\n\n…외 " + (out.length - n) + "건 (나눠서 올릴게요)";
-    copyText(t, n < out.length ? "길어서 " + n + "건만 복사했어요. 나머지는 고친 뒤 다시 복사해 주세요" : "고친 " + n + "건을 복사했어요. 디스코드에 붙여 넣어 주세요");
+    copyText(t, n < out.length ? "길어서 " + n + "건만 복사했어요. 나머지는 고친 뒤 다시 복사해 주세요" : "고친 " + n + "건을 복사했어요. 제보 게시판(카페)에 붙여 넣어 주세요");
   });
   $("serEdit").addEventListener("click", e => { if (e.target === $("serEdit")) closeSerEdit(); });
   $("seClose").addEventListener("click", closeSerEdit);
@@ -995,7 +995,6 @@
   const FB = /^https?:\/\//i.test(SITE.discord || "") ? SITE.discord : SITE.feedback;   // 디스코드 주소가 있으면 디스코드로, 없으면 카페 채팅방으로
   document.querySelectorAll("[data-feedback]").forEach(a => { if (/^https?:\/\//i.test(FB || "")) a.href = FB; else a.hidden = true; });
   if (FB === SITE.discord) { const g = $("fbHelp"); if (g) g.innerHTML = "아래 버튼이나 화면 오른쪽 아래 <b>디스코드 참여하기</b> 버튼을 누르면 안내 채팅창이 열려요. 디스코드는 무료로 가입할 수 있고, 이런 일을 할 수 있어요.<ul><li>🐞 사이트 <b>버그</b> 제보</li><li>📚 시리즈 <b>분류 오류</b> 제보</li><li>💡 기능 <b>건의</b></li></ul>"; }
-  else { const t = $("fbBtnT"); if (t) t.textContent = "채팅방 열기"; }
   /* ── 디스코드 참여하기 (채팅창 안내) ── */
   const DC = [
     "안녕하세요! 👋 잉여맨추억자료실 디스코드를 소개하는 <b>자동 안내</b>예요. 실시간으로 대화하는 곳은 아니니 편하게 읽어 주세요.",
