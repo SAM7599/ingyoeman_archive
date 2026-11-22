@@ -1556,3 +1556,7 @@ html[data-motion="off"] .hol-fl i { top:50%; transform:translateY(-50%); opacity
 @keyframes holflow { to { background-position:200% 0; } }
 @keyframes holfall { 0% { transform:translateY(0) rotate(0); opacity:0; } 12% { opacity:.9; } 100% { transform:translateY(62px) rotate(200deg); opacity:0; } }
 @media (max-width:640px) { .hol-bar { font-size:12.5px; padding:8px 12px; gap:7px; } .hol-bar b { font-size:12.5px; padding:2px 9px; } }
+.logo[data-hol] .logo-t { color:var(--hc); }
+.logo[data-hol] .logo-t b { color:var(--ink); }
+.logo[data-hol="mem"] .logo-t { color:inherit; }
+@media (max-width:640px) { .logo.long { font-size:12.5px; gap:4px; } .logo.long .logo-mark { width:32px !important; height:23px !important; } }
