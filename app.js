@@ -69,7 +69,7 @@
   const hash = s => { let h = 0; for (const c of String(s)) h = (h * 31 + c.charCodeAt(0)) >>> 0; return h; };
   function hue(c) { const i = CATS.indexOf(c); return HUES[(i < 0 ? hash(c || "") : i) % HUES.length]; }
   const dot = c => `hsl(${hue(c)} 70% 62%)`;
-  const grad = c => `linear-gradient(135deg,hsl(${hue(c)} 52% 46%),hsl(${(hue(c) + 34) % 360} 50% 26%))`;
+  const grad = c => `linear-gradient(135deg,hsl(${hue(c)} 24% 30%),hsl(${(hue(c) + 34) % 360} 24% 13%))`;
   const num = v => { const m = (v.url || "").match(/\/(\d+)(?:[?#].*)?$/); return m ? m[1] : null; };
   const vid = v => num(v) || "k" + hash(key(v)).toString(36);
   const order = v => num(v) ? +num(v) : v._i;   // 카페에 올라온 순서 (글 번호)
@@ -503,7 +503,7 @@
   $("seClose").addEventListener("click", closeSerEdit);
   window.closeSerEdit = closeSerEdit;
   function tilesHtml() {   // 시리즈 목록
-    return SERIES.map(x => `<a class="tile" href="#series=${encodeURIComponent(x.name)}" style="--g:linear-gradient(135deg,hsl(${hash(x.name) % 360} 46% 40%),hsl(${(hash(x.name) + 40) % 360} 46% 24%))"><b>${esc(x.name)}</b><span>${x.n}편</span></a>`).join("");
+    return SERIES.map(x => `<a class="tile" href="#series=${encodeURIComponent(x.name)}" style="--g:linear-gradient(135deg,hsl(${hash(x.name) % 360} 32% 32%),hsl(${(hash(x.name) + 40) % 360} 30% 15%))"><b>${esc(x.name)}</b><span>${x.n}편</span></a>`).join("");
   }
   function emptyHtml() {
     const q = $("q").value.trim();
