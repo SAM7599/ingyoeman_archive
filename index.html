@@ -28,7 +28,7 @@
   if (m !== "on" && m !== "off") m = (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) ? "off" : "on";
   document.documentElement.setAttribute("data-motion", m); })();
 </script>
-<link rel="stylesheet" href="style.css?v=300">
+<link rel="stylesheet" href="style.css?v=301">
 </head>
 <body>
 <div id="intro" role="dialog" aria-label="잉여맨 추억자료실 소개 화면">
@@ -63,7 +63,7 @@
       <summary>자세한 내용 보기</summary>
       <p>영상 제목의 부적절한 표현 때문에 생기는 불쾌감·피해에 대해 사이트 운영진은 책임지지 않아요. 제목은 기록 그대로 보존하는 것이 원칙이라 부적절한 표현이 있어도 고치거나 지우지 않아요.</p>
       <p>구글 로그인은 선택이에요. 로그인하면 즐겨찾기·열어본 영상·시리즈 고침, 퀴즈 기록이 계정에 저장되고, 화면 옆에서 즐겨찾기를 바로 여는 「즐겨찾기 옆 탭」도 쓸 수 있고(영상 번호만, 사람당 개수 제한), <b>6개월 동안 접속하지 않으면 자동으로 지워져요.</b> 미니게임은 로그인한 분만 할 수 있어요.</p>
-      <p>미성년자는 이용하면 안 되고, 로그인도 19세 이상만 할 수 있어요. 알려 주신 내용은 본인이 책임져야 해요. 자세한 규칙은 <a href="terms.html?v=300" target="_blank" rel="noopener noreferrer">이용약관</a>, 개인정보는 <a href="privacy.html?v=300" target="_blank" rel="noopener noreferrer">개인정보처리방침</a>에 따라 다뤄요.</p>
+      <p>미성년자는 이용하면 안 되고, 로그인도 19세 이상만 할 수 있어요. 알려 주신 내용은 본인이 책임져야 해요. 자세한 규칙은 <a href="terms.html?v=301" target="_blank" rel="noopener noreferrer">이용약관</a>, 개인정보는 <a href="privacy.html?v=301" target="_blank" rel="noopener noreferrer">개인정보처리방침</a>에 따라 다뤄요.</p>
     </details>
     </div>
     <div class="cs-foot">
@@ -96,7 +96,7 @@
       <a class="tab" href="#series" data-tab="series">시리즈</a>
       <a class="tab" href="#fav" data-tab="fav">즐겨찾기<b class="nFav"></b></a>
       <a class="tab" href="#recent" data-tab="recent">열어본 영상</a>
-      <a class="tab" href="#about" data-tab="info">소개·이용 가이드</a>
+      <a class="tab" href="#about" data-tab="info">소개·FAQ</a>
     </nav>
     <label class="search">
       <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
@@ -154,7 +154,7 @@
 </main>
 
 <main id="viewAbout" class="guide about" hidden>
-  <div class="pg-tabs"><a href="#about" class="on">사이트 소개</a><a href="#guide">이용 가이드</a><a href="#notes">패치노트</a></div>
+  <div class="pg-tabs"><a href="#about" class="on">사이트 소개</a><a href="#guide">자주 묻는 질문</a><a href="#notes">패치노트</a></div>
 
   <section class="ab-hero">
     <span class="ab-kick">비공식 팬 자료실</span>
@@ -228,75 +228,48 @@
 </main>
 
 <main id="viewNotes" class="guide notes" hidden>
-  <div class="pg-tabs"><a href="#about">사이트 소개</a><a href="#guide">이용 가이드</a><a href="#notes" class="on">패치노트</a></div>
+  <div class="pg-tabs"><a href="#about">사이트 소개</a><a href="#guide">자주 묻는 질문</a><a href="#notes" class="on">패치노트</a></div>
   <h1>패치노트</h1>
   <p class="lead">사이트에 새로 생기거나 바뀐 내용이에요.</p>
   <div id="notesList"></div>
 </main>
 
-<main id="viewGuide" class="guide" hidden>
-  <div class="pg-tabs"><a href="#about">사이트 소개</a><a href="#guide" class="on">이용 가이드</a><a href="#notes">패치노트</a></div>
-  <h1>이용 가이드</h1>
-  <p class="lead">처음 오셨어도 어렵지 않아요. 아래 세 단계면 충분해요. 궁금한 항목은 눌러서 펼쳐 보세요.</p>
-
-  <h2 class="gh">그림으로 보는 사용법</h2>
-  <div class="gpics"><div class="gp"><div class="gp-i"><svg viewBox="0 0 160 100" aria-hidden="true"><rect x="10" y="12" width="140" height="76" rx="10" fill="#eef0ff"/><rect x="22" y="24" width="116" height="22" rx="11" fill="#fff" stroke="#c9ccff"/><circle cx="35" cy="35" r="5" fill="none" stroke="#6b5cff" stroke-width="2.4"/><path d="M39 39l4 4" stroke="#6b5cff" stroke-width="2.4" stroke-linecap="round"/><text x="50" y="39" font-size="10" font-weight="700" fill="#6b5cff">ㅁㄱㅌㅊㅁ</text><rect x="22" y="56" width="52" height="24" rx="6" fill="#fff"/><rect x="86" y="56" width="52" height="24" rx="6" fill="#fff"/><rect x="26" y="62" width="30" height="4" rx="2" fill="#c9ccff"/><rect x="90" y="62" width="34" height="4" rx="2" fill="#c9ccff"/></svg></div><b><i>1</i>검색창에 입력</b><span>제목 일부나 초성(ㅁㄱㅌㅊㅁ)만 쳐도 찾아져요</span></div><div class="gp"><div class="gp-i"><svg viewBox="0 0 160 100" aria-hidden="true"><rect x="10" y="12" width="140" height="76" rx="10" fill="#fff4ec"/><rect x="20" y="22" width="34" height="16" rx="8" fill="#ff8a5c"/><rect x="60" y="22" width="34" height="16" rx="8" fill="#fff" stroke="#ffd0b8"/><rect x="100" y="22" width="40" height="16" rx="8" fill="#fff" stroke="#ffd0b8"/><rect x="20" y="48" width="56" height="34" rx="8" fill="#fff"/><rect x="84" y="48" width="56" height="34" rx="8" fill="#fff"/><path d="M30 62h36M30 70h22" stroke="#ffd0b8" stroke-width="4" stroke-linecap="round"/><path d="M94 62h36M94 70h22" stroke="#ffd0b8" stroke-width="4" stroke-linecap="round"/></svg></div><b><i>2</i>분류·시리즈 고르기</b><span>칩을 눌러 보고 싶은 분류만 모아 봐요</span></div><div class="gp"><div class="gp-i"><svg viewBox="0 0 160 100" aria-hidden="true"><rect x="10" y="12" width="140" height="76" rx="10" fill="#eafaf1"/><rect x="26" y="24" width="108" height="52" rx="10" fill="#fff"/><rect x="34" y="32" width="46" height="30" rx="6" fill="#bfe9d1"/><path d="M52 41l14 6-14 6z" fill="#fff"/><path d="M88 36h36M88 46h26" stroke="#bfe9d1" stroke-width="4" stroke-linecap="round"/><circle cx="116" cy="66" r="14" fill="#03c75a"/><path d="M110 66h12m-5-5l5 5-5 5" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></div><b><i>3</i>카드를 눌러 다시보기</b><span>네이버 카페 글이 열려요 (카페 가입 필요)</span></div><div class="gp"><div class="gp-i"><svg viewBox="0 0 160 100" aria-hidden="true"><rect x="10" y="12" width="140" height="76" rx="10" fill="#fdeef3"/><path d="M80 70s-22-13-22-29a12 12 0 0 1 22-6 12 12 0 0 1 22 6c0 16-22 29-22 29z" fill="#ff5d7a"/><circle cx="124" cy="30" r="12" fill="#6b5cff"/><text x="124" y="35" text-anchor="middle" font-size="14" font-weight="800" fill="#fff">G</text><path d="M30 28l3 6 6 1-4 4 1 6-6-3-6 3 1-6-4-4 6-1z" fill="#ffd34d"/></svg></div><b><i>4</i>로그인하면 더 편해요</b><span>즐겨찾기가 저장되고 영상 반응·퀴즈·미니게임도 즐겨요</span></div></div>
-
-  <ol class="gsteps">
-    <li><b>카페 가입 + 올드팬 인증</b><span>영상을 보려면 꼭 필요해요 (1980~2004년생만 가입 가능)</span></li>
-    <li><b>영상 찾기</b><span>검색창이나 분류, 시리즈로요</span></li>
-    <li><b>카드 눌러 다시보기</b><span>네이버 카페 글이 열려요</span></li>
-  </ol>
-  <p class="gtip">항목을 누르면 자세한 설명이 펼쳐져요.</p>
+<main id="viewGuide" class="guide faqpg" hidden>
+  <div class="pg-tabs"><a href="#about">사이트 소개</a><a href="#guide" class="on">자주 묻는 질문</a><a href="#notes">패치노트</a></div>
+  <h1>자주 묻는 질문</h1>
+  <p class="lead">가장 많이 물어보시는 것만 모았어요. 질문을 누르면 답이 펼쳐져요.</p>
 
   <h2 class="gh">영상 보기</h2>
-  <div class="gs">
-    <details class="gi" open><summary><span class="gi-ic" aria-hidden="true">▶</span><span class="gi-t"><b>다시보기 열기</b><small>카드나 다시보기 버튼을 누르면 카페 글이 열려요</small></span></summary><div class="gi-b"><p class="gnote">👤 <b>카페 가입 조건</b><br><b>1980년생부터 2004년생까지 출생자만</b> 가입할 수 있어요. 이 범위가 아니면 카페에 가입할 수 없어서 영상을 볼 수 없어요.</p><ul><li>컴퓨터는 사이트 위 <b>팝업 창</b>, 휴대폰은 <b>네이버 카페 앱</b>으로 열려요.</li><li>📱 휴대폰에서 처음 누르면 <b>"네이버 카페 앱에서 열까요?"</b> 같은 안내창이 한 번 떠요. <b>열기(또는 허용)</b>를 누르면 카페 앱에서 영상이 열려요. 다 보고 나서 <b>뒤로가기</b>를 누르면 이 앱(사이트)으로 돌아와요.</li><li>팝업이 불편하면 설정에서 <b>카페 글 팝업 창으로</b>를 꺼서 새 탭으로 열 수 있어요.</li><li>영상을 보려면 <b>카페 가입과 올드팬 인증</b>이 필요해요. 방법은 <a href="https://cafe.naver.com/youtubecreateringyoe/2951" target="_blank" rel="noopener noreferrer">처음 오신 분을 위한 공지</a>와 <a href="https://cafe.naver.com/youtubecreateringyoe/2828" target="_blank" rel="noopener noreferrer">팬클럽 등업 가이드</a>에 있어요.</li></ul></div></details>
-    <details class="gi"><summary><span class="gi-ic" aria-hidden="true">🔎</span><span class="gi-t"><b>영상 찾기</b><small>검색창, 분류 버튼으로 찾아요</small></span></summary><div class="gi-b"><ul><li>맨 위 <b>검색창</b>에 제목 일부나 분류 이름을 적어요. 단어를 띄어 쓰면 모두 들어간 영상만 나와요.</li><li>검색창 아래 <b>분류 버튼</b>(전체 영상, 탈출맵, 상황극…)을 누르면 그 분류만 모아 볼 수 있어요. 옆으로 밀면 더 많은 분류가 나와요.</li></ul></div></details>
-    <details class="gi"><summary><span class="gi-ic" aria-hidden="true">🏆</span><span class="gi-t"><b>인기 랭킹</b><small>카페 조회수와 좋아요로 순위를 매겨요</small></span></summary><div class="gi-b"><ul><li>좋아요 1개는 조회수 50회로 쳐요. 분류 버튼을 누르면 그 분류 안의 순위가 나와요.</li><li>조회수와 좋아요 수는 목록을 정리한 때의 숫자라 지금 카페와 조금 다를 수 있어요.</li></ul></div></details>
-    <details class="gi"><summary><span class="gi-ic" aria-hidden="true">📚</span><span class="gi-t"><b>시리즈</b><small>같은 콘텐츠를 한데 모아 몰아봐요</small></span></summary><div class="gi-b"><ul><li>아오오니저택, 경찰과 도둑처럼 같은 콘텐츠가 모여요. 영상 아래 시리즈 이름을 눌러도 돼요.</li><li>제목으로 자동 분류해서 빠지거나 잘못 들어간 영상이 있을 수 있어요. 발견하면 「다시보기 사이트 제보」 게시판에 알려 주세요.</li></ul></div></details>
+  <div class="faq">
+    <details open><summary>영상이 안 열려요</summary><div class="fa"><p>영상은 <b>네이버 카페에 가입하고 올드팬 인증을 받은 분만</b> 볼 수 있어요. 카페 가입은 <b>1980~2004년생</b>만 할 수 있어요.</p><ul><li>네이버에 로그인한 상태인지 확인해 주세요.</li><li>카페 가입과 올드팬 인증이 되어 있는지 확인해 주세요.</li><li>카페 글이 지워졌을 수도 있어요. 그럼 「다시보기 사이트 제보」 게시판에 알려 주세요.</li></ul></div></details>
+    <details><summary>올드팬 인증은 어떻게 받나요?</summary><div class="fa"><p>카페 「잉여맨추억자료실」에 가입한 뒤, 카페 안내 글을 따라 인증을 받으시면 돼요. 아래 두 글을 먼저 봐 주세요.</p><p class="fa-btns"><a class="btn" href="https://cafe.naver.com/youtubecreateringyoe/2951" target="_blank" rel="noopener noreferrer">처음 오신 분을 위한 공지</a> <a class="btn" href="https://cafe.naver.com/youtubecreateringyoe/2828" target="_blank" rel="noopener noreferrer">팬클럽 등업 가이드</a></p></div></details>
+    <details><summary>영상이 끊기거나 버퍼링이 걸려요</summary><div class="fa"><p>영상은 이 사이트가 아니라 <b>네이버 카페(또는 유튜브) 서버에서 재생</b>돼요. 이 사이트는 카페 글로 연결해 주는 목록이라, 끊김은 사이트에서 고칠 수 없어요.</p><ul><li>와이파이가 약하거나 휴대폰 신호가 약하지 않은지 확인해 보세요.</li><li>브라우저나 앱을 완전히 닫았다 다시 열어 보세요.</li><li>한꺼번에 많은 사람이 보는 시간대에는 카페 쪽이 느려질 수 있어요.</li></ul></div></details>
+    <details><summary>영상이 이 사이트에 직접 들어 있나요?</summary><div class="fa"><p>아니요. 여기는 카페 영상을 쉽게 찾도록 모아 둔 목록이에요. 영상을 누르면 네이버 카페 글로 이동해요.</p></div></details>
   </div>
 
-  <h2 class="gh">재미 요소</h2>
-  <div class="gs">
-    <details class="gi"><summary><span class="gi-ic" aria-hidden="true">🎮</span><span class="gi-t"><b>잉여맨 오락실 (미니게임)</b><small>낱말퍼즐, 제목 빈칸 채우기, 퀴즈 대결 · 로그인 필요</small></span></summary><div class="gi-b"><ul><li>첫 화면의 <b>미니게임</b> 버튼이나 설정 메뉴에서 열어요. 구글 로그인(만 19세 이상)이 필요해요.</li><li><b>낱말퍼즐</b>: 난이도 3단계. 힌트는 몇 번만 쓸 수 있고, 맞춘 칸은 고정돼요. 막히면 포기하고 다음 퍼즐로 넘어가요.</li><li><b>제목 빈칸 채우기</b>: 영상 제목의 빈칸을 맞혀요. 난이도 3단계예요.</li><li><b>퀴즈 대결</b>: 방 코드로 친구와 1:1로 겨뤄요. 직접 연결 방식이라 <b>상대에게 내 접속 주소(IP)가 보일 수 있어요.</b> 아는 사람과만 하세요.</li><li>낱말·문제는 AI가 만들어서 어색한 부분이 있을 수 있어요.</li></ul></div></details>
-    <details class="gi"><summary><span class="gi-ic" aria-hidden="true">💡</span><span class="gi-t"><b>오늘의 한 줄 퀴즈</b><small>로그인하면 매일 새 문제가 나와요</small></span></summary><div class="gi-b"><ul><li>첫 화면 위쪽에서 하루에 한 번 풀 수 있어요.</li><li>연속 정답과 정답률이 계정에 기록돼요.</li></ul></div></details>
-    <details class="gi"><summary><span class="gi-ic" aria-hidden="true">☀</span><span class="gi-t"><b>오늘의 다시보기</b><small>첫 화면 큰 배너에서 매일 한 편 골라 드려요</small></span></summary><div class="gi-b"><p>배너를 누르면 바로 카페 글로 이동해요.</p></div></details>
-    <details class="gi"><summary><span class="gi-ic" aria-hidden="true">🎯</span><span class="gi-t"><b>도전과제</b><small>하다 보면 저절로 달성돼요</small></span></summary><div class="gi-b"><ul><li>영상 열어보기, 즐겨찾기 등을 하면 달성돼요. 달성하면 알림이 떠요.</li><li>맨 위 <b>트로피 버튼</b>에서 전체 목록과 진행 상황을 볼 수 있어요. 기록은 이 기기에만 저장돼요.</li></ul></div></details>
+  <h2 class="gh">로그인 · 내 기록</h2>
+  <div class="faq">
+    <details><summary>로그인을 꼭 해야 하나요?</summary><div class="fa"><p>아니요, <b>선택</b>이에요. 목록 보기, 검색, 즐겨찾기, 다시보기는 로그인 없이 다 돼요. 로그인(만 19세 이상)하면 이런 게 더 돼요.</p><ul><li>기기를 옮겨도 즐겨찾기·열어본 영상이 그대로 저장돼요.</li><li>화면 옆 「즐겨찾기」 탭으로 내 즐겨찾기를 바로 열 수 있어요.</li><li>오늘의 한 줄 퀴즈와 미니게임(잉여맨 오락실)을 즐길 수 있어요.</li></ul></div></details>
+    <details><summary>즐겨찾기나 열어본 영상이 사라졌어요</summary><div class="fa"><p>로그인하지 않으면 기록이 <b>지금 쓰는 기기와 브라우저에만</b> 저장돼요. 인터넷 사용 기록을 지우거나 다른 기기로 들어오면 안 보여요.</p><ul><li><b>구글 로그인</b>을 하면 기기를 옮겨도 그대로 이어져요.</li><li>로그인이 싫다면 <b>즐겨찾기</b> 탭의 <b>다른 기기로 옮기기</b>로 QR코드나 링크를 만들어 옮길 수 있어요.</li></ul></div></details>
+    <details><summary>PC방·공용 컴퓨터에서 로그인해도 되나요?</summary><div class="fa"><p><b>권하지 않아요.</b> 여러 사람이 쓰는 컴퓨터에는 입력한 내용을 몰래 기록하는 프로그램이 있을 수 있고, 로그아웃하지 않으면 다음 사람이 내 기록을 볼 수 있어요. 공용 컴퓨터에서는 로그인 없이 되는 기능만 쓰고, 꼭 로그인했다면 끝나고 <b>로그아웃</b>해 주세요.</p></div></details>
+    <details><summary>휴대폰에 앱처럼 설치할 수 있나요?</summary><div class="fa"><ul><li><b>안드로이드(크롬):</b> 맨 위 오른쪽 설정 버튼 → <b>앱으로 설치하기</b>. 안 보이면 크롬 오른쪽 위 점 세 개 → <b>홈 화면에 추가</b>.</li><li><b>아이폰(사파리):</b> 아래쪽 공유 버튼 → <b>홈 화면에 추가</b>.</li></ul><p>설치하면 주소창 없이 앱처럼 열려요.</p></div></details>
   </div>
 
-  <h2 class="gh">내 기록</h2>
-  <div class="gs">
-    <details class="gi"><summary><span class="gi-ic" aria-hidden="true">♥</span><span class="gi-t"><b>즐겨찾기</b><small>영상의 하트를 누르면 모여요</small></span></summary><div class="gi-b"><p>💡 <b>구글 로그인을 하면 기기를 옮겨도 저장돼요.</b> 휴대폰에서 담은 즐겨찾기가 컴퓨터에서도 보이고, 인터넷 사용 기록을 지워도 남아요.</p><p>로그인하지 않으면 지금 쓰는 기기와 브라우저에만 저장돼서, 인터넷 사용 기록을 지우면 함께 사라질 수 있어요.</p></div></details>
-    <details class="gi"><summary><span class="gi-ic" aria-hidden="true">📌</span><span class="gi-t"><b>즐겨찾기 옆 탭</b><small>구글 로그인하면 화면 옆에 생겨요</small></span></summary><div class="gi-b"><ul><li>화면 가장자리의 <b>「즐겨찾기」 탭</b>을 누르면, 페이지를 옮기지 않고 옆에서 내 즐겨찾기 목록이 열려요.</li><li>목록에서 영상을 누르면 바로 열리고, ♥를 누르면 즐겨찾기에서 빠져요.</li><li>위치는 오른쪽 위 <b>설정 버튼</b>의 「즐겨찾기 옆 탭」에서 오른쪽·왼쪽·끄기로 바꿀 수 있어요.</li></ul></div></details>
-    <details class="gi"><summary><span class="gi-ic" aria-hidden="true">🕘</span><span class="gi-t"><b>열어본 영상</b><small>누른 영상에 열어봄 표시가 붙어요</small></span></summary><div class="gi-b"><ul><li>한 번 누른 영상은 <b>열어본 영상</b>에 쌓여서 다시 찾기 쉬워요.</li><li>영상은 카페에서 재생돼서 끝까지 봤는지는 표시하지 않아요.</li><li>기록은 제목 옆 <b>점 세 개</b> 메뉴에서 지울 수 있어요.</li></ul></div></details>
-    <details class="gi xfer-only"><summary><span class="gi-ic" aria-hidden="true">📱</span><span class="gi-t"><b>다른 기기로 옮기기</b><small>즐겨찾기와 기록을 휴대폰↔컴퓨터로 옮겨요</small></span></summary><div class="gi-b"><ul><li><b>즐겨찾기</b> 탭의 <b>다른 기기로 옮기기</b> 버튼을 누르면 QR코드와 링크가 나와요.</li><li>다른 기기 카메라로 QR을 찍거나, 링크를 나에게 보내서 열면 기록이 합쳐져요.</li></ul></div></details>
-    <details class="gi"><summary><span class="gi-ic" aria-hidden="true">📲</span><span class="gi-t"><b>앱처럼 설치하기</b><small>홈 화면에 아이콘을 만들어요</small></span></summary><div class="gi-b"><ul><li><b>안드로이드(크롬):</b> 맨 위 오른쪽 <b>설정 버튼</b> → <b>앱으로 설치하기</b>를 누르세요. 안 보이면 크롬 오른쪽 위 점 세 개 → <b>홈 화면에 추가</b>(또는 앱 설치)를 누르면 돼요.</li><li><b>아이폰(사파리):</b> 아래쪽 <b>공유 버튼</b> → <b>홈 화면에 추가</b>를 누르세요.</li><li>설치하면 주소창 없이 앱처럼 전체 화면으로 열려요. 사이트가 바뀌면 앱도 같이 바뀌어요.</li></ul></div></details>
-    <details class="gi"><summary><span class="gi-ic" aria-hidden="true">🌙</span><span class="gi-t"><b>화면 설정</b><small>어두운 화면, 움직임 줄이기 등</small></span></summary><div class="gi-b"><ul><li>맨 위 오른쪽 <b>설정 버튼</b>에서 <b>어두운 화면</b>, <b>움직임 줄이기</b>, <b>효과음</b>, <b>카페 글 팝업 창으로</b>를 켜고 끌 수 있어요.</li><li>움직임 줄이기를 켜면 화면의 움직이는 효과가 멈춰요. 설정은 이 기기에 기억돼요.</li></ul></div></details>
+  <h2 class="gh">이용 · 제보</h2>
+  <div class="faq">
+    <details><summary>미성년자도 이용할 수 있나요?</summary><div class="fa"><p>아니요. 이 사이트는 <b>만 19세 이상</b>만 이용해야 해요. 오래된 방송 제목을 그대로 모아 둬서 욕설 같은 부적절한 표현이 일부 있고, 로그인도 만 19세 이상만 할 수 있어요. 처음 들어올 때 동의해야 이용할 수 있어요.</p></div></details>
+    <details><summary>잘못된 분류나 버그, 건의는 어디에 알리나요?</summary><div class="fa"><p>화면 오른쪽 아래 <b>제보하기</b> 버튼을 누르면 카페 「다시보기 사이트 제보」 게시판이 열려요. 버그, 잘못된 분류·시리즈, 건의 모두 거기에 남겨 주세요. 글을 쓰려면 네이버 로그인과 카페 가입이 필요해요.</p><p class="fa-btns"><a class="btn primary" data-feedback target="_blank" rel="noopener noreferrer">제보 게시판 가기</a></p></div></details>
+    <details><summary>영상 썸네일이 없어요. 제보할 수 있나요?</summary><div class="fa"><p>네, 영상 제목 옆 <b>점 세 개</b> → <b>썸네일 제보</b>를 누르세요. 제보는 GitHub(코드 공유 사이트)의 게시판으로 받아서 GitHub 로그인이 필요해요. 어려우면 제보 게시판에 영상 제목과 함께 남겨 주셔도 돼요.</p></div></details>
+    <details><summary>이 사이트를 흉내 낸 가짜 사이트가 있으면요?</summary><div class="fa"><p>공식 주소는 <b>sam7599.github.io/ingyoeman_archive</b> 하나뿐이에요. 주소가 다르면 진짜가 아니니 로그인하지 마세요. 누가 보낸 링크보다 네이버 카페의 공식 안내로 들어오는 게 안전해요.</p></div></details>
+    <details><summary>로고가 갑자기 바뀌었어요</summary><div class="fa"><p>설날, 추석, 어린이날 같은 한국 기념일과 잉여맨님 생일(3월 5일)에는 로고와 맨 위 띠가 그날 모습으로 바뀌어요. 하루가 지나면 원래대로 돌아와요. 오류가 아니에요.</p></div></details>
   </div>
 
-  <h2 class="gh">제보</h2>
-  <div class="gs">
-    <details class="gi"><summary><span class="gi-ic" aria-hidden="true">🖼</span><span class="gi-t"><b>썸네일 제보 (GitHub 사용)</b><small>점 세 개 메뉴 → 썸네일 제보. GitHub 로그인이 필요해요</small></span></summary><div class="gi-b"><p>제보는 <b>GitHub</b>(코드 공유 사이트)의 <b>이슈</b>라는 게시판으로 받아요. 이 사이트의 파일이 GitHub에 있기 때문이에요.</p><ol class="gol"><li>영상 제목 옆 <b>점 세 개</b> → <b>썸네일 제보</b>를 눌러요.</li><li>새 창에서 <b>GitHub에 로그인</b>해요. 계정이 없으면 무료로 가입할 수 있어요.</li><li>영상 제목과 카페 글 주소는 미리 채워져 있어요.</li><li>썸네일 그림을 입력칸에 끌어다 놓거나 이미지 주소를 붙여넣어요.</li><li><b>Submit new issue</b> 버튼을 눌러요.</li></ol><p class="gwarn">⚠ GitHub 이슈는 <b>누구나 볼 수 있는 공개 글</b>이에요. 올린 그림과 GitHub 닉네임이 공개돼요. 개인정보가 담긴 그림은 올리지 마세요.</p><p><b>개인정보는 따로 다뤄져요.</b> 제보 화면은 이 사이트가 아니라 <b>GitHub 사이트</b>에서 열려요. 그곳에서 로그인하고 입력하는 정보는 이 사이트가 받거나 저장하지 않고, <b>GitHub의 개인정보처리방침이 따로 적용돼요.</b> 이 사이트의 <a href="privacy.html?v=300">개인정보처리방침</a>과는 별개예요. 제보는 선택 사항이라, 안 해도 사이트를 쓰는 데 문제없어요.</p><p>제보가 들어온 영상에는 <b>썸네일 제보 몇 건</b>이 표시되고, 썸네일이 반영되면 표시가 사라져요.</p></div></details>
-    <details class="gi"><summary><span class="gi-ic" aria-hidden="true">💬</span><span class="gi-t"><b>버그·건의 제보하기</b><small>카페 「다시보기 사이트 제보」 게시판</small></span></summary><div class="gi-b"><p id="fbHelp">고쳤으면 하는 점이나 잘못된 시리즈 분류·영상 정보를 발견하면 화면 오른쪽 아래 <b>제보하기</b> 버튼을 눌러 주세요. 네이버 카페의 <b>「다시보기 사이트 제보」</b> 게시판이 열려요. 글을 쓰려면 네이버 로그인과 카페 가입이 필요해요. 버그, 잘못된 분류, 건의 모두 이 게시판에 남겨 주세요.</p><p><a class="btn primary dc-btn" data-feedback target="_blank" rel="noopener noreferrer"><i class="dc-ic" aria-hidden="true"></i><span id="fbBtnT">제보 게시판 열기</span></a></p></div></details>
-  </div>
-
-  <h2>자주 묻는 질문</h2>
-  <details><summary>미성년자도 이용할 수 있나요?</summary><p>아니요. 이 사이트는 <b>만 19세 이상</b>만 이용해야 해요. 2011~2016년 영상(최신 영상은 2017년부터)의 제목을 그대로 모아 둔 목록이라 욕설·비속어 같은 부적절한 표현이 일부 있고, 로그인도 만 19세 이상만 할 수 있어요. 나이는 직접 체크하는 방식이에요. 처음 들어올 때 동의해야 이용할 수 있고, 동의한 뒤의 부적절한 표현으로 인한 피해 등은 운영진이 책임지지 않아요. 제목은 기록 그대로 보존하는 것이 원칙이라, 부적절한 표현이 있어도 고치거나 지우지 않아요.</p></details>
-  <details><summary>영상이 안 열려요</summary><p>영상은 카페에 가입하고 올드팬 인증을 받은 분만 볼 수 있어요. 카페 가입은 <b>1980년생부터 2004년생까지 출생자만</b> 할 수 있어요. 네이버에 로그인한 뒤 카페 가입과 올드팬 인증이 되어 있는지 확인해 주세요. 카페 글이 지워졌을 수도 있어요.</p></details>
-  <details><summary>영상이 끊기거나 버퍼링이 걸려요</summary><p>영상은 이 사이트가 아니라 <b>네이버 카페(또는 유튜브)의 서버에서 재생</b>돼요. 이 사이트는 영상 파일을 담고 있지 않고, 카페 글로 연결해 주는 목록일 뿐이에요. 그래서 재생 속도와 끊김은 이 사이트가 아니라 아래 같은 환경에 따라 달라져요. 사이트 운영진이 고칠 수 없는 부분이에요.</p><ul><li><b>내 인터넷 속도</b>: 와이파이가 약하거나 같은 공유기를 여러 명이 쓰면 느려져요. 휴대폰 데이터는 신호가 약하면 더 끊겨요.</li><li><b>내 컴퓨터·휴대폰 상태</b>: 오래된 기기이거나 다른 프로그램(게임, 다운로드, 크롬 탭 여러 개)이 켜져 있으면 재생이 버벅거릴 수 있어요.</li><li><b>접속 시간대</b>: 저녁이나 주말에 네이버·유튜브에 사람이 몰리면 느려질 수 있어요.</li><li><b>영상 화질과 길이</b>: 화질이 높거나 오래된 긴 영상은 처음에 불러오는 데 더 오래 걸려요.</li></ul><p>이럴 때는 이렇게 해 보세요. ① 화질을 낮춰요. ② 영상을 잠시 멈추고 파란 줄이 어느 정도 차면 다시 재생해요. ③ 다른 탭과 프로그램을 닫아요. ④ 브라우저를 새로고침하거나 다른 브라우저로 열어 봐요. ⑤ 인터넷(와이파이)을 껐다 켜거나 시간을 두고 다시 봐요. 그래도 계속 끊기거나 재생이 안 되면 네이버 서비스 문제일 수 있어요. 이 사이트가 아니라 <b>네이버 고객센터</b>에 문의해 주세요.</p></details>
-  <details><summary>올드팬 인증은 어떻게 받나요?</summary><p>네이버 카페 「잉여맨추억자료실」에 가입한 뒤(<b>1980년생부터 2004년생까지 출생자만</b> 가입할 수 있어요), 카페 안내에 따라 인증을 받으시면 돼요. 자세한 방법은 카페의 안내 글 두 개를 확인해 주세요.</p><p><a class="btn" href="https://cafe.naver.com/youtubecreateringyoe/2951" target="_blank" rel="noopener noreferrer">처음 오신 분을 위한 공지</a> <a class="btn" href="https://cafe.naver.com/youtubecreateringyoe/2828" target="_blank" rel="noopener noreferrer">팬클럽 등업 가이드</a></p></details>
-  <details><summary>PC방·공용 와이파이에서도 로그인해도 되나요?</summary><p><b>권하지 않아요.</b> 구글 로그인을 할 때는, PC방·학교·회사처럼 여러 사람이 쓰는 컴퓨터에서는 이런 위험이 있어요.</p><ul><li>입력한 글자나 화면을 몰래 기록하는 프로그램이 깔려 있을 수 있어요.</li><li>사이트가 로그인 상태를 컴퓨터에 저장해서, 로그아웃하지 않으면 다음 사람이 내 계정으로 즐겨찾기와 기록을 보거나 바꿀 수 있어요.</li></ul><p>영상 목록 보기, 즐겨찾기, 다시보기는 로그인 없이 되니 공용 컴퓨터에서는 그 기능만 쓰는 걸 권해요. 꼭 로그인해야 한다면 다 쓴 뒤 오른쪽 위 이름 메뉴의 <b>로그아웃</b>을 누르고, 구글 계정도 로그아웃해 주세요. 공용 컴퓨터에서 로그아웃하지 않아 생긴 일은 운영진이 도와드리기 어려워요.</p><p><b>휴대폰도 같아요.</b> 카페·지하철·상점의 무료(공용) 와이파이에는 가짜 와이파이나 악성 접속점이 섞여 있을 수 있어서 로그인 정보가 엿보일 위험이 있어요. 로그인은 내 휴대폰 데이터(LTE·5G)나 믿을 수 있는 와이파이에서 해 주세요.</p></details>
-  <details><summary>이 사이트를 흉내 낸 가짜 사이트가 있으면요?</summary><p>인기 있는 사이트는 이름과 화면을 똑같이 따라 한 <b>사칭(가짜) 사이트</b>가 생길 수 있어요. 가짜 사이트는 로그인 정보나 개인정보를 빼가는 데 쓰일 수 있으니, 아래를 꼭 확인해 주세요.</p><ul><li>공식 주소는 <b>sam7599.github.io/ingyoeman_archive</b> 하나예요. 주소창이 이것과 다르면 진짜가 아니에요. 비슷한 글자나 다른 도메인에 속지 마세요.</li><li>누가 보낸 링크보다 <b>네이버 카페나 이 사이트의 공식 안내</b>로 들어오는 게 안전해요. 이 주소를 즐겨찾기(북마크)해 두면 좋아요.</li><li>이 사이트는 <b>구글 로그인 창 하나</b>로만 로그인해요. 구글 비밀번호나 인증 번호를 이 사이트 화면에 직접 적으라고 하면 가짜예요.</li><li>이 사이트는 <b>결제, 후원, 카드 정보, 신분증 사진, 휴대폰 번호</b>를 요구하지 않아요. 그런 걸 요구하면 가짜예요.</li><li>"계정에 문제가 생겼으니 여기에 정보를 입력하라"는 메시지도 가짜일 가능성이 커요. 문의는 공식 카페 「다시보기 사이트 제보」 게시판에서만 받아요.</li></ul><p>가짜 사이트를 발견하면 주소를 복사해서 카페 「다시보기 사이트 제보」 게시판에 알려 주세요. 이미 정보를 입력했다면 구글 비밀번호를 바로 바꿔 주세요.</p></details>
-  <details><summary>로고가 갑자기 바뀌었어요</summary><p>한국 기념일(설날, 추석, 어린이날 등)과 잉여맨님 생일(3월 5일)에는 로고와 맨 위 띠가 그날 모습으로 바뀌어요. 하루가 지나면 원래대로 돌아와요. 오류가 아니에요.</p></details>
-  <details><summary>영상이 이 사이트에 직접 들어 있나요?</summary><p>아니요. 여기는 카페 영상을 쉽게 찾도록 모아 둔 목록이에요. 영상은 네이버 카페에 있고, 누르면 카페 글로 이동해요.</p></details>
-  <details><summary>영상 날짜는 왜 안 보이나요?</summary><p>오래된 영상이라 방송한 날짜를 정확히 알 수 없어서 표시하지 않아요.</p></details>
-  <details><summary>즐겨찾기나 열어봄 표시가 사라졌어요</summary><p><b>구글 로그인을 하면 기기를 옮겨도 즐겨찾기·열어본 영상이 그대로 저장돼요.</b> 로그인하지 않았다면 브라우저 기록을 지웠거나 다른 기기로 접속할 때 보이지 않고, 기기마다 따로 저장돼요. 로그인이 싫다면 <b>즐겨찾기</b> 탭의 <b>다른 기기로 옮기기</b>로 QR코드나 링크를 만들어 다른 기기로 옮길 수 있어요.</p></details>
-  <a class="btn" href="#">다시보기 목록으로</a>
+  <p class="faq-more">찾는 답이 없나요? 「다시보기 사이트 제보」 게시판에 질문을 남겨 주세요.</p>
+  <p><a class="btn" href="#">다시보기 목록으로</a></p>
 </main>
 
 <noscript><p>자바스크립트를 켜면 검색·랭킹 기능을 쓸 수 있어요. <a href="list.html">잉여맨 방송 다시보기 전체 목록 보기</a></p></noscript>
-<footer><p class="vis" id="vis" hidden></p><p>비공식 팬 자료실이에요. 영상은 네이버 카페 「잉여맨추억자료실」에 있어요.</p><p><a href="#about">사이트 소개</a> <a href="terms.html?v=300">이용약관</a> <a href="privacy.html?v=300">개인정보처리방침</a></p><p class="copy">© 2026 잉여맨 추억자료실. 사이트 구성·디자인의 저작권은 운영진에게 있고, 영상과 제목의 권리는 각 권리자에게 있어요.</p></footer>
+<footer><p class="vis" id="vis" hidden></p><p>비공식 팬 자료실이에요. 영상은 네이버 카페 「잉여맨추억자료실」에 있어요.</p><p><a href="#about">사이트 소개</a> <a href="terms.html?v=301">이용약관</a> <a href="privacy.html?v=301">개인정보처리방침</a></p><p class="copy">© 2026 잉여맨 추억자료실. 사이트 구성·디자인의 저작권은 운영진에게 있고, 영상과 제목의 권리는 각 권리자에게 있어요.</p></footer>
 
 <button class="side-fav" id="sideFav" type="button" hidden aria-label="내 즐겨찾기 열기" aria-expanded="false" aria-controls="sideDr"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg><span>즐겨찾기</span><b class="nFav"></b></button>
 <aside class="side-dr r" id="sideDr" aria-label="내 즐겨찾기" aria-hidden="true"><div class="sd-h"><b>♥ 내 즐겨찾기 <em id="sdN"></em></b><button type="button" id="sdX" aria-label="닫기">✕</button></div><div class="sd-l" id="sdL"></div><a class="sd-all" id="sdAll" href="#fav">전체 화면으로 보기</a></aside>
@@ -326,10 +299,10 @@
   <div class="mh" role="presentation">안내</div>
   <button type="button" id="noticeBtn" role="menuitem" hidden>📢 공지 다시 보기</button>
   <a href="#about" role="menuitem">사이트 소개</a>
-  <a href="#guide" role="menuitem">이용 가이드</a>
+  <a href="#guide" role="menuitem">자주 묻는 질문</a>
   <a href="#notes" role="menuitem" id="notesLink">패치노트</a>
   <a href="#ach" role="menuitem">도전과제</a>
-  <div class="mf"><a href="terms.html?v=300" role="menuitem">이용약관</a><a href="privacy.html?v=300" role="menuitem">개인정보처리방침</a></div>
+  <div class="mf"><a href="terms.html?v=301" role="menuitem">이용약관</a><a href="privacy.html?v=301" role="menuitem">개인정보처리방침</a></div>
 </div>
 
 <div class="modal" id="admModal" hidden>
@@ -453,10 +426,10 @@
 
 <div class="ach-pop" id="achPop" role="status" hidden><span class="ach-ic"><svg viewBox="0 0 24 24"><path d="M8 4h8v5a4 4 0 0 1-8 0zM8 6H5v1a3 3 0 0 0 3 3M16 6h3v1a3 3 0 0 1-3 3M12 13v4M8.5 20h7M10 17h4"/></svg></span><span class="ach-tx"><small>도전과제 달성!</small><b id="achPopT"></b><i id="achPopD"></i></span></div>
 <div id="toast" role="status"></div>
-<script src="config.js?v=300"></script>
-<script src="app.js?v=300"></script>
-<script src="mobile.js?v=300"></script>
-<script src="tour.js?v=300"></script>
-<script src="play.js?v=300"></script>
+<script src="config.js?v=301"></script>
+<script src="app.js?v=301"></script>
+<script src="mobile.js?v=301"></script>
+<script src="tour.js?v=301"></script>
+<script src="play.js?v=301"></script>
 </body>
 </html>
