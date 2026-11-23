@@ -1629,3 +1629,30 @@ body.sd-open .side-fav.r { right:var(--sdw); } body.sd-open .side-fav.l { left:v
 .sd-e { margin:40px 14px; text-align:center; color:var(--sub); font-size:14px; line-height:1.7; } .sd-e b { display:block; color:var(--ink); font-size:16px; margin-bottom:4px; }
 .sd-all { margin:10px 14px 16px; padding:12px; border-radius:12px; text-align:center; font-weight:800; text-decoration:none; background:var(--accent); color:var(--on-accent); }
 html[data-motion="off"] .side-dr, html[data-motion="off"] button.side-fav { transition:none; }
+
+/* ── 인기 랭킹 다듬기 (차분하고 세련되게): 번쩍임·테두리 회전·펄스는 줄이고, 숫자·얇은 포인트선·은은한 빛으로 순위를 보여줘요 ── */
+.card.r1::after, .card.r2::after, .card.r3::after, .card.r1 .thumb::after, .card.r2 .thumb::after, .card.r3 .thumb::after { display:none !important; }
+.rk { width:42px; font-size:17px; font-weight:700; color:color-mix(in srgb, var(--sub) 85%, transparent); letter-spacing:-.3px; }
+.rk.hot { font-weight:800; font-size:26px; color:var(--c2); text-shadow:none; animation:none !important;
+  background:linear-gradient(180deg,var(--c1),var(--c2) 85%); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+.rk.hot .crown { -webkit-text-fill-color:initial; }
+.rk.t1 { font-size:32px; }
+.rk.t1 .crown { width:19px; height:23px; margin:0 0 3px; filter:drop-shadow(0 1px 3px rgba(255,100,20,.45)); animation:none !important; }
+.rows .card.r1, .rows .card.r2, .rows .card.r3 { border-radius:14px; border-bottom-color:transparent; padding:12px 4px 12px 10px; margin:4px 0; }
+.rows .card.r1 { background:linear-gradient(90deg,rgba(var(--gl),.11),transparent 62%); box-shadow:inset 3px 0 0 var(--c2); }
+.rows .card.r2 { background:linear-gradient(90deg,rgba(var(--gl),.08),transparent 58%); box-shadow:inset 3px 0 0 color-mix(in srgb, var(--c2) 75%, transparent); }
+.rows .card.r3 { background:linear-gradient(90deg,rgba(var(--gl),.06),transparent 54%); box-shadow:inset 3px 0 0 color-mix(in srgb, var(--c2) 55%, transparent); }
+.rows .card.r1:hover, .rows .card.r2:hover, .rows .card.r3:hover { background:linear-gradient(90deg,rgba(var(--gl),.16),transparent 66%); }
+.card.r1 .thumb, .card.r2 .thumb, .card.r3 .thumb { animation:none !important; box-shadow:0 0 0 1.5px rgba(var(--gl),.85), 0 8px 20px -6px rgba(var(--gl),.45); }
+.card.r1 .thumb { box-shadow:0 0 0 1.5px var(--c1), 0 0 0 3px rgba(var(--gl),.25), 0 10px 24px -6px rgba(var(--gl),.55); }
+/* 불꽃은 1위에만, 작고 단정하게 */
+.fire.f2, .fire.f3 { display:none; }
+.fire.f1 { filter:drop-shadow(0 0 4px rgba(255,110,20,.5)); transform:scale(.78); transform-origin:50% 100%; }
+.fire.f1 i:nth-child(-n+2), .fire.f1 i:nth-last-child(-n+2) { display:none; }
+/* 격자 보기의 순위 배지: 어두운 유리 느낌 + 얇은 포인트선 */
+.rkb { min-width:28px; height:28px; padding:0 9px; border-radius:99px; font-size:13px; font-weight:800; letter-spacing:-.2px; background:rgba(14,16,30,.72); color:#fff; -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px); box-shadow:0 2px 8px rgba(0,0,0,.25); }
+.card.r1 .rkb, .card.r2 .rkb, .card.r3 .rkb { background:rgba(14,16,30,.78); color:var(--c1); box-shadow:inset 0 0 0 1.5px rgba(var(--gl),.9), 0 2px 8px rgba(0,0,0,.3); animation:none !important; }
+.card.r3 .rkb { color:var(--c1); }
+.rkb .crown .fo { fill:var(--c2); } .rkb .crown .fm { fill:var(--c1); }
+.grid.rank-in .card.r1 { animation-name:rankin !important; }
+@media (max-width:860px) { .rk { width:34px; font-size:16px; } .rk.hot { font-size:22px; } .rk.t1 { font-size:27px; } .rows .card.r1, .rows .card.r2, .rows .card.r3 { padding:10px 2px 10px 6px; } }
