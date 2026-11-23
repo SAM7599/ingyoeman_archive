@@ -1047,10 +1047,12 @@
       gae: `${sun}${ring(28.5, "#2d8cff")}${base("#2d8cff")}${play("#2d8cff")}`,
       han: `${ring(11.5, "#2d4de0")}${ring(28.5, "#2d4de0")}${base("#2d4de0")}<path d='M27.6 7.2v9.6M27.6 12h4.4' stroke='#2d4de0' stroke-width='2.4' ${L} fill='none'/>`,
       xmas: `${ring(11.5, "#e5322d")}${ring(28.5, "#1f9d55")}${base("#e5322d")}${play("#1f9d55")}<path d='M4.4 9.6Q7 -.4 14.6 2.4Q11.6 3.8 12.4 8.4Z' fill='#e5322d'/><path d='M3.8 9.4L13 8.2' stroke='#fff' stroke-width='2.4' ${L}/><circle cx='15' cy='2.6' r='2' fill='#fff' stroke='#c5cdd9' stroke-width='.6'/><circle cx='34' cy='4' r='1' fill='#9ecbff'/><circle cx='37' cy='9' r='.8' fill='#9ecbff'/><circle cx='20' cy='6' r='.9' fill='#9ecbff'/>`,
+      bday: `${ring(11.5, "#ff4f9a")}${ring(28.5, "#7a5cff")}${base("#ffb300")}${play("#ffb300")}<path d='M5.6 6.2L11.5 -1.8 17.4 6.2Z' fill='#ffcf33' stroke='#ff4f9a' stroke-width='1' stroke-linejoin='round'/><path d='M7.6 3.6L15.4 3.6M9.4 .9L13.6 .9' stroke='#ff4f9a' stroke-width='1.4' stroke-linecap='round'/><circle cx='11.5' cy='-1.8' r='1.7' fill='#ff4f9a'/>${star(20, 4.5, 2.8, "#ffd54a")}${star(36, 3, 2.3, "#ff4f9a")}<circle cx='4' cy='24' r='1' fill='#7a5cff'/><circle cx='37' cy='22' r='1.1' fill='#ff4f9a'/><circle cx='34.5' cy='26.5' r='.9' fill='#ffb300'/>`,
       ny: `${ring(11.5, "#ff5d73")}${ring(28.5, "#ffb300")}${base("#ff5d73")}${play("#ff5d73")}${star(20, 5, 3.2, "#ffd54a")}${star(35.5, 3.2, 2.4, "#ff5d73")}${star(4.2, 3, 2.2, "#ffb300")}`,
       mem: `${ring(11.5, "#6b7280")}${ring(28.5, "#6b7280")}${base("#6b7280")}${play("#6b7280")}<path d='M17.2 .6L20 6.2 22.8 .6M20 6.2l-2.2 4.2M20 6.2l2.2 4.2' fill='none' stroke='#15171c' stroke-width='1.9' ${L} stroke-linejoin='round'/>`
     };
     const H = {   // t: 인사말, n: 기념일 이름, c: 대표색, e: 배너에 떠다닐 그림
+      bday: { n: "잉여맨님 생일", t: "오늘은 잉여맨님 생일이에요! 생일 축하드려요", c: ["#ff4f9a", "#ffb300"], e: "🎂 🎈 🎉 🎁" },
       ny: { n: "새해", t: "새해 복 많이 받으세요!", c: ["#ff5d73", "#ffb300"], e: "🎊 ✨ 🎉" },
       seol: { n: "설날", t: "설날 잘 보내세요! 새해 복 많이 받으세요", c: ["#e8453c", "#ff9a3c"], e: "🧧 🎎 🧧" },
       mar1: { n: "3·1절", t: "오늘은 3·1절이에요. 그날의 만세를 기억해요", c: ["#1f4fd8", "#e5322d"], e: "🕊️ ✊ 🕊️" },
@@ -1067,7 +1069,7 @@
     const SEOL = { 2026: "02-17", 2027: "02-07", 2028: "01-27", 2029: "02-13", 2030: "02-03", 2031: "01-23", 2032: "02-11", 2033: "01-31", 2034: "02-19", 2035: "02-08" };      // 설날(음력 1/1)
     const BUDDHA = { 2026: "05-24", 2027: "05-13", 2028: "05-02", 2029: "05-20", 2030: "05-09", 2031: "05-28", 2032: "05-16", 2033: "05-06", 2034: "05-25", 2035: "05-15" };   // 부처님오신날(음력 4/8)
     const CHU = { 2026: "09-25", 2027: "09-15", 2028: "10-03", 2029: "09-22", 2030: "09-12", 2031: "10-01", 2032: "09-19", 2033: "09-08", 2034: "09-27", 2035: "09-16" };       // 추석(음력 8/15)
-    const FIX = { "01-01": "ny", "03-01": "mar1", "05-05": "kids", "05-08": "par", "06-06": "mem", "08-15": "lib", "10-03": "gae", "10-09": "han", "12-24": "xmas", "12-25": "xmas", "12-31": "ny" };
+    const FIX = { "01-01": "ny", "03-05": "bday", "03-01": "mar1", "05-05": "kids", "05-08": "par", "06-06": "mem", "08-15": "lib", "10-03": "gae", "10-09": "han", "12-24": "xmas", "12-25": "xmas", "12-31": "ny" };
     const p = new URLSearchParams(location.search).get("hol");   // 미리보기용: ?hol=chu 처럼 주소 뒤에 붙이면 그 기념일 모습을 볼 수 있어요
     const kst = new Intl.DateTimeFormat("sv-SE", { timeZone: "Asia/Seoul" }).format(new Date());   // 2026-11-22
     const y = +kst.slice(0, 4), md = kst.slice(5);
