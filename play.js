@@ -16,12 +16,20 @@
     $("plX").addEventListener("click", function () { if (st) home(); else close(); });   // 게임 중이면 목록으로, 목록이면 사이트로
     box.addEventListener("click", function (e) { if (e.target === box) close(); handle(e); });
     box.addEventListener("submit", function (e) { if (e.target && e.target.id === "pvForm") { e.preventDefault(); pvJoin($("pvIn").value); return; } if (e.target && e.target.id === "cwForm") { e.preventDefault(); cwSubmit(); } });
+    // 휴대폰: 게임 화면을 아래로 끌어도 「당겨서 새로고침」이 되지 않게 막아요 (스크롤이 맨 위일 때 아래로 끄는 동작만)
+    var ty = 0;
+    box.addEventListener("touchstart", function (e) { ty = e.touches[0].clientY; }, { passive: true });
+    box.addEventListener("touchmove", function (e) {
+      if (e.touches[0].clientY <= ty) return;   // 위로 미는 동작은 그대로
+      for (var n = e.target; n && n !== box; n = n.parentNode) { if (n.scrollHeight > n.clientHeight + 1 && n.scrollTop > 0 && /auto|scroll/.test(getComputedStyle(n).overflowY)) return; }   // 안쪽 목록이 아직 위로 스크롤될 수 있으면 그대로
+      if (e.cancelable) e.preventDefault();
+    }, { passive: false });
     document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !box.hidden) close(); });
     document.addEventListener("ovback", function () { if (!box.hidden) close(); });
   }
   function setBack() { var b = $("plX"); if (b) b.textContent = st ? "← 게임 목록" : "← 사이트로"; if (box) { box.classList.add("pl-arcade"); box.classList.toggle("pl-game", !!st); box.setAttribute("data-hue", st ? st.g : ""); } }   // 목록(게임 선택) 화면일 때만 오락실 모양으로 전체를 꾸며요
-  function open() { build(); var a = A(); if (!a || a.vids().length < 20) return; a.closeMenu(); box.hidden = false; document.body.style.overflow = "hidden"; home(); }
-  function close() { pvClose(); if (!box) return; box.hidden = true; document.body.style.overflow = ""; st = null; }
+  function open() { build(); var a = A(); if (!a || a.vids().length < 20) return; a.closeMenu(); box.hidden = false; document.body.style.overflow = "hidden"; document.documentElement.classList.add("play-open"); home(); }
+  function close() { pvClose(); if (!box) return; box.hidden = true; document.body.style.overflow = ""; document.documentElement.classList.remove("play-open"); st = null; }
   window.openPlay = open;
 
   function gate() {

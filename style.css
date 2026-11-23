@@ -1682,3 +1682,7 @@ html[data-motion="off"] .side-dr, html[data-motion="off"] button.side-fav { tran
   @keyframes rkGlow2 { 0%,100% { box-shadow:0 0 0 1.5px rgba(var(--gl),.8), 0 8px 18px -6px rgba(var(--gl),.3); } 50% { box-shadow:0 0 0 1.5px rgba(var(--gl),.95), 0 10px 24px -6px rgba(var(--gl),.55); } }
   @keyframes rkTongue { 0% { transform:scale(1,.82) skewX(-3deg); opacity:.9; } 50% { transform:scale(.95,1.1) skewX(2deg); opacity:1; } 100% { transform:scale(1,.9) skewX(4deg); opacity:.92; } }
 }
+
+/* 미니게임을 열어 둔 동안은 당겨서 새로고침(휴대폰)과 끝에서 튕기는 스크롤이 일어나지 않게 해요 */
+html.play-open, html.play-open body { overscroll-behavior:none; }
+.play { overscroll-behavior:none; } .pl-main { overscroll-behavior:contain; }
