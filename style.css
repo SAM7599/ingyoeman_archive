@@ -1855,3 +1855,20 @@ html[data-motion="off"] .chip, html[data-motion="off"] .qz-o, html[data-motion="
 @media (hover:hover) { html:not([data-motion="off"]) .ach-item:hover { transform:translateY(-2px); } }
 @media (max-width:560px) { .ach-hero { gap:16px; padding:18px; } .ah-ring { width:84px; height:84px; } .ah-ring::before { inset:8px; } .ah-ring b { font-size:24px; } .ah-tx h2 { font-size:19px; } }
 .ah-tx h2::before { content:none !important; }
+
+/* 로고 글자 — 빛이 한 번씩 지나가는 움직임 */
+@keyframes logoShine { 0% { background-position:100% 0; } 32%, 100% { background-position:0 0; } }
+.logo .logo-t { --lb:var(--ink); }
+.logo[data-hol] .logo-t { --lb:var(--hc); }
+.logo[data-hol="mem"] .logo-t { --lb:var(--ink); }
+.logo .logo-t b { --lb:var(--ink); }
+@media (prefers-reduced-motion:no-preference) {
+  html:not([data-motion="off"]) .logo .logo-t b,
+  html:not([data-motion="off"]) .logo .logo-t > span {
+    color:transparent; -webkit-text-fill-color:transparent; -webkit-background-clip:text; background-clip:text;
+    background-image:linear-gradient(100deg, var(--lb) 0 40%, var(--accent) 50%, var(--lb) 60% 100%);
+    background-size:300% 100%; background-position:100% 0;
+    animation:logoShine 6.5s ease-in-out 1.2s infinite;
+  }
+  html:not([data-motion="off"]) .logo .logo-t > span { animation-delay:1.75s; }
+}
