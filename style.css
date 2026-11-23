@@ -1814,3 +1814,44 @@ html[data-motion="off"] .chip, html[data-motion="off"] .qz-o, html[data-motion="
 .g-menu.g-prof { background:var(--surface); color:var(--ink); }
 .pf-st li { background:var(--raise); }
 .g-prof #gOut { background:var(--raise); }
+
+/* 도전과제 — 세련된 새 스타일 */
+.ach-hero { display:flex; align-items:center; gap:22px; margin:6px 0 18px; padding:22px 24px; border:1px solid var(--line); border-radius:22px; background:radial-gradient(120% 140% at 0% 0%, color-mix(in srgb,var(--accent) 16%,transparent), transparent 60%), var(--surface); }
+.ah-ring { flex:none; position:relative; width:104px; height:104px; border-radius:50%; background:conic-gradient(var(--accent) calc(var(--pc,0) * 1%), var(--raise) 0); display:grid; place-items:center; }
+.ah-ring::before { content:""; position:absolute; inset:9px; border-radius:50%; background:var(--surface); }
+.ah-ring b { position:relative; font-size:30px; font-weight:800; letter-spacing:-.04em; line-height:1; }
+.ah-ring small { font-size:14px; font-weight:700; color:var(--sub); margin-left:1px; }
+.ah-tx { flex:1; min-width:0; }
+.ah-tx > small { font-size:12px; color:var(--sub); }
+.ah-tx h2 { margin:2px 0 4px; font-size:22px; font-weight:800; letter-spacing:-.03em; }
+.ah-tx p { margin:0; font-size:14px; color:var(--sub); }
+.ah-tx p b { color:var(--ink); }
+.ah-next { display:flex; align-items:center; gap:10px; margin-top:14px; padding:10px 12px; border-radius:14px; background:color-mix(in srgb,var(--raise) 70%,transparent); }
+.ah-next > span { font-size:22px; line-height:1; }
+.ah-next > div { flex:1; min-width:0; }
+.ah-next i { display:block; margin-bottom:5px; font-style:normal; font-size:12.5px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.ah-next .bar { height:6px; }
+.ah-next em { font-style:normal; font-size:12px; font-weight:700; color:var(--sub); }
+.ach-filter { display:inline-flex; gap:4px; margin:0 0 6px; padding:4px; border-radius:99px; background:var(--raise); }
+.ach-filter button { height:32px; padding:0 16px; border:0; border-radius:99px; background:transparent; color:var(--sub); font:inherit; font-size:13.5px; font-weight:700; cursor:pointer; }
+.ach-filter button.on { background:var(--surface); color:var(--ink); box-shadow:0 1px 4px rgba(0,0,0,.18); }
+.ach-grp { margin-top:24px; }
+.ach-grp h2 { display:flex; align-items:baseline; gap:8px; margin:0 0 10px; font-size:16px; font-weight:800; letter-spacing:-.02em; }
+.ach-grp h2::before { content:none; }
+.ach-grp h2 small { font-size:12.5px; font-weight:700; color:var(--sub); }
+.ach .ach-list { gap:10px; }
+.ach-item { position:relative; gap:14px; padding:14px 16px; border-radius:18px; border:1px solid var(--line); background:var(--surface); transition:border-color .2s, transform .2s; }
+.ach-item:not(.done) { opacity:1; }
+.ach-item:not(.done) .ach-ic { background:var(--raise); }
+.ach-item:not(.done) .ach-ic em { filter:grayscale(1); opacity:.55; }
+.ach-item:not(.done) .ach-tx b { color:var(--sub); }
+.ach-item.done { border-color:color-mix(in srgb,var(--accent) 55%,var(--line)); background:linear-gradient(135deg, color-mix(in srgb,var(--accent) 13%,var(--surface)), var(--surface) 70%); }
+.ach-item.done .ach-ic { background:color-mix(in srgb,var(--accent) 24%,var(--surface)); box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 45%,transparent); }
+.ach-item.done::after { content:"✓"; position:absolute; right:12px; top:10px; width:20px; height:20px; border-radius:50%; display:grid; place-items:center; font-size:12px; font-weight:800; background:var(--accent); color:var(--on-accent); }
+.ach-ic { width:50px; height:50px; border-radius:15px; }
+.ach-ic em { font-style:normal; font-size:26px; line-height:1; }
+.ach-pop .ach-ic em { font-size:24px; }
+.ach-none { padding:36px 0; text-align:center; color:var(--sub); }
+@media (hover:hover) { html:not([data-motion="off"]) .ach-item:hover { transform:translateY(-2px); } }
+@media (max-width:560px) { .ach-hero { gap:16px; padding:18px; } .ah-ring { width:84px; height:84px; } .ah-ring::before { inset:8px; } .ah-ring b { font-size:24px; } .ah-tx h2 { font-size:19px; } }
+.ah-tx h2::before { content:none !important; }

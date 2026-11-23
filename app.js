@@ -192,8 +192,9 @@
     rApi("/quiz", { method: "POST", body: JSON.stringify({ d: new Date(Date.now() + 9 * 36e5).toISOString().slice(0, 10), ok }) }).then(r => r.ok ? r.json() : null).then(setQst).catch(() => {});
   }
   document.addEventListener("click", e => {
+    if (e.target.closest && e.target.closest("[data-play]")) { try { achFlag("play"); } catch (x) {} }
     const me = e.target.closest && e.target.closest("#gMe"), menu = $("gMenu");
-    if (me && menu) { if (menu.hidden) menu.innerHTML = profHtml(); menu.hidden = !menu.hidden; me.setAttribute("aria-expanded", String(!menu.hidden)); return; }
+    if (me && menu) { if (menu.hidden) { menu.innerHTML = profHtml(); achFlag("prof"); } menu.hidden = !menu.hidden; me.setAttribute("aria-expanded", String(!menu.hidden)); return; }
     if (e.target.closest && e.target.closest("[data-pf]") && menu) { menu.hidden = true; return; }
     if (e.target.closest && e.target.closest("#gOut")) { rLogout(); toast("로그아웃했어요"); return; }
     if (e.target.closest && e.target.closest("#gDel")) { deleteMine(); return; }
@@ -647,6 +648,7 @@
     if (next !== tab || nextSer !== ser) cat = "";
     if (nextSer !== ser) $("q").value = "";
     tab = next; ser = nextSer;
+    try { if (tab !== "all") achFlag("v_" + tab); } catch (e) {}   // 화면을 처음 보면 도전과제 기록
     if (tab !== "series" && serOn) { serOn = false; $("serBar").hidden = true; document.body.classList.remove("ser-on"); }   // 시리즈 탭을 떠나면 편집 모드는 꺼져요
     $("viewGuide").hidden = tab !== "guide"; $("viewAbout").hidden = tab !== "about"; $("viewNotes").hidden = tab !== "notes"; if (tab === "notes") showNotes(); $("viewAch").hidden = tab !== "ach"; if (tab === "ach") renderAch(); $("viewList").hidden = isInfo();
     document.querySelectorAll(".tab").forEach(a => a.classList.toggle("on", a.dataset.tab === (tab === "ach" ? "ach" : isInfo() ? "info" : tab === "nothumb" ? "all" : tab)));
@@ -707,7 +709,7 @@
     if (!keepHash && location.hash.startsWith("#v=")) history.replaceState(history.state, "", location.pathname + location.search);
   }
   function toggleFav(k) {
-    if (favs.has(k)) { favs.delete(k); toast("즐겨찾기에서 뺐어요"); } else { favs.add(k); toast("즐겨찾기에 담았어요"); }
+    if (favs.has(k)) { favs.delete(k); toast("즐겨찾기에서 뺐어요"); st.flags.favdel = 1; saveSt(); } else { favs.add(k); toast("즐겨찾기에 담았어요"); }
     store.set("favs", [...favs]); popKey = favs.has(k) ? k : null; render(); popKey = null; syncModalFav(); achCheck();
   }
   const canShare = !!navigator.share && matchMedia("(pointer:coarse)").matches;   // 휴대폰은 카카오톡 등으로 바로 공유
@@ -752,7 +754,7 @@
     const on = soundOn();
     $("sound").setAttribute("aria-checked", on);
   }
-  function toggleSound() { store.set("sound", soundOn() ? "off" : "on"); syncSound(); if (soundOn()) tone(880, 0, 0.18, "sine", 0.1); }
+  function toggleSound() { achFlag("sound"); store.set("sound", soundOn() ? "off" : "on"); syncSound(); if (soundOn()) tone(880, 0, 0.18, "sine", 0.1); }
   $("sound").addEventListener("click", toggleSound);
   syncSound();
 
@@ -766,23 +768,86 @@
     SERIES.forEach(x => { const l = all.filter(v => v._s.includes(x.name)), n = l.filter(v => op.has(vid(v))).length; if (n / l.length > best[0] / best[1]) best = [n, l.length]; });
     return best;
   }
+  function seriesN() {   // 끝까지 다 열어 본 시리즈 수
+    const op = new Set(st.opened); let n = 0;
+    SERIES.forEach(x => { const l = all.filter(v => v._s.includes(x.name)); if (l.length && l.every(v => op.has(vid(v)))) n++; });
+    return n;
+  }
+  const fl = n => () => [st.flags[n] ? 1 : 0, 1];
   const ACH = [
-    { id: "open1", t: "첫 발걸음", d: "영상을 처음으로 열어 보기", p: () => [st.opened.length, 1] },
-    { id: "open10", t: "정주행 시작", d: "영상 10개 열어 보기", p: () => [st.opened.length, 10] },
-    { id: "open50", t: "추억 여행자", d: "영상 50개 열어 보기", p: () => [st.opened.length, 50] },
-    { id: "open100", t: "올드팬의 품격", d: "영상 100개 열어 보기", p: () => [st.opened.length, 100] },
-    { id: "cats", t: "골고루 맛보기", d: "서로 다른 분류 6곳의 영상 열어 보기", p: () => [openedCats(), 6] },
-    { id: "series", t: "시리즈 정복", d: "한 시리즈의 영상을 전부 열어 보기", p: () => seriesDone() },
-    { id: "rank1", t: "1위의 맛", d: "인기 랭킹 1위 영상 열어 보기", p: () => [st.flags.rank1 ? 1 : 0, 1] },
-    { id: "search", t: "명탐정", d: "검색으로 찾은 영상 열어 보기", p: () => [st.flags.search ? 1 : 0, 1] },
-    { id: "owl", t: "올빼미", d: "새벽 2시에서 5시 사이에 영상 열어 보기", p: () => [st.flags.owl ? 1 : 0, 1] },
-    { id: "fav1", t: "찜", d: "즐겨찾기에 처음으로 담기", p: () => [favs.size, 1] },
-    { id: "fav20", t: "수집가", d: "즐겨찾기에 20개 담기", p: () => [favs.size, 20] },
-    { id: "share", t: "나눔의 기쁨", d: "영상 링크 복사하기", p: () => [st.flags.share ? 1 : 0, 1] },
-    { id: "report", t: "썸네일 도우미", d: "썸네일 제보 눌러 보기", p: () => [st.flags.report ? 1 : 0, 1] },
-    { id: "moved", t: "이사 완료", d: "다른 기기에서 보낸 기록 가져오기", p: () => [st.flags.moved ? 1 : 0, 1] },
-    { id: "days7", t: "단골손님", d: "서로 다른 날 7일 방문하기", p: () => [st.days.length, 7] },
-    { id: "all", t: "추억자료실 마스터", d: "다른 도전과제를 모두 달성하기", p: () => [ACH.filter(a => a.id !== "all" && got[a.id]).length, ACH.length - 1] }
+    /* 영상 보기 */
+    { id: "open1", g: "영상 보기", e: "👣", t: "첫 발걸음", d: "영상을 처음으로 열어 보기", p: () => [st.opened.length, 1] },
+    { id: "open10", g: "영상 보기", e: "🚶", t: "정주행 시작", d: "영상 10개 열어 보기", p: () => [st.opened.length, 10] },
+    { id: "open25", g: "영상 보기", e: "🔥", t: "워밍업", d: "영상 25개 열어 보기", p: () => [st.opened.length, 25] },
+    { id: "open50", g: "영상 보기", e: "🧳", t: "추억 여행자", d: "영상 50개 열어 보기", p: () => [st.opened.length, 50] },
+    { id: "open100", g: "영상 보기", e: "🎖️", t: "올드팬의 품격", d: "영상 100개 열어 보기", p: () => [st.opened.length, 100] },
+    { id: "open200", g: "영상 보기", e: "📺", t: "정주행러", d: "영상 200개 열어 보기", p: () => [st.opened.length, 200] },
+    { id: "open300", g: "영상 보기", e: "🎞️", t: "추억 수집가", d: "영상 300개 열어 보기", p: () => [st.opened.length, 300] },
+    { id: "open500", g: "영상 보기", e: "📚", t: "살아있는 아카이브", d: "영상 500개 열어 보기", p: () => [st.opened.length, 500] },
+    { id: "openall", g: "영상 보기", e: "👑", t: "전설의 정주행", d: "자료실의 모든 영상 열어 보기", p: () => [st.opened.length, Math.max(all.length, 1)] },
+    { id: "cats3", g: "영상 보기", e: "🍽️", t: "맛보기 입문", d: "서로 다른 분류 3곳의 영상 열어 보기", p: () => [openedCats(), 3] },
+    { id: "cats", g: "영상 보기", e: "🥢", t: "골고루 맛보기", d: "서로 다른 분류 6곳의 영상 열어 보기", p: () => [openedCats(), 6] },
+    { id: "catsall", g: "영상 보기", e: "🧭", t: "분류 탐험가", d: "모든 분류의 영상 열어 보기", p: () => [openedCats(), Math.max(CATS.length, 1)] },
+    { id: "series", g: "영상 보기", e: "🗂️", t: "시리즈 정복", d: "한 시리즈의 영상을 전부 열어 보기", p: () => seriesDone() },
+    { id: "sers3", g: "영상 보기", e: "🏅", t: "시리즈 수집가", d: "시리즈 3개를 끝까지 열어 보기", p: () => [seriesN(), 3] },
+    { id: "sers5", g: "영상 보기", e: "🏆", t: "시리즈 마니아", d: "시리즈 5개를 끝까지 열어 보기", p: () => [seriesN(), 5] },
+    { id: "rank1", g: "영상 보기", e: "🥇", t: "1위의 맛", d: "인기 랭킹 1위 영상 열어 보기", p: fl("rank1") },
+    { id: "search", g: "영상 보기", e: "🔍", t: "명탐정", d: "검색으로 찾은 영상 열어 보기", p: fl("search") },
+    /* 즐겨찾기 */
+    { id: "fav1", g: "즐겨찾기", e: "💗", t: "찜", d: "즐겨찾기에 처음으로 담기", p: () => [favs.size, 1] },
+    { id: "fav5", g: "즐겨찾기", e: "💞", t: "찜 시작", d: "즐겨찾기에 5개 담기", p: () => [favs.size, 5] },
+    { id: "fav10", g: "즐겨찾기", e: "💝", t: "취향 확실", d: "즐겨찾기에 10개 담기", p: () => [favs.size, 10] },
+    { id: "fav20", g: "즐겨찾기", e: "🧺", t: "수집가", d: "즐겨찾기에 20개 담기", p: () => [favs.size, 20] },
+    { id: "fav50", g: "즐겨찾기", e: "💎", t: "보물창고", d: "즐겨찾기에 50개 담기", p: () => [favs.size, 50] },
+    { id: "fav100", g: "즐겨찾기", e: "🏦", t: "추억 금고", d: "즐겨찾기에 100개 담기", p: () => [favs.size, 100] },
+    { id: "favdel", g: "즐겨찾기", e: "🧹", t: "마음 정리", d: "즐겨찾기에서 하나 빼 보기", p: fl("favdel") },
+    /* 방문·시간 */
+    { id: "days3", g: "방문·시간", e: "🙂", t: "또 왔네요", d: "서로 다른 날 3일 방문하기", p: () => [st.days.length, 3] },
+    { id: "days7", g: "방문·시간", e: "🛎️", t: "단골손님", d: "서로 다른 날 7일 방문하기", p: () => [st.days.length, 7] },
+    { id: "days14", g: "방문·시간", e: "🔥", t: "열혈 팬", d: "서로 다른 날 14일 방문하기", p: () => [st.days.length, 14] },
+    { id: "days30", g: "방문·시간", e: "🎗️", t: "개근상", d: "서로 다른 날 30일 방문하기", p: () => [st.days.length, 30] },
+    { id: "weekend", g: "방문·시간", e: "🛋️", t: "주말 정주행", d: "토요일이나 일요일에 영상 열어 보기", p: fl("weekend") },
+    { id: "morning", g: "방문·시간", e: "☀️", t: "아침형 팬", d: "오전 5시에서 9시 사이에 영상 열어 보기", p: fl("morning") },
+    { id: "lunch", g: "방문·시간", e: "🍚", t: "점심시간 시청", d: "낮 12시에서 1시 사이에 영상 열어 보기", p: fl("lunch") },
+    { id: "night", g: "방문·시간", e: "🌙", t: "야식 타임", d: "밤 10시 이후에 영상 열어 보기", p: fl("night") },
+    { id: "midnight", g: "방문·시간", e: "🦇", t: "자정의 방문자", d: "자정에서 새벽 2시 사이에 영상 열어 보기", p: fl("midnight") },
+    { id: "owl", g: "방문·시간", e: "🦉", t: "올빼미", d: "새벽 2시에서 5시 사이에 영상 열어 보기", p: fl("owl") },
+    /* 둘러보기 */
+    { id: "v_rank", g: "둘러보기", e: "📈", t: "랭킹 구경", d: "인기 랭킹 화면 보기", p: fl("v_rank") },
+    { id: "v_series", g: "둘러보기", e: "📂", t: "시리즈 구경", d: "시리즈 화면 보기", p: fl("v_series") },
+    { id: "v_fav", g: "둘러보기", e: "⭐", t: "내 목록 점검", d: "즐겨찾기 화면 보기", p: fl("v_fav") },
+    { id: "v_recent", g: "둘러보기", e: "🕘", t: "발자취 확인", d: "열어본 영상 화면 보기", p: fl("v_recent") },
+    { id: "v_about", g: "둘러보기", e: "🏠", t: "사이트 알아보기", d: "사이트 소개 화면 보기", p: fl("v_about") },
+    { id: "v_guide", g: "둘러보기", e: "❓", t: "궁금증 해결", d: "자주 묻는 질문 화면 보기", p: fl("v_guide") },
+    { id: "v_notes", g: "둘러보기", e: "📝", t: "패치노트 정독", d: "패치노트 화면 보기", p: fl("v_notes") },
+    { id: "v_ach", g: "둘러보기", e: "🏆", t: "도전과제 확인", d: "도전과제 화면 열어 보기", p: fl("v_ach") },
+    { id: "v_nothumb", g: "둘러보기", e: "🖼️", t: "썸네일 사냥꾼", d: "썸네일 없는 영상 모아보기", p: fl("v_nothumb") },
+    { id: "search10", g: "둘러보기", e: "🔎", t: "검색 단골", d: "검색을 10번 해 보기", p: () => [st.searches || 0, 10] },
+    { id: "search50", g: "둘러보기", e: "🧐", t: "검색 장인", d: "검색을 50번 해 보기", p: () => [st.searches || 0, 50] },
+    { id: "share", g: "둘러보기", e: "🔗", t: "나눔의 기쁨", d: "영상 링크 복사하기", p: fl("share") },
+    { id: "report", g: "둘러보기", e: "🖍️", t: "썸네일 도우미", d: "썸네일 제보 눌러 보기", p: fl("report") },
+    { id: "moved", g: "둘러보기", e: "📦", t: "이사 완료", d: "다른 기기에서 보낸 기록 가져오기", p: fl("moved") },
+    /* 꾸미기·설정 */
+    { id: "theme", g: "꾸미기·설정", e: "🌗", t: "분위기 전환", d: "밝은 화면과 어두운 화면 바꿔 보기", p: fl("theme") },
+    { id: "motion", g: "꾸미기·설정", e: "🍃", t: "차분한 모드", d: "움직임 줄이기 켜 보기", p: fl("motion") },
+    { id: "sound", g: "꾸미기·설정", e: "🔊", t: "소리 조절", d: "효과음을 켜거나 꺼 보기", p: fl("sound") },
+    { id: "side", g: "꾸미기·설정", e: "↔️", t: "옆 탭 배치", d: "즐겨찾기 옆 탭 위치 바꿔 보기", p: fl("side") },
+    { id: "popup", g: "꾸미기·설정", e: "🪟", t: "열기 방식 선택", d: "카페 글 여는 방식 바꿔 보기", p: fl("popup") },
+    { id: "prof", g: "꾸미기·설정", e: "🦊", t: "내 프로필 확인", d: "로그인 후 프로필 카드 열어 보기", p: fl("prof") },
+    /* 퀴즈·오락실 */
+    { id: "login", g: "퀴즈·오락실", e: "🔑", t: "정식 회원", d: "구글 로그인하기", p: () => [rtok ? 1 : 0, 1] },
+    { id: "quiz1", g: "퀴즈·오락실", e: "🧠", t: "퀴즈 첫 도전", d: "오늘의 퀴즈 풀어 보기", p: () => [qst && qst.all || 0, 1] },
+    { id: "quiz10", g: "퀴즈·오락실", e: "📖", t: "퀴즈 열 번째", d: "퀴즈 10문제 풀기", p: () => [qst && qst.all || 0, 10] },
+    { id: "quiz30", g: "퀴즈·오락실", e: "🎓", t: "퀴즈 박사", d: "퀴즈 30문제 풀기", p: () => [qst && qst.all || 0, 30] },
+    { id: "qok10", g: "퀴즈·오락실", e: "✅", t: "정답왕", d: "퀴즈 10문제 맞히기", p: () => [qst && qst.ok || 0, 10] },
+    { id: "qs3", g: "퀴즈·오락실", e: "🎯", t: "3연속 정답", d: "퀴즈를 3번 연속으로 맞히기", p: () => [qst && qst.streak || 0, 3] },
+    { id: "qs7", g: "퀴즈·오락실", e: "⚡", t: "7연속 정답", d: "퀴즈를 7번 연속으로 맞히기", p: () => [qst && qst.streak || 0, 7] },
+    { id: "play", g: "퀴즈·오락실", e: "🎮", t: "오락실 입장", d: "잉여맨 오락실 열어 보기", p: fl("play") },
+    /* 특별 */
+    { id: "hol", g: "특별", e: "🎉", t: "기념일 손님", d: "기념일 로고가 걸린 날 방문하기", p: fl("hol") },
+    { id: "newyear", g: "특별", e: "🎍", t: "새해 첫 방문", d: "새해나 설날에 방문하기", p: fl("newyear") },
+    { id: "bday", g: "특별", e: "🎂", t: "생일 축하해요", d: "잉여맨님 생일(3월 5일)에 방문하기", p: fl("bday") },
+    { id: "all", g: "특별", e: "🌟", t: "추억자료실 마스터", d: "다른 도전과제를 모두 달성하기", p: () => [ACH.filter(a => a.id !== "all" && got[a.id]).length, ACH.length - 1] }
   ];
   const popQ = []; let popBusy = false;
   function achCheck() {
@@ -790,6 +855,7 @@
     let hit = false;
     ACH.forEach(a => { if (got[a.id]) return; const p = a.p(); if (p[0] >= p[1]) { got[a.id] = Date.now(); popQ.push(a); hit = true; } });
     if (hit) { store.set("ach", got); if (!got.all) return achCheck(); }
+    if (popQ.length > 3) { const L = popQ.splice(0, popQ.length); popQ.push({ e: "🎉", t: L.length + "개를 한꺼번에 달성했어요!", d: L.slice(0, 3).map(a => a.t).join(", ") + " 외 " + (L.length - 3) + "개" }); }
     syncAch(); nextPop();
   }
   function syncAch() {
@@ -801,7 +867,7 @@
     if (popBusy || !popQ.length) return;
     popBusy = true;
     const a = popQ.shift(), el = $("achPop");
-    $("achPopT").textContent = a.t; $("achPopD").textContent = a.d;
+    $("achPopT").textContent = a.t; $("achPopD").textContent = a.d; { const ic = el.querySelector(".ach-ic"); if (ic) { if (!ic.dataset.svg) ic.dataset.svg = ic.innerHTML; ic.innerHTML = a.e ? `<em>${a.e}</em>` : ic.dataset.svg; } }
     el.hidden = false; el.classList.remove("show"); void el.offsetWidth; el.classList.add("show");
     tone(784, 0, 0.14, "triangle", 0.09); tone(1047, 0.11, 0.14, "triangle", 0.09); tone(1568, 0.22, 0.4, "sine", 0.1);
     setTimeout(() => { el.classList.remove("show"); setTimeout(() => { el.hidden = true; popBusy = false; nextPop(); }, 350); }, 3600);
@@ -813,24 +879,40 @@
     if (!st.opened.includes(id)) st.opened.push(id);
     const top = ranked(all)[0]; if (top && key(top) === key(v)) st.flags.rank1 = 1;
     if (words().length && !isHome()) st.flags.search = 1;
-    const h = new Date().getHours(); if (h >= 2 && h < 5) st.flags.owl = 1;
+    const nw = new Date(), h = nw.getHours(), dw = nw.getDay();
+    if (h >= 2 && h < 5) st.flags.owl = 1; if (h < 2) st.flags.midnight = 1; if (h >= 5 && h < 9) st.flags.morning = 1; if (h === 12) st.flags.lunch = 1; if (h >= 22) st.flags.night = 1; if (dw === 0 || dw === 6) st.flags.weekend = 1;
     saveSt(); achCheck();
   }
+  let achF = "all";
+  const ACH_RANK = [[0, "새내기 팬"], [10, "눈도장 찍은 팬"], [25, "단골 팬"], [40, "올드팬"], [55, "추억 수집가"], [70, "추억 지킴이"], [85, "전설의 팬"], [100, "추억자료실 마스터"]];
   function renderAch() {
-    const n = ACH.filter(a => got[a.id]).length;
-    $("achSum").textContent = ACH.length + "개 중 " + n + "개 달성";
-    $("achBar").style.width = Math.round(n / ACH.length * 100) + "%";
+    const tot = ACH.length, n = ACH.filter(a => got[a.id]).length, pc = Math.round(n / tot * 100);
+    const rk = ACH_RANK.filter(r => pc >= r[0]).pop()[1];
+    const ratio = a => { const p = a.p(); return Math.min(p[0] / p[1], 1); };
+    const near = ACH.filter(a => !got[a.id] && a.id !== "all").sort((x, y) => ratio(y) - ratio(x))[0];
+    const np = near ? near.p() : null;
+    $("achHero").style.setProperty("--pc", pc);
+    $("achHero").innerHTML = `<div class="ah-ring" role="img" aria-label="전체 ${pc}% 달성"><b>${pc}<small>%</small></b></div><div class="ah-tx"><small>현재 등급</small><h2>${esc(rk)}</h2><p><b>${tot}개 중 ${n}개</b> 달성했어요</p>${near ? `<div class="ah-next"><span>${near.e}</span><div><i>다음 목표 · ${esc(near.t)}</i><div class="bar"><i style="width:${Math.round(ratio(near) * 100)}%"></i></div></div><em>${Math.min(np[0], np[1])}/${np[1]}</em></div>` : ""}</div>`;
+    document.querySelectorAll("#achFilter [data-af]").forEach(b => { b.classList.toggle("on", b.dataset.af === achF); b.setAttribute("aria-pressed", String(b.dataset.af === achF)); });
     const fmt = t => { const d = new Date(t); return d.getFullYear() + "." + (d.getMonth() + 1) + "." + d.getDate() + " 달성"; };
-    $("achList").innerHTML = ACH.slice().sort((a, b) => (got[b.id] ? 1 : 0) - (got[a.id] ? 1 : 0)).map(a => {
-      const p = a.p(), cur = Math.min(p[0], p[1]), done = !!got[a.id];
-      return `<div class="ach-item ${done ? "done" : ""}"><span class="ach-ic">${TROPHY}</span><div class="ach-tx"><b>${esc(a.t)}</b><i>${esc(a.d)}</i>
-        ${done ? `<small>${fmt(got[a.id])}</small>` : p[1] > 1 ? `<div class="bar"><i style="width:${Math.round(cur / p[1] * 100)}%"></i></div><small>${cur} / ${p[1]}</small>` : `<small>아직 달성 전</small>`}</div></div>`;
-    }).join("");
+    const groups = [...new Set(ACH.map(a => a.g))];
+    $("achList").innerHTML = groups.map(g => {
+      const all2 = ACH.filter(a => a.g === g), dn = all2.filter(a => got[a.id]).length;
+      const list = all2.filter(a => achF === "all" || (achF === "done" ? got[a.id] : !got[a.id])).sort((a, b) => (got[b.id] ? 1 : 0) - (got[a.id] ? 1 : 0));
+      if (!list.length) return "";
+      return `<section class="ach-grp"><h2>${esc(g)} <small>${dn}/${all2.length}</small></h2><div class="ach-list">` + list.map(a => {
+        const p = a.p(), cur = Math.min(p[0], p[1]), done = !!got[a.id];
+        return `<div class="ach-item ${done ? "done" : ""}"><span class="ach-ic"><em aria-hidden="true">${a.e}</em></span><div class="ach-tx"><b>${esc(a.t)}</b><i>${esc(a.d)}</i>${done ? `<small>${fmt(got[a.id])}</small>` : p[1] > 1 ? `<div class="bar"><i style="width:${Math.round(cur / p[1] * 100)}%"></i></div><small>${cur} / ${p[1]}</small>` : `<small>아직 달성 전</small>`}</div></div>`;
+      }).join("") + `</div></section>`;
+    }).join("") || `<p class="ach-none">${achF === "done" ? "아직 달성한 도전과제가 없어요. 하나씩 도전해 보세요!" : "모든 도전과제를 달성했어요. 🎉"}</p>`;
   }
+  document.addEventListener("click", e => { const b = e.target.closest && e.target.closest("#achFilter [data-af]"); if (b) { achF = b.dataset.af; renderAch(); } });
   function achStart() {   // 처음 불러왔을 때: 방문 날짜 기록, 예전 기록으로 달성된 것 확인
     const today = new Date(); const dkey = today.getFullYear() + "-" + (today.getMonth() + 1) + "-" + today.getDate();
     if (!st.days.includes(dkey)) { st.days.push(dkey); if (st.days.length > 40) st.days = st.days.slice(-40); }
     recent.map(byKey).filter(Boolean).forEach(v => { if (!st.opened.includes(vid(v))) st.opened.push(vid(v)); });
+    const lg = document.querySelector(".logo"), hl = lg && lg.dataset.hol;
+    if (hl) { st.flags.hol = 1; if (hl === "bday") st.flags.bday = 1; if (hl === "ny" || hl === "seol") st.flags.newyear = 1; }
     saveSt(); achCheck();
   }
 
@@ -1003,7 +1085,8 @@
       if (b.dataset.sg !== undefined) apply(b.dataset.sg);
     });
   }
-  $("q").addEventListener("input", () => { if (isInfo()) location.hash = ""; reset(); });
+  let srT = 0, srLast = "";
+  $("q").addEventListener("input", () => { if (isInfo()) location.hash = ""; reset(); clearTimeout(srT); srT = setTimeout(() => { const w = words().join(" "); if (w.length >= 2 && w !== srLast) { srLast = w; st.searches = (st.searches || 0) + 1; saveSt(); achCheck(); } }, 1500); });
   $("sort").addEventListener("change", () => { store.set("sort", $("sort").value); reset(); });
   $("vGrid").addEventListener("click", () => { view = "grid"; store.set("view2", view); render(); });
   $("vList").addEventListener("click", () => { view = "rows"; store.set("view2", view); render(); });
@@ -1195,16 +1278,16 @@
     $("motion").setAttribute("aria-checked", root.getAttribute("data-motion") === "off");
     $("popup").setAttribute("aria-checked", popupOn()); $("popup").hidden = isPhone;
   }
-  $("sideSet").addEventListener("click", () => { const n = SIDES[(SIDES.indexOf(sidePos()) + 1) % SIDES.length]; store.set("sidefav", n); syncSide(); toast("즐겨찾기 옆 탭: " + SIDE_T[n]); });
-  $("popup").addEventListener("click", () => { store.set("popup", popupOn() ? "off" : "on"); syncSet(); toast(popupOn() ? "카페 글을 팝업 창으로 열어요" : "카페 글을 새 탭으로 열어요"); });
+  $("sideSet").addEventListener("click", () => { achFlag("side"); const n = SIDES[(SIDES.indexOf(sidePos()) + 1) % SIDES.length]; store.set("sidefav", n); syncSide(); toast("즐겨찾기 옆 탭: " + SIDE_T[n]); });
+  $("popup").addEventListener("click", () => { achFlag("popup"); store.set("popup", popupOn() ? "off" : "on"); syncSet(); toast(popupOn() ? "카페 글을 팝업 창으로 열어요" : "카페 글을 새 탭으로 열어요"); });
   syncSet(); syncSide();
   $("theme").addEventListener("click", () => {
     const t = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
-    root.setAttribute("data-theme", t); try { localStorage.setItem("theme", t); } catch (e) {} syncSet();
+    root.setAttribute("data-theme", t); try { localStorage.setItem("theme", t); } catch (e) {} syncSet(); achFlag("theme");
   });
   $("motion").addEventListener("click", () => {
     const m = root.getAttribute("data-motion") === "off" ? "on" : "off";
-    root.setAttribute("data-motion", m); try { localStorage.setItem("motion", m); } catch (e) {} syncSet();
+    root.setAttribute("data-motion", m); try { localStorage.setItem("motion", m); } catch (e) {} syncSet(); achFlag("motion");
     toast(m === "off" ? "움직임 줄이기를 켰어요" : "움직임 줄이기를 껐어요");
   });
   /* ── 앱으로 설치 (홈 화면에 추가) ── */
