@@ -1903,3 +1903,6 @@ body { background:radial-gradient(640px 420px at 6% -4%, rgba(45,212,191,.26), t
 :root[data-theme="light"] .chip.on { color:#fff; }
 .row-h h2, .guide h2, .ach-grp h2 { letter-spacing:-.03em; }
 :root[data-theme="light"] .hero { box-shadow:0 0 0 1px rgba(17,20,28,.1), 0 26px 50px -26px rgba(40,50,90,.4); }
+
+/* 말풍선 꼬리: 본체 오른쪽 위 색(보라 빛)과 맞춤 */
+.g-tip::before { background:#383257 !important; border-left:1px solid #2c3250 !important; border-top:1px solid #2c3250 !important; }
