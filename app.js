@@ -118,6 +118,23 @@
   function drawPromoBtn() { const b = $("gBtnPromo"); if (b && !b.firstChild) gBtn(b, { text: "signin_with", shape: "pill", locale: "ko" }); }
   const tipDay = () => Math.floor((Date.now() + 9 * 36e5) / 864e5);
   let tipOn = store.get("tip_hide", 0) !== tipDay(), tipT = 0, qst = store.get("qzs1", null), pulled = false, pullBusy = false, pushT = 0, vmapC = null;
+  /* ── 로그인 프로필 (구글 이름·사진은 쓰지 않고, 사이트 닉네임과 내 기록만 보여줘요) ── */
+  const PFACE = ["🦊", "🐻", "🐼", "🐯", "🐸", "🐧", "🦁", "🐰", "🐨", "🐙", "🦉", "🐳"];
+  const profHue = n => hash(n || "나") % 360;
+  const profFace = n => PFACE[hash(n || "나") % PFACE.length];
+  function profHtml() {
+    const nm = (meI && meI.name) || (rtok && rtok.name) || "나";
+    let ach = "-", achAll = "";
+    try { const list = ACH.filter(a => a.id !== "all"); ach = list.filter(a => got[a.id]).length; achAll = "/" + list.length; } catch (e) {}
+    let fv = 0, op = 0; try { fv = favs.size; op = recent.length; } catch (e) {}
+    const q = qst && qst.all ? qst.ok + "/" + qst.all : "-";
+    const stat = (n, t) => `<li><b>${esc(String(n))}</b><span>${t}</span></li>`;
+    return `<div class="pf-top" style="--pg:${profHue(nm)}"><i class="pf-av" aria-hidden="true">${profFace(nm)}</i><div><small>로그인됨</small><b>${esc(nm)}</b>${meI && meI.title ? `<em>${esc(meI.title)}</em>` : ""}</div></div>`
+      + `<ul class="pf-st">${stat(fv, "즐겨찾기")}${stat(op, "열어본 영상")}${stat(q, "퀴즈 정답")}${stat(ach + achAll, "도전과제")}</ul>`
+      + `<div class="pf-go"><a href="#fav" data-pf>⭐ 내 즐겨찾기</a><a href="#recent" data-pf>🕘 열어본 영상</a><a href="#ach" data-pf>🏆 도전과제</a></div>`
+      + `<p class="pf-n">닉네임은 구글 이름이 아니라 사이트가 정해 준 별명이에요. 구글 이름과 사진은 저장하지 않아요.</p>`
+      + `<button type="button" id="gOut">로그아웃</button><button type="button" id="gDel" class="g-del">내 정보 지우기</button>`;
+  }
   function drawLogin() {
     try { syncQuiz(); } catch (e) {}
     document.body.classList.toggle("is-in", !!rtok); if (rtok) document.dispatchEvent(new Event("dlogin"));
@@ -126,7 +143,7 @@
     box.hidden = false;
     if (rtok) {
       const nm = (meI && meI.name) || rtok.name || "나";
-      box.innerHTML = `<button type="button" class="round g-me" id="gMe" aria-haspopup="true" aria-expanded="false" title="${esc(nm)} (로그인됨)"><span>${esc(String(nm).slice(0, 1))}</span></button><div class="g-menu" id="gMenu" hidden><p><small>로그인됨</small><b>${esc(nm)}</b></p><button type="button" id="gOut">로그아웃</button><button type="button" id="gDel" class="g-del">내 정보 지우기</button></div>`;
+      box.innerHTML = `<button type="button" class="round g-me" id="gMe" aria-haspopup="true" aria-expanded="false" title="${esc(nm)} (로그인됨)" style="--pg:${profHue(nm)}"><span>${esc(profFace(nm))}</span></button><div class="g-menu g-prof" id="gMenu" hidden></div>`;
       syncPull(); return;
     }
     box.innerHTML = '<div id="gBtnTop"></div>' + (tipOn ? '<div class="g-tip" id="gTip" role="note"><button type="button" class="g-x" id="gTipX" aria-label="닫기">✕</button><span class="lp-badge">무료 회원</span><b class="g-tt">로그인 혜택</b><ul class="lp-rows"><li><i class="lp-i" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg></i><div><b>즐겨찾기·열어본 영상 저장</b><span>기기를 바꿔도 그대로예요</span></div></li><li><i class="lp-i" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M15 4v16M18 9.5l-1.2 1.4"/></svg></i><div><b>즐겨찾기 옆 탭</b><span>페이지를 안 옮기고 옆에서 바로 열어요</span></div></li><li><i class="lp-i" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 1-1 1.7"/><path d="M12 17h.01"/></svg></i><div><b>오늘의 한 줄 퀴즈</b><span>매일 새 문제, 연속 정답·정답률 기록</span></div></li><li><i class="lp-i" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="11" rx="5"/><path d="M8 11v5M5.5 13.5h5M15.5 12.5h.01M18 14.5h.01"/></svg></i><div><b>미니게임</b><span>제목 빈칸 채우기</span></div></li></ul><button type="button" class="g-tipoff" id="gTipOff">오늘 하루 보지 않기</button></div>' : "");
@@ -176,7 +193,8 @@
   }
   document.addEventListener("click", e => {
     const me = e.target.closest && e.target.closest("#gMe"), menu = $("gMenu");
-    if (me && menu) { menu.hidden = !menu.hidden; me.setAttribute("aria-expanded", String(!menu.hidden)); return; }
+    if (me && menu) { if (menu.hidden) menu.innerHTML = profHtml(); menu.hidden = !menu.hidden; me.setAttribute("aria-expanded", String(!menu.hidden)); return; }
+    if (e.target.closest && e.target.closest("[data-pf]") && menu) { menu.hidden = true; return; }
     if (e.target.closest && e.target.closest("#gOut")) { rLogout(); toast("로그아웃했어요"); return; }
     if (e.target.closest && e.target.closest("#gDel")) { deleteMine(); return; }
     if (menu && !menu.hidden && !(e.target.closest && e.target.closest("#gMenu"))) menu.hidden = true;

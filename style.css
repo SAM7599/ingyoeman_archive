@@ -1789,3 +1789,28 @@ html[data-motion="off"] .ab-f { transition:none; } html[data-motion="off"] .ab-f
   .qz:not(.lp) { padding:16px 15px 13px; border-radius:20px; }
 }
 html[data-motion="off"] .chip, html[data-motion="off"] .qz-o, html[data-motion="off"] .rail .thumb { transition:none; }
+
+/* 로그인 프로필 카드 */
+.g-me { background:linear-gradient(135deg,hsl(var(--pg,20) 70% 52%),hsl(calc(var(--pg,20) + 40) 70% 38%)); color:#fff; }
+.g-me span { font-size:18px; line-height:1; }
+.g-menu.g-prof { width:260px; max-width:calc(100vw - 24px); min-width:0; padding:14px; border-radius:18px; }
+.pf-top { display:flex; align-items:center; gap:12px; padding:2px 2px 12px; border-bottom:1px solid var(--line); }
+.pf-av { flex:none; width:52px; height:52px; border-radius:50%; display:grid; place-items:center; font-style:normal; font-size:28px; background:linear-gradient(135deg,hsl(var(--pg,20) 70% 52%),hsl(calc(var(--pg,20) + 40) 70% 38%)); box-shadow:0 4px 12px rgba(0,0,0,.25); }
+.pf-top div { min-width:0; }
+.pf-top small { display:block; font-size:11.5px; color:var(--sub); }
+.pf-top b { display:block; font-size:15.5px; line-height:1.3; word-break:keep-all; overflow-wrap:anywhere; }
+.pf-top em { display:inline-block; margin-top:3px; padding:1px 8px; border-radius:99px; font-style:normal; font-size:11.5px; font-weight:700; background:var(--line); color:var(--sub); }
+.pf-st { display:grid; grid-template-columns:repeat(4,1fr); gap:4px; margin:12px 0; padding:0; list-style:none; }
+.pf-st li { text-align:center; padding:8px 2px; border-radius:10px; background:color-mix(in srgb,var(--line) 55%,transparent); }
+.pf-st b { display:block; font-size:15px; line-height:1.2; }
+.pf-st span { display:block; margin-top:2px; font-size:10.5px; color:var(--sub); letter-spacing:-.02em; }
+.pf-go { display:grid; gap:2px; margin-bottom:8px; }
+.pf-go a { display:block; padding:9px 10px; border-radius:10px; font-size:14px; font-weight:700; color:inherit; text-decoration:none; }
+.pf-go a:hover, .pf-go a:focus-visible { background:var(--line); }
+.pf-n { margin:0 0 6px !important; padding:8px 4px 8px !important; border-top:1px solid var(--line); border-bottom:0 !important; font-size:11.5px; line-height:1.5; color:var(--sub); }
+.g-prof #gOut { text-align:center; background:var(--line); }
+.g-prof #gDel { text-align:center; margin-top:2px; }
+@media (max-width:640px) { .g-menu.g-prof { position:fixed; right:10px; left:auto; top:60px; width:min(280px, calc(100vw - 20px)); } }
+.g-menu.g-prof { background:var(--surface); color:var(--ink); }
+.pf-st li { background:var(--raise); }
+.g-prof #gOut { background:var(--raise); }
