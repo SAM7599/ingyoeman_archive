@@ -1631,7 +1631,7 @@ body.sd-open .side-fav.r { right:var(--sdw); } body.sd-open .side-fav.l { left:v
 html[data-motion="off"] .side-dr, html[data-motion="off"] button.side-fav { transition:none; }
 
 /* ── 인기 랭킹 다듬기 (차분하고 세련되게): 번쩍임·테두리 회전·펄스는 줄이고, 숫자·얇은 포인트선·은은한 빛으로 순위를 보여줘요 ── */
-.card.r1::after, .card.r2::after, .card.r3::after, .card.r1 .thumb::after, .card.r2 .thumb::after, .card.r3 .thumb::after { display:none !important; }
+.card.r1 .thumb::after, .card.r2 .thumb::after, .card.r3 .thumb::after { display:none !important; }
 .rk { width:42px; font-size:17px; font-weight:700; color:color-mix(in srgb, var(--sub) 85%, transparent); letter-spacing:-.3px; }
 .rk.hot { font-weight:800; font-size:26px; color:var(--c2); text-shadow:none; animation:none !important;
   background:linear-gradient(180deg,var(--c1),var(--c2) 85%); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
@@ -1656,3 +1656,29 @@ html[data-motion="off"] .side-dr, html[data-motion="off"] button.side-fav { tran
 .rkb .crown .fo { fill:var(--c2); } .rkb .crown .fm { fill:var(--c1); }
 .grid.rank-in .card.r1 { animation-name:rankin !important; }
 @media (max-width:860px) { .rk { width:34px; font-size:16px; } .rk.hot { font-size:22px; } .rk.t1 { font-size:27px; } .rows .card.r1, .rows .card.r2, .rows .card.r3 { padding:10px 2px 10px 6px; } }
+
+/* ── 인기 랭킹 움직임 (세련되게): 부드러운 등장 · 빛이 한 번 지나가기 · 숫자 은은한 광택 · 천천히 숨 쉬는 테두리 빛 ── */
+.card.r1::after, .card.r2::after, .card.r3::after { content:""; position:absolute; inset:0; padding:0; border-radius:inherit; pointer-events:none; -webkit-mask:none; mask:none; opacity:0; background:linear-gradient(100deg,transparent 35%,rgba(var(--gl),.22) 50%,transparent 65%); transform:translateX(-100%); animation:none; }
+.rows .card { position:relative; overflow:hidden; }
+.rows .card.r1, .rows .card.r2, .rows .card.r3 { overflow:visible; }
+.rows .card.r1::after, .rows .card.r2::after, .rows .card.r3::after { overflow:hidden; }
+.rk.hot { background:linear-gradient(110deg,var(--c2) 0 38%,var(--c1) 50%,var(--c2) 62% 100%); background-size:260% 100%; background-position:100% 0; -webkit-background-clip:text; background-clip:text; }
+@media all {
+  html:not([data-motion="off"]) .grid.rank-in .card { animation:rkIn .6s cubic-bezier(.22,.8,.3,1) both !important; animation-delay:calc(min(var(--i), 14) * 55ms) !important; }
+  html:not([data-motion="off"]) .grid.rank-in .card.r1, html:not([data-motion="off"]) .grid.rank-in .card.r2, html:not([data-motion="off"]) .grid.rank-in .card.r3 { animation-name:rkIn !important; }
+  html:not([data-motion="off"]) .grid.rank-in .card.r1::after, html:not([data-motion="off"]) .grid.rank-in .card.r2::after, html:not([data-motion="off"]) .grid.rank-in .card.r3::after { animation:rkSweep 1.3s ease-out calc(.55s + var(--i) * 160ms) 1 both; }
+  html:not([data-motion="off"]) .rk.hot { animation:rkSheen 5.5s ease-in-out 1.2s infinite !important; }
+  html:not([data-motion="off"]) .card.r2 .rk.hot { animation-delay:2s !important; } html:not([data-motion="off"]) .card.r3 .rk.hot { animation-delay:2.8s !important; }
+  html:not([data-motion="off"]) .card.r1 .thumb { animation:rkGlow1 3.8s ease-in-out infinite !important; }
+  html:not([data-motion="off"]) .card.r2 .thumb { animation:rkGlow2 4.4s ease-in-out .6s infinite !important; }
+  html:not([data-motion="off"]) .card.r3 .thumb { animation:rkGlow2 5s ease-in-out 1.2s infinite !important; }
+  html:not([data-motion="off"]) .fire.f1 i { animation:rkTongue calc(var(--t) * 1.7) ease-in-out var(--d) infinite alternate; }
+  html:not([data-motion="off"]) .rows .card > a { transition:transform .28s cubic-bezier(.22,.8,.3,1); }
+  html:not([data-motion="off"]) .rows .card:hover > a { transform:translateX(3px); }
+  @keyframes rkIn { from { opacity:0; transform:translateY(12px); filter:blur(3px); } to { opacity:1; transform:none; filter:none; } }
+  @keyframes rkSweep { 0% { opacity:0; transform:translateX(-100%); } 15% { opacity:1; } 100% { opacity:0; transform:translateX(100%); } }
+  @keyframes rkSheen { 0%,55% { background-position:100% 0; } 100% { background-position:-60% 0; } }
+  @keyframes rkGlow1 { 0%,100% { box-shadow:0 0 0 1.5px var(--c1), 0 0 0 3px rgba(var(--gl),.22), 0 10px 22px -6px rgba(var(--gl),.42); } 50% { box-shadow:0 0 0 1.5px var(--c1), 0 0 0 5px rgba(var(--gl),.12), 0 12px 30px -6px rgba(var(--gl),.7); } }
+  @keyframes rkGlow2 { 0%,100% { box-shadow:0 0 0 1.5px rgba(var(--gl),.8), 0 8px 18px -6px rgba(var(--gl),.3); } 50% { box-shadow:0 0 0 1.5px rgba(var(--gl),.95), 0 10px 24px -6px rgba(var(--gl),.55); } }
+  @keyframes rkTongue { 0% { transform:scale(1,.82) skewX(-3deg); opacity:.9; } 50% { transform:scale(.95,1.1) skewX(2deg); opacity:1; } 100% { transform:scale(1,.9) skewX(4deg); opacity:.92; } }
+}
