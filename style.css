@@ -453,11 +453,11 @@ html[data-motion="off"] *, html[data-motion="off"] *::before, html[data-motion="
   .g-title { transition:opacity .2s; }
 }
 
-/* ── 다른 기기로 옮기기 ── */
+/* ── 내 데이터 옮기기 ── */
 .sheet.xfer { width:min(500px,100%); }
 .xfer .m-body { padding:26px 24px 24px; }
 .xfer h2 { margin:0 0 6px; padding-right:40px; }
-.xfer h3 { margin:20px 0 4px; font-size:16px; padding-top:18px; border-top:1px solid var(--line); }
+.xfer h3 { margin:20px 0 10px; font-size:16px; padding-top:18px; border-top:1px solid var(--line); }
 .x-sub { margin:0 0 14px; color:var(--sub); font-size:14px; line-height:1.7; word-break:keep-all; }
 .x-qr { display:flex; align-items:center; gap:18px; }
 #xQr { flex:none; width:176px; height:176px; padding:8px; border-radius:14px; background:#fff; color:#333; font-size:12.5px; display:grid; place-items:center; text-align:center; }
@@ -468,6 +468,9 @@ html[data-motion="off"] *, html[data-motion="off"] *::before, html[data-motion="
 #xLink:focus { outline:0; border-color:var(--accent); }
 .x-note { margin:14px 0 0; color:var(--sub); font-size:13px; line-height:1.7; word-break:keep-all; }
 .x-empty { margin:6px 0 0; padding:26px 16px; border:1px dashed var(--line); border-radius:14px; text-align:center; color:var(--sub); line-height:1.7; word-break:keep-all; }
+#xPaste { display:block; width:100%; margin-bottom:10px; padding:10px 12px; border:1px solid var(--line); border-radius:12px; background:var(--bg); color:var(--ink); font:13px ui-monospace,Consolas,monospace; resize:vertical; }
+#xPaste:focus { outline:0; border-color:var(--accent); }
+.xfer .m-acts { flex-wrap:wrap; }
 .xfer .x { background:var(--raise); color:var(--ink); }
 @media (max-width:860px) { .x-qr { flex-direction:column; align-items:flex-start; gap:12px; } #xQr { width:100%; height:auto; aspect-ratio:1; max-width:240px; align-self:center; } }
 

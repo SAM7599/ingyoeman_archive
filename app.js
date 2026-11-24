@@ -625,7 +625,7 @@
     const note = serOn ? (tiles ? "시리즈를 열어서 고칠 영상을 눌러 주세요. 고친 내용은 이 기기에만 저장돼요." : "시리즈를 바꿀 영상을 눌러 주세요. 고친 내용은 이 기기에만 저장돼요.") : tab === "nothumb" ? "아직 썸네일이 없는 영상이에요. 영상 제목 옆 점 세 개(⋮) 메뉴에서 “썸네일 제보”를 눌러 주세요. 여러분의 제보로 목록이 채워져요." : tiles ? "같은 콘텐츠끼리 묶었어요. 제목으로 자동 분류해서 빠지거나 잘못 들어간 영상이 있을 수 있어요."
       : rank ? "네이버 카페 조회수와 좋아요를 합친 점수 순서예요. 좋아요 1개를 조회수 " + LIKE_W + "회로 쳤어요." + "" + " 카페 숫자는 목록을 정리한 때 기준이라 지금과 조금 다를 수 있어요." : "";
     $("pageNote").hidden = !note; $("pageNote").textContent = note;
-    $("favXferBox").hidden = tab !== "fav"; drawFolderBar();
+    drawFolderBar();
     $("grid").className = tiles ? "grid tiles" : "grid" + (view === "rows" || rank ? " rows" : "");
     $("vGrid").classList.toggle("on", view === "grid"); $("vList").classList.toggle("on", view === "rows");
     if (rank && !rankWas) { $("grid").classList.add("rank-in"); setTimeout(() => $("grid").classList.remove("rank-in", "anim"), 1800); }   // 랭킹 화면에 처음 들어올 때만 차례로 등장
@@ -659,7 +659,7 @@
     closeMenu();
     document.documentElement.classList.remove("pre-guide", "pre-about", "pre-notes", "pre-ach", "pre-rank", "pre-series", "pre-fav", "pre-recent", "pre-nothumb");
     if (!isInfo()) reset();
-    if (h.startsWith("import=")) { askImport(h.slice(7)); }
+    if (h.startsWith("mv=") || h.startsWith("import=")) { const c = location.href; history.replaceState(null, "", location.pathname + location.search); parseMove(c).then(askImport); }
     else if (h.startsWith("v=")) { const v = all.find(x => vid(x) === h.slice(2)); if (v) openModal(v); else if (all.length) toast("영상을 찾지 못했어요"); }
     else { if (!$("modal").hidden) closeModal(true); window.scrollTo(0, 0); }
   }
@@ -931,59 +931,119 @@
     saveSt(); achCheck();
   }
 
-  /* ── 다른 기기로 옮기기 (QR코드·링크에 즐겨찾기와 열어본 영상을 담아요) ── */
+  /* ── 내 데이터 옮기기 (즐겨찾기·폴더·열어본 영상·시청 기록·도전과제·설정을 링크·QR·파일로 옮겨요) ── */
   const B64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
   const packIds = keys => keys.map(byKey).filter(Boolean).map(num).filter(n => n && +n < 4096).map(n => B64[+n >> 6] + B64[+n & 63]).join("");   // 글 번호 하나를 두 글자로
   const unpackIds = t => { const out = []; for (let i = 0; i + 1 < t.length; i += 2) { const a = B64.indexOf(t[i]), b = B64.indexOf(t[i + 1]); if (a < 0 || b < 0) return null; out.push(String(a * 64 + b)); } return out; };
-  const moveLink = () => location.origin + location.pathname + "#import=1." + packIds([...favs]) + "." + packIds(recent.slice(0, 40));
-  function readMove(t) {
-    const m = String(t || "").match(/^1\.([\w-]*)\.([\w-]*)$/); if (!m) return null;
-    const f = unpackIds(m[1]), r = unpackIds(m[2]); if (!f || !r) return null;
-    const map = new Map(all.map(v => [num(v), key(v)]));
-    return { favs: f.map(id => map.get(id)).filter(Boolean), recent: r.map(id => map.get(id)).filter(Boolean) };
+  const MV_SET = ["theme", "motion", "accent", "fs", "onehand", "view2", "sort", "sidefav", "sound", "popup", "chipHint1", "dcSeen1", "intro1", "tour1"];   // 설정: 받는 기기에 덮어써요
+  const MV_RAW = ["theme", "motion"];   // 이 둘은 글자 그대로 저장돼 있어요
+  const rawGet = k => { try { const v = localStorage.getItem(k); if (v == null) return undefined; try { return JSON.parse(v); } catch (e) { return v; } } catch (e) { return undefined; } };
+  const rawSet = (k, v) => { try { localStorage.setItem(k, MV_RAW.includes(k) ? String(v) : JSON.stringify(v)); } catch (e) {} };
+  const b64u = u8 => { let s = ""; u8.forEach(b => { s += String.fromCharCode(b); }); return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""); };
+  const unb64u = t => { t = t.replace(/-/g, "+").replace(/_/g, "/"); while (t.length % 4) t += "="; const s = atob(t), u = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i); return u; };
+  const pipeZ = async (u8, S) => new Uint8Array(await new Response(new Blob([u8]).stream().pipeThrough(new S("deflate-raw"))).arrayBuffer());
+  function buildMove(slim) {
+    const d = { v: 2, f: packIds([...favs]), r: packIds(recent) };
+    MV_SET.concat(["sov1", "ach", "stat", "notes_seen", "ann_seen"]).forEach(k => { const x = rawGet(k); if (x !== undefined && x !== null) d[k] = x; });
+    const sl = rawGet("seenlog"); if (Array.isArray(sl) && sl.length) d.seenlog = slim ? sl.slice(-300) : sl;
+    const ff = FF || { list: [], map: {} }, m = {};
+    Object.keys(ff.map || {}).forEach(k => { const v = byKey(k), n = v && num(v); if (n && +n < 4096) m[n] = ff.map[k]; });
+    if (ff.list && ff.list.length) d.favfolders = { list: ff.list, map: m };
+    return d;
+  }
+  async function encodeMove(d) {
+    const u8 = new TextEncoder().encode(JSON.stringify(d));
+    if (window.CompressionStream) { try { return "z" + b64u(await pipeZ(u8, CompressionStream)); } catch (e) {} }
+    return "p" + b64u(u8);
+  }
+  async function decodeCode(c) {
+    c = c.trim(); let u = unb64u(c.slice(1));
+    if (c[0] === "z") u = await pipeZ(u, DecompressionStream); else if (c[0] !== "p") throw 0;
+    return JSON.parse(new TextDecoder().decode(u));
+  }
+  function resolveMove(d) {   // 받은 내용을 이 기기의 영상 글자표로 바꿔요
+    if (!d || d.v !== 2) return null;
+    const map = new Map(all.map(v => [num(v), key(v)])), un = t => (unpackIds(String(t || "")) || []).map(id => map.get(id)).filter(Boolean);
+    const R = { favs: un(d.f), recent: un(d.r), raw: d, ff: null };
+    if (d.favfolders && Array.isArray(d.favfolders.list)) { const m = {}; Object.keys(d.favfolders.map || {}).forEach(id => { const k = map.get(id); if (k) m[k] = d.favfolders.map[id]; }); R.ff = { list: d.favfolders.list, map: m }; }
+    return R;
+  }
+  async function parseMove(text) {   // 링크·코드·파일 내용을 모두 읽어요
+    text = String(text || "").trim(); if (!text) return null;
+    try {
+      let m;
+      if (text[0] === "{") return resolveMove(JSON.parse(text));
+      if ((m = text.match(/[#?&]mv=([\w-]+)/)) || (m = text.match(/^([zp][\w-]{8,})$/))) return resolveMove(await decodeCode(m[1]));
+      if ((m = text.match(/import=(1\.[\w-]*\.[\w-]*)/)) || (m = text.match(/^(1\.[\w-]*\.[\w-]*)$/))) {   // 예전 링크 (즐겨찾기·열어본 영상만)
+        const p = m[1].split("."), map = new Map(all.map(v => [num(v), key(v)])), un = t => (unpackIds(t) || []).map(id => map.get(id)).filter(Boolean);
+        return { favs: un(p[1]), recent: un(p[2]), raw: {}, ff: null };
+      }
+    } catch (e) {}
+    return null;
   }
   let pendingMove = null;
-  function askImport(code) {   // 링크나 QR코드로 들어왔을 때
-    history.replaceState(null, "", location.pathname + location.search);
-    const d = readMove(code);
-    if (!d) return toast("가져올 수 없는 링크예요. 링크를 다시 만들어 주세요");
-    const nfv = d.favs.filter(k => !favs.has(k)).length, nr = d.recent.filter(k => !recent.includes(k)).length;
-    if (!nfv && !nr) return toast("새로 더할 기록이 없어요. 이미 다 있어요");
-    pendingMove = d;
-    $("iText").textContent = "다른 기기에서 보낸 기록이에요. 즐겨찾기 " + nfv + "개, 열어본 영상 " + nr + "개를 이 기기에 더할까요? 지금 있는 기록은 그대로 남아요.";
-    $("imp").hidden = false; document.body.style.overflow = "hidden"; $("iYes").focus();
+  function askImport(R) {
+    if (!R) return toast("가져올 수 없는 내용이에요. 링크나 파일을 다시 확인해 주세요");
+    const nfv = R.favs.filter(k => !favs.has(k)).length, nr = R.recent.filter(k => !recent.includes(k)).length, nf = R.ff ? R.ff.list.length : 0;
+    const rs = R.raw || {}, hasSet = MV_SET.some(k => rs[k] !== undefined), hasLog = Array.isArray(rs.seenlog) && rs.seenlog.length;
+    const parts = ["즐겨찾기 " + nfv + "개", "열어본 영상 " + nr + "개"]; if (nf) parts.push("폴더 " + nf + "개"); if (hasLog) parts.push("시청 기록"); if (rs.ach || rs.stat) parts.push("도전과제"); if (hasSet) parts.push("화면 설정");
+    pendingMove = R;
+    $("iText").textContent = "다른 기기의 데이터예요. " + parts.join(", ") + "을(를) 이 기기에 합칠까요? 지금 있는 기록은 지워지지 않고, 화면 설정은 받은 값으로 바뀌어요. 가져온 뒤 사이트가 새로고침돼요.";
+    $("xfer").hidden = true; $("imp").hidden = false; document.body.style.overflow = "hidden"; $("iYes").focus();
   }
   function closeImp() { $("imp").hidden = true; document.body.style.overflow = ""; pendingMove = null; }
   $("iNo").addEventListener("click", closeImp);
+  function applyMove(R) {
+    const d = R.raw || {}, g = rawGet;
+    const fv = [...favs]; R.favs.forEach(k => { if (!fv.includes(k)) fv.push(k); }); rawSet("favs", fv);
+    rawSet("recent", [...recent, ...R.recent.filter(k => !recent.includes(k))].slice(0, RECENT_MAX));
+    MV_SET.forEach(k => { if (d[k] !== undefined) rawSet(k, d[k]); });
+    ["sov1", "ach"].forEach(k => { if (d[k] && typeof d[k] === "object") rawSet(k, { ...d[k], ...(g(k) || {}) }); });
+    if (d.stat && typeof d.stat === "object") {
+      const a = g("stat") || {}, b = d.stat, u = (x, y) => [...new Set([...(Array.isArray(x) ? x : []), ...(Array.isArray(y) ? y : [])])];
+      rawSet("stat", { ...b, ...a, opened: u(a.opened, b.opened), legends: u(a.legends, b.legends), days: u(a.days, b.days).slice(-40), draws: Math.max(a.draws | 0, b.draws | 0), rare: Math.max(a.rare | 0, b.rare | 0), flags: { ...(b.flags || {}), ...(a.flags || {}) } });
+    }
+    if (Array.isArray(d.seenlog)) {
+      const a = g("seenlog"), seen = new Set(), out = [];
+      [...(Array.isArray(a) ? a : []), ...d.seenlog].forEach(e => { if (!e || typeof e.t !== "number") return; const id = e.t + "|" + e.c; if (!seen.has(id)) { seen.add(id); out.push({ c: e.c, t: e.t }); } });
+      out.sort((x, y) => x.t - y.t); rawSet("seenlog", out.slice(-1500));
+    }
+    ["notes_seen", "ann_seen"].forEach(k => { const a = g(k), b = d[k]; if (typeof a === "number" && typeof b === "number") rawSet(k, Math.max(a, b)); else if (a == null && b != null) rawSet(k, b); });
+    if (R.ff) {
+      const lf = g("favfolders"), L = lf && Array.isArray(lf.list) ? { list: lf.list.slice(), map: { ...(lf.map || {}) } } : { list: [], map: {} }, idMap = {};
+      R.ff.list.forEach(f => { if (!f || !f.id || !f.name) return; const same = L.list.find(x => x.id === f.id) || L.list.find(x => x.name === f.name); if (same) idMap[f.id] = same.id; else if (L.list.length < 20) { L.list.push({ id: f.id, name: String(f.name).slice(0, 12) }); idMap[f.id] = f.id; } });
+      Object.keys(R.ff.map).forEach(k => { const t = idMap[R.ff.map[k]]; if (t && !L.map[k]) L.map[k] = t; });
+      rawSet("favfolders", L);
+    }
+    achFlag("moved");
+  }
   $("iYes").addEventListener("click", () => {
-    const d = pendingMove; if (!d) return closeImp();
-    let nfv = 0; d.favs.forEach(k => { if (!favs.has(k)) { favs.add(k); nfv++; } });
-    const add = d.recent.filter(k => !recent.includes(k));
-    recent = [...recent, ...add].slice(0, RECENT_MAX);
-    store.set("favs", [...favs]); store.set("recent", recent);
-    achFlag("moved"); closeImp(); render(); toast("즐겨찾기 " + nfv + "개, 열어본 영상 " + add.length + "개를 가져왔어요");
+    const R = pendingMove; if (!R) return closeImp();
+    applyMove(R); closeImp(); toast("가져왔어요. 잠시 뒤 새로고침돼요"); setTimeout(() => { location.replace(location.pathname + location.search); }, 900);
   });
   function loadQr() {
     if (window.qrcode) return Promise.resolve();
     return new Promise((ok, no) => { const sc = document.createElement("script"); sc.src = "vendor/qrcode.js"; sc.onload = ok; sc.onerror = no; document.head.appendChild(sc); });
   }
-  function openXfer() {
+  const mvFile = () => new File([JSON.stringify(buildMove(false))], "잉여맨-내데이터.json", { type: "application/json" });
+  async function openXfer() {
     closeSet(); closeMenu();
-    const nfv = favs.size, nr = recent.map(byKey).filter(Boolean).length, has = nfv + nr > 0;
+    const nfv = favs.size, nr = recent.map(byKey).filter(Boolean).length;
     $("xCount").textContent = "지금 이 기기에는 즐겨찾기 " + nfv + "개, 열어본 영상 " + nr + "개가 있어요.";
-    $("xHave").hidden = !has; $("xNone").hidden = has;
-    $("xfer").hidden = false; document.body.style.overflow = "hidden"; $("xClose").focus();
-    if (!has) return;
-    const link = moveLink();
-    $("xLink").value = link; $("xShare").hidden = !(navigator.share && matchMedia("(pointer:coarse)").matches);   // 휴대폰·태블릿에서만 보여요 (컴퓨터에서는 링크 복사를 써요)
-    $("xQr").textContent = "QR코드를 만드는 중이에요";
-    loadQr().then(() => {
-      const q = window.qrcode(0, "L"); q.addData(link); q.make();
+    $("xPaste").value = ""; $("xfer").hidden = false; document.body.style.overflow = "hidden"; $("xClose").focus();
+    const touch = matchMedia("(pointer:coarse)").matches;
+    $("xShare").hidden = !(navigator.share && touch);   // 휴대폰·태블릿에서만 보여요
+    $("xLink").value = "만드는 중이에요…"; $("xQr").textContent = "QR코드를 만드는 중이에요";
+    try {
+      const link = location.origin + location.pathname + "#mv=" + await encodeMove(buildMove(true));
+      $("xLink").value = link;
+      if (link.length > 2500) { $("xQr").textContent = "데이터가 많아서 QR코드는 못 만들어요. 링크나 파일을 써 주세요."; return; }
+      await loadQr(); const q = window.qrcode(0, "L"); q.addData(link); q.make();
       $("xQr").innerHTML = q.createSvgTag({ cellSize: 4, margin: 3, scalable: true });
-    }).catch(() => { $("xQr").textContent = "QR코드를 만들지 못했어요. 아래 링크를 써 주세요."; });
+    } catch (e) { $("xQr").textContent = "QR코드를 만들지 못했어요. 링크나 파일을 써 주세요."; }
   }
   function closeXfer() { $("xfer").hidden = true; document.body.style.overflow = ""; }
-  $("favXfer").addEventListener("click", openXfer);
+  $("xferOpen").addEventListener("click", openXfer);
   $("xClose").addEventListener("click", closeXfer);
   $("xfer").addEventListener("click", e => { if (e.target === $("xfer") && downT === e.target) closeXfer(); });
   $("xLink").addEventListener("focus", () => $("xLink").select());
@@ -991,11 +1051,21 @@
     const link = $("xLink").value, done = () => toast("링크를 복사했어요. 다른 기기에서 열어 주세요"), fail = () => { $("xLink").focus(); toast("위 칸의 링크를 직접 복사해 주세요"); };
     if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(link).then(done, fail); else fail();
   });
-  $("xShare").addEventListener("click", () => {
-    const link = $("xLink").value;
-    const copy = () => { if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(link).then(() => toast("공유가 안 돼서 링크를 복사했어요. 카톡이나 메모에 붙여넣어 주세요"), () => { $("xLink").focus(); toast("위 칸의 링크를 직접 복사해 주세요"); }); else { $("xLink").focus(); toast("위 칸의 링크를 직접 복사해 주세요"); } };
-    if (!navigator.share) return copy();
-    navigator.share({ title: "잉여맨 추억자료실 내 기록", text: "잉여맨 추억자료실 내 기록 링크예요. 다른 기기에서 열어 주세요", url: link }).catch(e => { if (!e || e.name !== "AbortError") copy(); });   // 닫기만 한 경우는 그대로 두고, 오류면 복사해 줘요
+  $("xSave").addEventListener("click", () => {
+    const f = mvFile(), a = document.createElement("a"); a.href = URL.createObjectURL(f); a.download = f.name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000); toast("파일로 저장했어요. 다른 기기로 보낸 뒤 「파일 불러오기」를 눌러 주세요");
+  });
+  $("xShare").addEventListener("click", () => {   // 휴대폰의 공유창이 열려요 (블루투스·퀵쉐어·에어드롭·카톡 등)
+    const f = mvFile(), link = $("xLink").value;
+    const data = navigator.canShare && navigator.canShare({ files: [f] }) ? { files: [f], title: "잉여맨 추억자료실 내 데이터" } : { title: "잉여맨 추억자료실 내 데이터", text: "다른 기기에서 열어 주세요", url: link };
+    navigator.share(data).catch(e => { if (e && e.name !== "AbortError") toast("공유가 안 돼요. 링크 복사나 파일 저장을 써 주세요"); });
+  });
+  $("xGo").addEventListener("click", async () => { const R = await parseMove($("xPaste").value); if (!R) return toast("읽을 수 없어요. 받은 링크를 통째로 붙여넣어 주세요"); askImport(R); });
+  $("xLoad").addEventListener("click", () => $("xFile").click());
+  $("xFile").addEventListener("change", async () => {
+    const f = $("xFile").files[0]; $("xFile").value = ""; if (!f) return;
+    if (f.size > 2e6) return toast("파일이 너무 커요. 이 사이트에서 저장한 파일만 불러올 수 있어요");
+    askImport(await parseMove(await f.text()));
   });
 
   /* ── 썸네일 제보 건수 (GitHub에 열려 있는 제보 글을 세요) ── */
@@ -1219,7 +1289,7 @@
   });
   window.addEventListener("hashchange", () => {   // 탭 이동은 이전 화면이 부드럽게 사라지며 새 화면으로 바뀌어요
     const h = location.hash.replace("#", "");
-    const sameView = h.startsWith("v=") || h.startsWith("import=");
+    const sameView = h.startsWith("v=") || h.startsWith("import=") || h.startsWith("mv=");
     if (!document.startViewTransition || calm() || sameView || !$("consent") || document.documentElement.classList.contains("consent-on")) return route();
     const de = document.documentElement; de.classList.add("vt");
     let t; try { t = document.startViewTransition(() => route()); } catch (e) { de.classList.remove("vt"); return route(); }
@@ -1473,7 +1543,7 @@
       $("abN").textContent = nf(all.length); $("abC").textContent = new Set(all.map(v => v.category).filter(Boolean)).size; $("abS").textContent = SERIES.length;
       let sv = null; try { if (((performance.getEntriesByType("navigation")[0] || {}).type) === "reload") sv = JSON.parse(sessionStorage.getItem("view1")); } catch (e) {}
       route(); achStart(); if (rtok) syncPull();
-      if (sv && sv.h === location.hash && !location.hash.startsWith("#v=") && !location.hash.startsWith("#import=")) {   // 새로고침하면 보던 분류·검색·위치를 그대로 이어서 보여줘요
+      if (sv && sv.h === location.hash && !location.hash.startsWith("#v=") && !location.hash.startsWith("#import=") && !location.hash.startsWith("#mv=")) {   // 새로고침하면 보던 분류·검색·위치를 그대로 이어서 보여줘요
         if (typeof sv.cat === "string" && sv.cat) cat = sv.cat;
         if (typeof sv.q === "string" && sv.q) $("q").value = sv.q.slice(0, 80);
         reset(); if (sv.shown > shown) { shown = Math.min(sv.shown, all.length + PAGE); render(); }
