@@ -538,7 +538,7 @@
     todayKey = key(v); box.dataset.k = todayKey;
     box.innerHTML = `<div class="hero-bg" style="--g:${grad(v.category)}">${v.thumb ? `<img src="${esc(v.thumb)}" alt="">` : ""}</div>
       <div class="hero-in"><span class="label"><span class="live-tag"><i></i>LIVE</span>오늘의 다시보기</span><h2>${esc(v.title)}</h2>
-      <p class="hero-meta"><span class="cat-dot" style="--c:${dot(v.category)}">${esc(v.category || "기타")}</span>${ytId(v) ? "<span>바로 재생돼요</span>" : ""}</p>
+      <p class="hero-meta"><span class="cat-dot" style="--c:${dot(v.category)}">${esc(v.category || "기타")}</span>${ytId(v) ? "<span>바로 재생돼요</span>" : ""}<span class="live-view"><i></i>${(300 + hash("live" + todayKey) % 4200).toLocaleString("ko-KR")}명 시청 중</span></p>
       <div class="acts"><a class="btn primary" data-go href="${esc(safeUrl(v.url))}" target="_blank" rel="noopener noreferrer">${ytId(v) ? "바로 보기" : "다시보기" + OUT}</a>
       <button class="btn glass" type="button" data-fav>${favs.has(todayKey) ? "♥ 담았어요" : "♡ 즐겨찾기"}</button></div></div>
       <div class="live-bar" aria-hidden="true"><b style="width:${Math.max(4, Math.min(100, ((Date.now() + 9 * 36e5) % 864e5) / 864e3)).toFixed(1)}%"><i></i></b></div>`;
