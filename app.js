@@ -615,6 +615,7 @@
     $("home").hidden = !home; $("browse").hidden = home;
     renderChips(); renderToday();
     $("chips").hidden = tiles || tab === "nothumb";
+    $("refBox").hidden = !(tab === "fav" || tab === "recent");
     if (home) { renderHome(); return playIn($("home")); }
     $("pageH").textContent = tiles ? "시리즈" : rank ? "인기 랭킹" : tab === "series" && ser ? ser : q ? "검색 결과" : tab === "fav" ? "즐겨찾기" : tab === "recent" ? "열어본 영상" : tab === "nothumb" ? "썸네일 없는 영상" : cat && cat !== "*" ? cat : "전체 영상";
     $("count").textContent = tiles ? SERIES.length + "개" : list.length + (tab === "series" ? "편" : "개");
@@ -1044,6 +1045,7 @@
   }
   function closeXfer() { $("xfer").hidden = true; document.body.style.overflow = ""; }
   $("xferOpen").addEventListener("click", openXfer);
+  $("refOpen").addEventListener("click", openXfer);
   $("xClose").addEventListener("click", closeXfer);
   $("xfer").addEventListener("click", e => { if (e.target === $("xfer") && downT === e.target) closeXfer(); });
   $("xLink").addEventListener("focus", () => $("xLink").select());
