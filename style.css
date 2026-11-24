@@ -2048,8 +2048,6 @@ html:not([data-motion="off"]) .rows .card.r1, html:not([data-motion="off"]) .row
 .live-bar b { position:relative; display:block; height:100%; background:#ff2d3d; }
 .live-bar i { position:absolute; right:-5px; top:50%; width:12px; height:12px; margin-top:-6px; border-radius:50%; background:#ff2d3d; box-shadow:0 0 0 0 rgba(255,45,61,.7); animation:livePulse 1.4s ease-out infinite; }
 @keyframes livePulse { 0% { box-shadow:0 0 0 0 rgba(255,80,90,.75); } 70%,100% { box-shadow:0 0 0 9px rgba(255,80,90,0); } }
-html[data-motion="off"] .live-tag i, html[data-motion="off"] .live-bar i { animation:none; }
-@media (prefers-reduced-motion:reduce) { .live-tag i, .live-bar i { animation:none; } }
 .hero .label::before { display:none !important; }
 .live-view { display:inline-flex; align-items:center; gap:6px; color:#ff8d96; font-weight:700; }
 .live-view i { width:7px; height:7px; border-radius:50%; background:#ff2d3d; }
@@ -2059,5 +2057,8 @@ html[data-motion="off"] .live-tag i, html[data-motion="off"] .live-bar i { anima
 .live-chat p { margin:0; font-size:13px; line-height:1.45; color:rgba(255,255,255,.92); word-break:keep-all; overflow-wrap:anywhere; animation:chatIn .35s both; }
 .live-chat p b { margin-right:7px; font-weight:700; }
 @keyframes chatIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
-html[data-motion="off"] .live-chat p { animation:none; }
 @media (max-width:860px) { .live-chat { top:14px; bottom:auto; right:14px; width:58%; max-height:104px; padding:8px 10px; -webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 45%); mask-image:linear-gradient(to bottom,transparent 0,#000 45%); } .live-chat p { font-size:12px; } .live-chat p:nth-last-child(n+4) { display:none; } }
+
+/* 오늘의 다시보기는 「움직임 줄이기」를 켜도 그대로 움직여요 (연출) */
+html[data-motion] #today .live-tag i, html[data-motion] #today .live-bar i { animation:livePulse 1.4s ease-out infinite !important; }
+html[data-motion] #today .live-chat p { animation:chatIn .3s both !important; }
