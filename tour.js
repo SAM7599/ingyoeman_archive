@@ -6,7 +6,7 @@
   var KEY = "tour1", de = document.documentElement, calm = function () { return de.getAttribute("data-motion") === "off"; };
   var seen = function () { try { return !!localStorage.getItem(KEY); } catch (e) { return true; } };
   var mark = function () { try { localStorage.setItem(KEY, "1"); } catch (e) {} };
-  var mobile = function () { return matchMedia("(max-width:860px)").matches; };
+  var mobile = function () { return matchMedia("(max-width:860px)").matches && !matchMedia("(hover:hover) and (pointer:fine)").matches; };
   var pick = function (sel) { var e = document.querySelector(sel); if (!e) return null; var r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0 ? e : null; };
 
   var STEPS = [

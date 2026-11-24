@@ -1920,3 +1920,16 @@ html:not([data-motion="off"]) .rk.t1, html[data-motion="off"] .rk.t1 { font-size
 html:not([data-motion="off"]) .rows .card.r1, html:not([data-motion="off"]) .rows .card.r2, html:not([data-motion="off"]) .rows .card.r3, html[data-motion="off"] .rows .card.r1, html[data-motion="off"] .rows .card.r2, html[data-motion="off"] .rows .card.r3 { background:transparent !important; box-shadow:none !important; border-radius:0; padding:10px 4px; margin:0; border-bottom-color:var(--line); }
 .card.rt10 .rk { color:var(--sub); }
 @media (max-width:860px) { .rk.hot, .rk.t1 { font-size:19px !important; } }
+
+/* ═══ 컴퓨터(마우스): 창을 좁혀도 휴대폰처럼 아래 메뉴를 띄우지 않고 위쪽 메뉴를 그대로 써요 ═══ */
+@media (max-width:860px) and (hover:hover) and (pointer:fine) {
+  .bottom { display:none !important; }
+  .nav { display:flex !important; order:4; flex:1 1 100%; overflow-x:auto; scrollbar-width:none; gap:0; margin:0 -4px; }
+  .nav::-webkit-scrollbar { display:none; }
+  .nav .tab { padding:8px 11px; font-size:14px; flex:none; }
+  .search { order:5; }
+  .fb { bottom:20px; }
+  .totop { bottom:80px; }
+  #toast { bottom:30px; }
+  footer { padding-bottom:36px; }
+}
