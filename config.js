@@ -9,6 +9,7 @@ window.SITE = {
   discord: "",   // (사용 안 함) 비워 두면 제보 버튼이 위 카페 게시판으로 연결돼요
   google: "313175138585-0lj420uspicahtk0nutdpvlp8rgqk5mc.apps.googleusercontent.com",   // 구글 로그인 클라이언트 ID (....apps.googleusercontent.com)
   rating: "https://ingyoeman-rating.programguy53.workers.dev",   // 로그인·저장 서버 주소 (https://....workers.dev) — 비우면 로그인 기능이 꺼져 있어요
+  rankDate: "2026-11-13",   // 인기 랭킹 숫자(조회수·좋아요)를 마지막으로 갱신한 날짜 (YYYY-MM-DD) — 영상 목록 숫자를 바꿀 때 같이 고쳐요
   categories: [
     "탈출맵", "상황극", "게임", "하이라이트", "콘텐츠특집", "잉여맨뒷담화",
     "아프리카TV", "게스트출연", "개인녹화본", "펌녹화본",
