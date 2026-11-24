@@ -1453,4 +1453,23 @@
       }
     })
     .catch(() => { route(); $("grid").innerHTML = `<div class="empty"><b>목록을 불러오지 못했어요</b>잠시 뒤 새로고침해 주세요.</div>`; });
+  /* 컴퓨터: 분류·가로 목록을 마우스로 잡고 끌어서 넘길 수 있어요 */
+  (() => {
+    let el = null, x0 = 0, s0 = 0, moved = false;
+    document.addEventListener("mousedown", e => {
+      if (e.button !== 0) return;
+      const t = e.target.closest && e.target.closest(".chips, .rail, .nav"); if (!t || t.scrollWidth <= t.clientWidth + 1) return;
+      el = t; x0 = e.clientX; s0 = t.scrollLeft; moved = false;
+    });
+    document.addEventListener("mousemove", e => {
+      if (!el) return; const dx = e.clientX - x0;
+      if (!moved && Math.abs(dx) > 5) { moved = true; el.classList.add("dragging"); }
+      if (moved) { el.scrollLeft = s0 - dx; e.preventDefault(); }
+    });
+    const end = () => {
+      if (!el) return; const t = el; el = null; t.classList.remove("dragging");
+      if (moved) { const stop = ev => { ev.stopPropagation(); ev.preventDefault(); }; t.addEventListener("click", stop, { capture: true, once: true }); setTimeout(() => t.removeEventListener("click", stop, true), 0); }
+    };
+    document.addEventListener("mouseup", end); window.addEventListener("blur", end);
+  })();
 })();
