@@ -651,6 +651,7 @@
     if (tab !== "series" && serOn) { serOn = false; $("serBar").hidden = true; document.body.classList.remove("ser-on"); }   // 시리즈 탭을 떠나면 편집 모드는 꺼져요
     $("viewGuide").hidden = tab !== "guide"; $("viewAbout").hidden = tab !== "about"; $("viewNotes").hidden = tab !== "notes"; if (tab === "notes") showNotes(); $("viewAch").hidden = tab !== "ach"; if (tab === "ach") renderAch(); $("viewList").hidden = isInfo();
     document.querySelectorAll(".tab").forEach(a => a.classList.toggle("on", a.dataset.tab === (tab === "ach" ? "ach" : isInfo() ? "info" : tab === "nothumb" ? "all" : tab)));
+    navInd();
     const pg = tab === "guide" ? $("viewGuide") : tab === "about" ? $("viewAbout") : tab === "notes" ? $("viewNotes") : tab === "ach" ? $("viewAch") : $("viewList"); pg.classList.remove("enter"); if (moved && !document.documentElement.classList.contains("vt")) { void pg.offsetWidth; pg.classList.add("enter"); }
     closeMenu();
     document.documentElement.classList.remove("pre-guide", "pre-about", "pre-notes", "pre-ach", "pre-rank", "pre-series", "pre-fav", "pre-recent", "pre-nothumb");
@@ -673,6 +674,18 @@
   const isPhone = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
   let cafeWin = null;
   const isCafe = u => { try { const x = new URL(u); return x.protocol === "https:" && /(^|\.)cafe\.naver\.com$/.test(x.hostname); } catch (e) { return false; } };
+  /* 위쪽 메뉴: 빨간 밑줄이 선택한 탭으로 부드럽게 미끄러져 가요 */
+  function navInd() {
+    const nav = document.querySelector(".nav"); if (!nav) return;
+    let ind = nav.querySelector(".nav-ind");
+    if (!ind) { ind = document.createElement("span"); ind.className = "nav-ind"; ind.setAttribute("aria-hidden", "true"); nav.appendChild(ind); }
+    const on = nav.querySelector(".tab.on");
+    if (!on || !on.offsetWidth) { ind.style.opacity = "0"; return; }
+    ind.style.width = on.offsetWidth + "px"; ind.style.transform = "translateX(" + on.offsetLeft + "px)"; ind.style.opacity = "1";
+    if (!ind.classList.contains("go")) requestAnimationFrame(() => requestAnimationFrame(() => ind.classList.add("go")));
+  }
+  window.addEventListener("resize", navInd);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(navInd);
   const popupOn = () => !isPhone && store.get("popup", "on") !== "off";
   function follow(e, v, href) {   // 영상 링크를 눌렀을 때
     if (ytId(v) && $("modal").hidden) { e.preventDefault(); return openModal(v); }   // 유튜브 영상은 사이트 안에서 재생
