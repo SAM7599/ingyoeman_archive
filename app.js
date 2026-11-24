@@ -532,26 +532,33 @@
     const on = cbox.querySelector(".chip.on"); if (on && cbox.scrollWidth > cbox.clientWidth + 4) { const l = on.offsetLeft - cbox.offsetLeft, r = l + on.offsetWidth; if (l < cbox.scrollLeft + 8 || r > cbox.scrollLeft + cbox.clientWidth - 8) cbox.scrollLeft = Math.max(0, l - (cbox.clientWidth - on.offsetWidth) / 2); }
   }
   /* 오늘의 다시보기: 가짜 채팅 연출 (재미로 넣은 글이에요. 실제 사람 글이 아니에요) */
-  const CHAT_N = ["달빛여우", "뒷담화러버", "탈출전문가", "늦덕", "오늘도출첵", "치킨먹는곰", "새벽감성", "맵뿌셔", "눈팅중", "잉여팬1호", "소소한하루", "집중탐구", "고요한밤", "맨날정주행", "별헤는밤", "초코우유", "느긋한고양이", "야식요정"];
-  const CHAT_T = ["ㅋㅋㅋㅋㅋㅋㅋ", "오늘도 왔다", "ㅇㅈㅇㅈ", "와 이거 진짜 웃겼는데", "추억 돋네요", "첫 방송부터 봤어요", "여기서 터졌지 ㅋㅋ", "BGM 뭐예요?", "ㄹㅇㅋㅋ", "이 장면 또 보러 옴", "역시 잉여맨", "아 배꼽 ㅋㅋㅋ", "다들 안녕하세요~", "정주행 가즈아", "이때가 그립다", "ㅠㅠ 재밌다", "와 대박", "ㅋㅋㅋ 표정 봐", "저만 웃겼나요", "ㅋㅋㅋㅋㅋㅋ 미쳤다", "여기 레전드 구간", "와 소름", "ㅁㅊㅋㅋ", "방금 뭐임 ㅋㅋ", "채팅 속도 보소", "다시 봐도 웃김", "1빠", "ㅇㅇ 나도 이때 봤음", "ㄷㄷㄷ", "오늘 라인업 좋다", "클립 따러 왔어요", "이 맵 어려웠는데", "ㄱㅇㅇ", "ㅎㅇㅎㅇ", "밥 먹다 뿜었다 ㅋㅋ", "역시 이맛에 본다", "또 보는 사람 손", "소리 키우세요 ㅋㅋ"];
+  const CHAT_P = ["달빛", "새벽", "뒷담화", "탈출", "늦덕", "치킨", "고양이", "별빛", "초코", "느긋한", "눈팅", "맵", "야식", "소소한", "집중", "고요한", "정주행", "오늘도", "추억", "잉여", "꿀잼", "졸린", "행복한", "배고픈", "심야", "아침", "구름", "방구석", "뚜벅이", "열혈"];
+  const CHAT_S = ["여우", "러버", "전문가", "팬", "곰", "요정", "탐험가", "러", "장인", "사랑", "대장", "지킴이", "중독자", "수집가", "손님", "친구", "한잔", "토끼", "펭귄", "감자"];
+  const CHAT_T = ["ㅋㅋㅋㅋㅋㅋㅋ", "오늘도 왔다", "ㅇㅈㅇㅈ", "와 이거 진짜 웃겼는데", "추억 돋네요", "첫 방송부터 봤어요", "여기서 터졌지 ㅋㅋ", "BGM 뭐예요?", "ㄹㅇㅋㅋ", "이 장면 또 보러 옴", "역시 잉여맨", "아 배꼽 ㅋㅋㅋ", "다들 안녕하세요~", "정주행 가즈아", "이때가 그립다", "ㅠㅠ 재밌다", "와 대박", "ㅋㅋㅋ 표정 봐", "저만 웃겼나요", "오늘 라인업 좋다", "클립 따러 왔어요", "이 맵 어려웠는데", "ㄱㅇㅇ", "ㅎㅇㅎㅇ", "밥 먹다 뿜었다 ㅋㅋ", "역시 이맛에 본다", "또 보는 사람 손", "소리 키우세요 ㅋㅋ",
+    "ㅋㅋㅋㅋㅋㅋ 미쳤다", "여기 레전드 구간", "와 소름", "ㅁㅊㅋㅋ", "방금 뭐임 ㅋㅋ", "채팅 속도 보소", "다시 봐도 웃김", "1빠", "ㅇㅇ 나도 이때 봤음", "ㄷㄷㄷ",
+    "퇴근하고 바로 달려옴", "야식 먹으면서 보는 중", "이거 보려고 일찍 왔다", "자기 전에 한 편만", "친구한테 추천했어요", "이 목소리 너무 좋다", "편집 누가 했어요 ㅋㅋ", "자막 센스 ㅋㅋㅋ", "저 이 장면 외웠어요", "옛날 생각나네", "2023년에 본 사람?", "벌써 몇 번째 보는 건지", "이 합 진짜 좋다", "역시 케미가 다르다", "ㅋㅋㅋ 텐션 보소", "분위기 미쳤다", "여기서 웃참 실패", "그 대사 또 나왔다", "다음 편도 올려주세요", "하트 누르고 갑니다", "즐겨찾기 해놨어요", "방금 입장했어요", "무슨 장면이에요?", "어디까지 봤더라", "이거 몇 화예요?", "화질 좋네요", "소리 작게 ㅋㅋ 가족 자는 중", "ㅋㅋㅋㅋ 아 진짜", "아 맞다 이거 있었지", "하 이건 못 참지", "와 이걸 다시 보네", "눈물나게 웃김", "진짜 명장면", "여기 편집점 ㅋㅋ", "ㅎㅇ 다들 뭐해요", "오 사람 많다", "분위기 좋네요", "점점 더 재밌어짐", "이 부분 짤로 만들고 싶다", "오늘 컨디션 최고", "ㅋㅋㅋ 아니 왜 저래", "인정 ㅋㅋ", "ㅇㅋㅇㅋ", "ㄴㅇㄱ", "헐", "대박사건", "오오오", "굿굿", "ㅎㅎㅎ", "ㅠㅠㅠㅠ 그립다", "와 이때 진짜 재밌었다", "다시 돌아와줘요 ㅠㅠ"];
   let liveT = 0;
   function startLiveChat() {
     clearTimeout(liveT); if (!document.querySelector("#today .live-chat")) return;
-    const n = hash("chat" + todayKey); let step = 0;
+    let viewers = 300 + hash("live" + todayKey) % 4200;   // 시청자 수가 많을수록 채팅이 빨라져요
+    const recentN = []; let bag = [];   // 글은 한 바퀴를 다 돌기 전에는 같은 글이 다시 나오지 않아요
+    const nextT = () => { if (!bag.length) { bag = CHAT_T.map((t, i) => [Math.random(), i]).sort((x, y) => x[0] - y[0]).map(x => x[1]); } return CHAT_T[bag.pop()]; };
+    const pick = (arr, used, keep) => { let x, t = 0; do { x = arr[Math.floor(Math.random() * arr.length)]; } while (used.includes(x) && ++t < 12); used.push(x); if (used.length > keep) used.shift(); return x; };
+    const nick = () => { const r = Math.random(), base = CHAT_P[Math.floor(Math.random() * CHAT_P.length)] + CHAT_S[Math.floor(Math.random() * CHAT_S.length)]; return pick([base, base + Math.floor(Math.random() * 99), base + "_" + Math.floor(Math.random() * 9 + 1), r < .1 ? "익명" + Math.floor(Math.random() * 999) : base], recentN, 30); };
+    const line = () => { let t = nextT(); if (Math.random() < .2) t += " " + "ㅋ".repeat(2 + Math.floor(Math.random() * 6)); return t; };
+    const put = (bx, nk, tx) => { const p = document.createElement("p"); p.innerHTML = '<b style="color:hsl(' + (hash(nk) % 360) + ',80%,72%)">' + esc(nk) + '</b>' + esc(tx); bx.appendChild(p); while (bx.children.length > 7) bx.firstChild.remove(); };
+    const first = document.querySelector("#today .live-chat"); for (let i = 0; i < 5; i++) put(first, nick(), line());
     const add = () => {
       const bx = document.querySelector("#today .live-chat"); if (!bx) return;
       if (!document.hidden) {
-        const burst = Math.random() < .3 ? 2 + (Math.random() < .4 ? 1 : 0) : 1;   // 가끔 여러 글이 한꺼번에 올라와요
-        for (let i = 0; i < burst; i++) {
-          const nick = CHAT_N[Math.floor(Math.random() * CHAT_N.length)], txt = CHAT_T[Math.floor(Math.random() * CHAT_T.length)] + (Math.random() < .25 ? " " + "ㅋ".repeat(2 + Math.floor(Math.random() * 6)) : ""); step++;
-          const p = document.createElement("p"); p.innerHTML = '<b style="color:hsl(' + (hash(nick) % 360) + ',80%,72%)">' + esc(nick) + '</b>' + esc(txt);
-          bx.appendChild(p); while (bx.children.length > 7) bx.firstChild.remove();
-        }
+        const f = (viewers - 300) / 4200, burst = Math.random() < .15 + f * .3 ? 2 + (Math.random() < .3 + f * .3 ? 1 : 0) : 1;   // 가끔 여러 글이 한꺼번에 올라와요
+        for (let i = 0; i < burst; i++) put(bx, nick(), line());
+        viewers = Math.max(250, viewers + Math.round((Math.random() - .45) * viewers * .02));   // 시청자 수도 조금씩 오르내려요
+        const lv = document.querySelector("#today .live-view"); if (lv && lv.lastChild) lv.lastChild.textContent = viewers.toLocaleString("ko-KR") + "명 시청 중";
       }
-      liveT = setTimeout(add, 450 + Math.random() * 1000);
+      liveT = setTimeout(add, 1500 - f0() * 1050 + Math.random() * 700);
     };
-    for (let i = 0; i < 5; i++) { const p = document.createElement("p"), nick = CHAT_N[(n + i * 7) % CHAT_N.length]; p.innerHTML = '<b style="color:hsl(' + (hash(nick) % 360) + ',80%,72%)">' + esc(nick) + '</b>' + esc(CHAT_T[(n + i * 5) % CHAT_T.length]); box0(p); }
-    function box0(p) { document.querySelector("#today .live-chat").appendChild(p); }
+    const f0 = () => Math.min(1, Math.max(0, (viewers - 300) / 4200));
     liveT = setTimeout(add, 700);
   }
   function renderToday() {
