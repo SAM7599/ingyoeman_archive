@@ -404,7 +404,7 @@
     if (s === "likes") return list.sort((a, b) => pop(b) - pop(a) || order(b) - order(a));
     return list.sort((a, b) => s === "title" ? (a.title || "").localeCompare(b.title || "", "ko") : s === "old" ? order(a) - order(b) : order(b) - order(a));
   }
-  const isInfo = () => tab === "guide" || tab === "about" || tab === "ach" || tab === "notes";
+  const isInfo = () => tab === "guide" || tab === "about" || tab === "ach" || tab === "notes" || tab === "announce";
   const isHome = () => tab === "all" && !cat && !words().length;
 
   /* ── 그리기 ── */
@@ -640,7 +640,7 @@
   /* ── 화면 바꾸기 ── */
   function route() {
     let h = location.hash.replace("#", ""); try { h = decodeURIComponent(h); } catch (e) {}
-    const next = ["fav", "recent", "guide", "about", "notes", "ach", "rank", "series", "nothumb"].includes(h) ? h : h.startsWith("series=") ? "series" : "all";
+    const next = ["fav", "recent", "guide", "about", "notes", "announce", "ach", "rank", "series", "nothumb"].includes(h) ? h : h.startsWith("series=") ? "series" : "all";
     const nextSer = h.startsWith("series=") ? h.slice(7) : "";
     const moved = next !== tab || nextSer !== ser;   // 화면(탭)이 실제로 바뀔 때만 전환 효과
     if (moved) { const h0 = document.documentElement; h0.style.scrollBehavior = "auto"; window.scrollTo(0, 0); h0.style.scrollBehavior = ""; }   // 새 화면을 훑으며 올라가지 않고 바로 맨 위에서 시작
@@ -649,10 +649,10 @@
     tab = next; ser = nextSer;
     try { if (tab !== "all") achFlag("v_" + tab); } catch (e) {}   // 화면을 처음 보면 도전과제 기록
     if (tab !== "series" && serOn) { serOn = false; $("serBar").hidden = true; document.body.classList.remove("ser-on"); }   // 시리즈 탭을 떠나면 편집 모드는 꺼져요
-    $("viewGuide").hidden = tab !== "guide"; $("viewAbout").hidden = tab !== "about"; $("viewNotes").hidden = tab !== "notes"; if (tab === "notes") showNotes(); $("viewAch").hidden = tab !== "ach"; if (tab === "ach") renderAch(); $("viewList").hidden = isInfo();
-    document.querySelectorAll(".tab").forEach(a => a.classList.toggle("on", a.dataset.tab === (tab === "ach" ? "ach" : isInfo() ? "info" : tab === "nothumb" ? "all" : tab)));
+    $("viewGuide").hidden = tab !== "guide"; $("viewAbout").hidden = tab !== "about"; $("viewNotes").hidden = tab !== "notes"; if (tab === "notes") showNotes(); $("viewAnnounce").hidden = tab !== "announce"; if (tab === "announce") showAnn(); $("viewAch").hidden = tab !== "ach"; if (tab === "ach") renderAch(); $("viewList").hidden = isInfo();
+    document.querySelectorAll(".tab").forEach(a => a.classList.toggle("on", a.dataset.tab === (tab === "ach" || tab === "announce" ? tab : isInfo() ? "info" : tab === "nothumb" ? "all" : tab)));
     navInd();
-    const pg = tab === "guide" ? $("viewGuide") : tab === "about" ? $("viewAbout") : tab === "notes" ? $("viewNotes") : tab === "ach" ? $("viewAch") : $("viewList"); pg.classList.remove("enter"); if (moved && !document.documentElement.classList.contains("vt")) { void pg.offsetWidth; pg.classList.add("enter"); }
+    const pg = tab === "guide" ? $("viewGuide") : tab === "about" ? $("viewAbout") : tab === "notes" ? $("viewNotes") : tab === "announce" ? $("viewAnnounce") : tab === "ach" ? $("viewAch") : $("viewList"); pg.classList.remove("enter"); if (moved && !document.documentElement.classList.contains("vt")) { void pg.offsetWidth; pg.classList.add("enter"); }
     closeMenu();
     document.documentElement.classList.remove("pre-guide", "pre-about", "pre-notes", "pre-ach", "pre-rank", "pre-series", "pre-fav", "pre-recent", "pre-nothumb");
     if (!isInfo()) reset();
@@ -1364,6 +1364,29 @@
   }
   $("tnHide").addEventListener("click", () => { store.set("tnHide", tnDay()); tnClose(); toast("오늘은 다시 안 보여드릴게요"); });
   $("tnX").addEventListener("click", tnClose);
+
+  /* ── 공지사항 (notices.json): 운영진이 이용자에게 알리는 글 ── */
+  let anns = null, annPrev = "";
+  const annUrl = u => { try { const x = new URL(u); return x.protocol === "https:" ? x.href : ""; } catch (e) { return ""; } };
+  const annSort = l => l.slice().sort((a, b) => (b.pin ? 1 : 0) - (a.pin ? 1 : 0) || String(b.date || "").localeCompare(String(a.date || "")));
+  const annLatest = () => (anns || []).reduce((m, n) => n.date && n.date > m ? n.date : m, "");
+  function drawAnn() {
+    const box = $("annList"); if (!box) return;
+    if (!anns) { box.innerHTML = `<p class="empty">불러오는 중이에요…</p>`; return; }
+    if (!anns.length) { box.innerHTML = `<p class="empty">아직 올라온 공지가 없어요.</p>`; return; }
+    box.innerHTML = annSort(anns).map((n, i) => {
+      const isNew = n.date && annPrev && n.date > annPrev, u = annUrl(n.link || "");
+      const body = String(n.text || "").split(/\n{2,}/).map(p => `<p>${esc(p).replace(/\n/g, "<br>")}</p>`).join("");
+      return `<details class="g-item ann${n.pin ? " pin" : ""}"${i === 0 ? " open" : ""}><summary><span class="ann-tg">${n.pin ? "📌 고정" : esc(n.tag || "공지")}</span><b>${esc(n.title)}</b>${isNew ? `<i class="ann-new">NEW</i>` : ""}${n.date ? `<time>${noteDate(n.date)}</time>` : ""}</summary><div class="ann-b">${body}${u ? `<p><a class="btn" href="${esc(u)}" target="_blank" rel="noopener noreferrer">${esc(n.linkText || "자세히 보기")}</a></p>` : ""}</div></details>`;
+    }).join("");
+  }
+  function markAnn() {   // 새 공지가 있으면 메뉴 글자 옆에 빨간 점
+    const l = annLatest(), seen = store.get("ann_seen", "");
+    document.querySelectorAll('.tab[data-tab="announce"]').forEach(a => a.classList.toggle("new", !!l && l > seen));
+  }
+  function showAnn() { drawAnn(); const l = annLatest(); if (l) { store.set("ann_seen", l); markAnn(); } }
+  { const seen0 = store.get("ann_seen", ""); annPrev = seen0;
+    fetch("notices.json?t=" + Date.now(), { cache: "no-store" }).then(r => r.json()).then(n => { anns = Array.isArray(n) ? n : []; if (tab === "announce") showAnn(); else markAnn(); }).catch(() => { anns = []; if (tab === "announce") drawAnn(); }); }
 
   /* ── 패치노트 (patchnotes.json) ── */
   let notes = null;
