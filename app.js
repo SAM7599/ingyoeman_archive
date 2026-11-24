@@ -531,17 +531,37 @@
     chipHint();
     const on = cbox.querySelector(".chip.on"); if (on && cbox.scrollWidth > cbox.clientWidth + 4) { const l = on.offsetLeft - cbox.offsetLeft, r = l + on.offsetWidth; if (l < cbox.scrollLeft + 8 || r > cbox.scrollLeft + cbox.clientWidth - 8) cbox.scrollLeft = Math.max(0, l - (cbox.clientWidth - on.offsetWidth) / 2); }
   }
+  /* 오늘의 다시보기: 가짜 채팅 연출 (재미로 넣은 글이에요. 실제 사람 글이 아니에요) */
+  const CHAT_N = ["달빛여우", "뒷담화러버", "탈출전문가", "늦덕", "오늘도출첵", "치킨먹는곰", "새벽감성", "맵뿌셔", "눈팅중", "잉여팬1호", "소소한하루", "집중탐구", "고요한밤", "맨날정주행", "별헤는밤", "초코우유", "느긋한고양이", "야식요정"];
+  const CHAT_T = ["ㅋㅋㅋㅋㅋㅋㅋ", "오늘도 왔다", "ㅇㅈㅇㅈ", "와 이거 진짜 웃겼는데", "추억 돋네요", "첫 방송부터 봤어요", "여기서 터졌지 ㅋㅋ", "BGM 뭐예요?", "ㄹㅇㅋㅋ", "이 장면 또 보러 옴", "역시 잉여맨", "아 배꼽 ㅋㅋㅋ", "다들 안녕하세요~", "정주행 가즈아", "이때가 그립다", "ㅠㅠ 재밌다", "와 대박", "ㅋㅋㅋ 표정 봐", "저만 웃겼나요", "오늘 라인업 좋다", "클립 따러 왔어요", "이 맵 어려웠는데", "ㄱㅇㅇ", "ㅎㅇㅎㅇ", "밥 먹다 뿜었다 ㅋㅋ", "역시 이맛에 본다", "또 보는 사람 손", "소리 키우세요 ㅋㅋ"];
+  let liveT = 0;
+  function startLiveChat() {
+    clearInterval(liveT); const box = document.querySelector("#today .live-chat"); if (!box) return;
+    const off = () => document.documentElement.getAttribute("data-motion") === "off" || matchMedia("(prefers-reduced-motion:reduce)").matches;
+    let n = hash("chat" + todayKey), step = 0;
+    const add = () => {
+      const bx = document.querySelector("#today .live-chat"); if (!bx) return clearInterval(liveT);
+      if (document.hidden) return;
+      const nick = CHAT_N[(n + step * 7) % CHAT_N.length], txt = CHAT_T[(n + step * 5 + (step >> 2)) % CHAT_T.length]; step++;
+      const p = document.createElement("p"); p.innerHTML = '<b style="color:hsl(' + (hash(nick) % 360) + ',80%,72%)">' + esc(nick) + '</b>' + esc(txt);
+      bx.appendChild(p); while (bx.children.length > 6) bx.firstChild.remove();
+    };
+    for (let i = 0; i < 4; i++) add();
+    if (!off()) liveT = setInterval(add, 2300);
+  }
   function renderToday() {
     const box = $("today");
     const v = isHome() && all.length ? (byKey(todayKey) || all[hash(new Date().toDateString()) % all.length]) : null;
     box.hidden = !v; if (!v) return;
     todayKey = key(v); box.dataset.k = todayKey;
     box.innerHTML = `<div class="hero-bg" style="--g:${grad(v.category)}">${v.thumb ? `<img src="${esc(v.thumb)}" alt="">` : ""}</div>
-      <div class="hero-in"><span class="label"><span class="live-tag"><i></i>LIVE</span>오늘의 다시보기</span><h2>${esc(v.title)}</h2>
+      <div class="hero-in"><span class="live-tag"><i></i>LIVE</span><h2>${esc(v.title)}</h2>
       <p class="hero-meta"><span class="cat-dot" style="--c:${dot(v.category)}">${esc(v.category || "기타")}</span>${ytId(v) ? "<span>바로 재생돼요</span>" : ""}<span class="live-view"><i></i>${(300 + hash("live" + todayKey) % 4200).toLocaleString("ko-KR")}명 시청 중</span></p>
       <div class="acts"><a class="btn primary" data-go href="${esc(safeUrl(v.url))}" target="_blank" rel="noopener noreferrer">${ytId(v) ? "바로 보기" : "다시보기" + OUT}</a>
       <button class="btn glass" type="button" data-fav>${favs.has(todayKey) ? "♥ 담았어요" : "♡ 즐겨찾기"}</button></div></div>
+      <div class="live-chat" aria-hidden="true"></div>
       <div class="live-bar" aria-hidden="true"><b style="width:${Math.max(4, Math.min(100, ((Date.now() + 9 * 36e5) % 864e5) / 864e3)).toFixed(1)}%"><i></i></b></div>`;
+    startLiveChat();
     if (box.dataset.shown !== todayKey) { box.dataset.shown = todayKey; box.classList.remove("anim"); void box.offsetWidth; box.classList.add("anim"); }
   }
   const ARR = d => `<button class="arr ${d < 0 ? "l" : "r"}" type="button" data-dir="${d}" aria-label="${d < 0 ? "앞으로" : "뒤로"} 넘기기"><svg viewBox="0 0 24 24"><path d="${d < 0 ? "M14 6l-6 6 6 6" : "M10 6l6 6-6 6"}"/></svg></button>`;
