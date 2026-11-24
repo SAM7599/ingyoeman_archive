@@ -59,6 +59,8 @@
   let all = [], SERIES = [], ser = "", tab = "all", cat = "", shown = PAGE, todayKey = null, menuFor = null, current = null;
   let favs = new Set(store.get("favs", []));
   let recent = store.get("recent", []);   // 열어본 영상 (자동)
+  let FF = store.get("favfolders", null); if (!FF || !Array.isArray(FF.list) || !FF.map || typeof FF.map !== "object") FF = { list: [], map: {} };   // 즐겨찾기 폴더 (이 기기에만 저장)
+  let favFolder = "";   // "" = 전체, "_" = 폴더 없음, 그 외 = 폴더 id
   let view = store.get("view2", "grid") === "rows" ? "rows" : "grid";
   const savedSort = store.get("sort", "new");
   $("sort").value = ["new", "old", "title", "likes"].includes(savedSort) ? savedSort : "new";
@@ -373,7 +375,7 @@
 
   /* ── 목록 고르기 ── */
   function pool() {
-    if (tab === "fav") return all.filter(v => favs.has(key(v)));
+    if (tab === "fav") return all.filter(v => { const k = key(v); return favs.has(k) && (!favFolder || (favFolder === "_" ? !folderOf(k) : folderOf(k) === favFolder)); });
     if (tab === "recent") return recent.map(byKey).filter(Boolean);
     if (tab === "nothumb") return all.filter(v => !v.thumb);
     if (tab === "rank") return ranked(all);
@@ -404,7 +406,7 @@
     if (s === "likes") return list.sort((a, b) => pop(b) - pop(a) || order(b) - order(a));
     return list.sort((a, b) => s === "title" ? (a.title || "").localeCompare(b.title || "", "ko") : s === "old" ? order(a) - order(b) : order(b) - order(a));
   }
-  const isInfo = () => tab === "guide" || tab === "about" || tab === "ach" || tab === "notes" || tab === "announce";
+  const isInfo = () => tab === "guide" || tab === "about" || tab === "ach" || tab === "notes" || tab === "announce" || tab === "stats";
   const isHome = () => tab === "all" && !cat && !words().length;
 
   /* ── 그리기 ── */
@@ -584,6 +586,7 @@
     $("home").innerHTML = quizHtml() +
       (top.length ? `<section class="row"><div class="row-h"><h2>인기 영상</h2><a class="more" href="#rank">랭킹 전체 보기</a></div>
         <div class="rail-wrap">${ARR(-1)}<div class="rail">${top.map((v, i) => cardHtml(v, true, i + 1)).join("")}</div>${ARR(1)}</div></section>` : "") +
+      recoHtml() +
       (() => { const b = promoHtml(); return b ? `<div class="promos">${b}</div>` : ""; })() +
       rowHtml("최근 열어본 영상", recent.map(byKey).filter(Boolean), `<a class="more" href="#recent">전체 보기</a>`) +
       rowHtml("즐겨찾기", sorted.filter(v => favs.has(key(v))), `<a class="more" href="#fav">전체 보기</a>`) +
@@ -622,7 +625,7 @@
     const note = serOn ? (tiles ? "시리즈를 열어서 고칠 영상을 눌러 주세요. 고친 내용은 이 기기에만 저장돼요." : "시리즈를 바꿀 영상을 눌러 주세요. 고친 내용은 이 기기에만 저장돼요.") : tab === "nothumb" ? "아직 썸네일이 없는 영상이에요. 영상 제목 옆 점 세 개(⋮) 메뉴에서 “썸네일 제보”를 눌러 주세요. 여러분의 제보로 목록이 채워져요." : tiles ? "같은 콘텐츠끼리 묶었어요. 제목으로 자동 분류해서 빠지거나 잘못 들어간 영상이 있을 수 있어요."
       : rank ? "네이버 카페 조회수와 좋아요를 합친 점수 순서예요. 좋아요 1개를 조회수 " + LIKE_W + "회로 쳤어요." + "" + " 카페 숫자는 목록을 정리한 때 기준이라 지금과 조금 다를 수 있어요." : "";
     $("pageNote").hidden = !note; $("pageNote").textContent = note;
-    $("favXferBox").hidden = tab !== "fav";
+    $("favXferBox").hidden = tab !== "fav"; drawFolderBar();
     $("grid").className = tiles ? "grid tiles" : "grid" + (view === "rows" || rank ? " rows" : "");
     $("vGrid").classList.toggle("on", view === "grid"); $("vList").classList.toggle("on", view === "rows");
     if (rank && !rankWas) { $("grid").classList.add("rank-in"); setTimeout(() => $("grid").classList.remove("rank-in", "anim"), 1800); }   // 랭킹 화면에 처음 들어올 때만 차례로 등장
@@ -640,7 +643,7 @@
   /* ── 화면 바꾸기 ── */
   function route() {
     let h = location.hash.replace("#", ""); try { h = decodeURIComponent(h); } catch (e) {}
-    const next = ["fav", "recent", "guide", "about", "notes", "announce", "ach", "rank", "series", "nothumb"].includes(h) ? h : h.startsWith("series=") ? "series" : "all";
+    const next = ["fav", "recent", "guide", "about", "notes", "announce", "stats", "ach", "rank", "series", "nothumb"].includes(h) ? h : h.startsWith("series=") ? "series" : "all";
     const nextSer = h.startsWith("series=") ? h.slice(7) : "";
     const moved = next !== tab || nextSer !== ser;   // 화면(탭)이 실제로 바뀔 때만 전환 효과
     if (moved) { const h0 = document.documentElement; h0.style.scrollBehavior = "auto"; window.scrollTo(0, 0); h0.style.scrollBehavior = ""; }   // 새 화면을 훑으며 올라가지 않고 바로 맨 위에서 시작
@@ -649,10 +652,10 @@
     tab = next; ser = nextSer;
     try { if (tab !== "all") achFlag("v_" + tab); } catch (e) {}   // 화면을 처음 보면 도전과제 기록
     if (tab !== "series" && serOn) { serOn = false; $("serBar").hidden = true; document.body.classList.remove("ser-on"); }   // 시리즈 탭을 떠나면 편집 모드는 꺼져요
-    $("viewGuide").hidden = tab !== "guide"; $("viewAbout").hidden = tab !== "about"; $("viewNotes").hidden = tab !== "notes"; if (tab === "notes") showNotes(); $("viewAnnounce").hidden = tab !== "announce"; if (tab === "announce") showAnn(); $("viewAch").hidden = tab !== "ach"; if (tab === "ach") renderAch(); $("viewList").hidden = isInfo();
+    $("viewGuide").hidden = tab !== "guide"; $("viewAbout").hidden = tab !== "about"; $("viewNotes").hidden = tab !== "notes"; if (tab === "notes") showNotes(); $("viewAnnounce").hidden = tab !== "announce"; if (tab === "announce") showAnn(); $("viewStats").hidden = tab !== "stats"; if (tab === "stats") drawStats(); $("viewAch").hidden = tab !== "ach"; if (tab === "ach") renderAch(); $("viewList").hidden = isInfo();
     document.querySelectorAll(".tab").forEach(a => a.classList.toggle("on", a.dataset.tab === (tab === "ach" || tab === "announce" ? tab : isInfo() ? "info" : tab === "nothumb" ? "all" : tab)));
     navInd();
-    const pg = tab === "guide" ? $("viewGuide") : tab === "about" ? $("viewAbout") : tab === "notes" ? $("viewNotes") : tab === "announce" ? $("viewAnnounce") : tab === "ach" ? $("viewAch") : $("viewList"); pg.classList.remove("enter"); if (moved && !document.documentElement.classList.contains("vt")) { void pg.offsetWidth; pg.classList.add("enter"); }
+    const pg = tab === "guide" ? $("viewGuide") : tab === "about" ? $("viewAbout") : tab === "notes" ? $("viewNotes") : tab === "announce" ? $("viewAnnounce") : tab === "stats" ? $("viewStats") : tab === "ach" ? $("viewAch") : $("viewList"); pg.classList.remove("enter"); if (moved && !document.documentElement.classList.contains("vt")) { void pg.offsetWidth; pg.classList.add("enter"); }
     closeMenu();
     document.documentElement.classList.remove("pre-guide", "pre-about", "pre-notes", "pre-ach", "pre-rank", "pre-series", "pre-fav", "pre-recent", "pre-nothumb");
     if (!isInfo()) reset();
@@ -662,7 +665,7 @@
   }
 
   /* ── 영상 열기 ── */
-  function markSeen(v) { const k = key(v); recent = [k, ...recent.filter(x => x !== k)].slice(0, RECENT_MAX); store.set("recent", recent); achOpen(v); }
+  function markSeen(v) { const k = key(v); recent = [k, ...recent.filter(x => x !== k)].slice(0, RECENT_MAX); store.set("recent", recent); try { const L = store.get("seenlog", []); L.push({ c: v.category || "", t: Date.now() }); store.set("seenlog", L.slice(-1500)); } catch (e) {} achOpen(v); }
   function appUrl(href) {   // 안드로이드: 네이버 카페 앱으로 열기 (앱이 없으면 브라우저로)
     try {
       const u = new URL(href);
@@ -1027,6 +1030,7 @@
     const m = $("menu"), k = key(v);
     menuFor = v; openMenu.y = window.scrollY;
     m.querySelector('[data-act="seen"]').hidden = !recent.includes(k);
+    m.querySelector('[data-act="folder"]').hidden = !favs.has(k);
     m.querySelector('[data-act="report"] .mt').textContent = "썸네일 제보" + (repCount(v) ? " (지금 " + repCount(v) + "건)" : "");
     m.hidden = false;
     const r = btn.getBoundingClientRect(), w = m.offsetWidth, h = m.offsetHeight;
@@ -1041,6 +1045,7 @@
     closeMenu();
     const k = key(v), a = b.dataset.act;
     if (a === "report") report(v);
+    else if (a === "folder") openFolderSheet("pick", v);
     else if (a === "series") openSerEdit(v);
     else if (a === "seen") {
       recent = recent.filter(x => x !== k); store.set("recent", recent); toast("열어본 기록에서 지웠어요"); render();
@@ -1495,4 +1500,130 @@
     };
     document.addEventListener("mouseup", end); window.addEventListener("blur", end);
   })();
+  /* ── 즐겨찾기 폴더 (이 기기에만 저장) ── */
+  function saveFF() { store.set("favfolders", FF); }
+  function folderOf(k) { const id = FF.map[k]; return FF.list.some(f => f.id === id) ? id : ""; }
+  function drawFolderBar() {
+    const bar = $("folderBar"); if (!bar) return;
+    bar.hidden = tab !== "fav" || !favs.size; if (bar.hidden) return;
+    if (favFolder && favFolder !== "_" && !FF.list.some(f => f.id === favFolder)) favFolder = "";
+    const cnt = id => [...favs].filter(k => id === "" ? true : id === "_" ? !folderOf(k) : folderOf(k) === id).length;
+    bar.innerHTML = `<button type="button" class="chip${!favFolder ? " on" : ""}" data-fd="">전체 <em>${cnt("")}</em></button>` +
+      (FF.list.length ? `<button type="button" class="chip${favFolder === "_" ? " on" : ""}" data-fd="_">폴더 없음 <em>${cnt("_")}</em></button>` : "") +
+      FF.list.map(f => `<button type="button" class="chip${favFolder === f.id ? " on" : ""}" data-fd="${esc(f.id)}">📁 ${esc(f.name)} <em>${cnt(f.id)}</em></button>`).join("") +
+      `<button type="button" class="chip ghost" data-fd-new>＋ 폴더 만들기</button>` + (FF.list.length ? `<button type="button" class="chip ghost" data-fd-edit>✏️ 관리</button>` : "");
+  }
+  var fdV = null, fdMode = "manage";
+  function drawFolderSheet() {
+    const L = $("fdList"), k = fdV ? key(fdV) : "";
+    $("fdT").textContent = fdMode === "pick" ? "어느 폴더에 넣을까요?" : "폴더 관리";
+    $("fdSub").textContent = fdMode === "pick" && fdV ? fdV.title : "이름을 고치거나 폴더를 지울 수 있어요. 폴더를 지워도 영상은 즐겨찾기에 그대로 남아요.";
+    if (fdMode === "pick") L.innerHTML = `<button type="button" class="fd-r${!folderOf(k) ? " on" : ""}" data-fdp="">📂 폴더 없음</button>` + FF.list.map(f => `<button type="button" class="fd-r${folderOf(k) === f.id ? " on" : ""}" data-fdp="${esc(f.id)}">📁 ${esc(f.name)}</button>`).join("");
+    else L.innerHTML = FF.list.length ? FF.list.map(f => `<div class="fd-m" data-id="${esc(f.id)}"><input value="${esc(f.name)}" maxlength="12" aria-label="폴더 이름"><button type="button" class="btn" data-fdsave>저장</button><button type="button" class="btn" data-fddel>삭제</button></div>`).join("") : `<p class="x-sub">아직 폴더가 없어요. 아래에서 만들어 보세요.</p>`;
+  }
+  function openFolderSheet(mode, v) { fdMode = mode; fdV = v || null; drawFolderSheet(); $("folderSheet").hidden = false; if (mode === "manage" && !FF.list.length) setTimeout(() => $("fdName").focus(), 50); }
+  function closeFolderSheet() { $("folderSheet").hidden = true; fdV = null; }
+  $("folderBar").addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    if (b.hasAttribute("data-fd-new")) return openFolderSheet("manage");
+    if (b.hasAttribute("data-fd-edit")) return openFolderSheet("manage");
+    if (b.hasAttribute("data-fd")) { favFolder = b.dataset.fd; reset(); }
+  });
+  $("folderSheet").addEventListener("click", e => { if (e.target === e.currentTarget) closeFolderSheet(); });
+  $("fdClose").addEventListener("click", closeFolderSheet);
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("folderSheet").hidden) closeFolderSheet(); });
+  $("fdList").addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    if (b.hasAttribute("data-fdp") && fdV) {
+      const k = key(fdV), id = b.dataset.fdp; if (id) FF.map[k] = id; else delete FF.map[k];
+      saveFF(); const nm = (FF.list.find(f => f.id === id) || {}).name; closeFolderSheet(); toast(id ? "「" + nm + "」 폴더에 넣었어요" : "폴더에서 뺐어요"); render(); return;
+    }
+    const row = b.closest(".fd-m"); if (!row) return; const id = row.dataset.id;
+    if (b.hasAttribute("data-fdsave")) {
+      const nm = row.querySelector("input").value.trim().slice(0, 12); if (!nm) return toast("폴더 이름을 적어 주세요");
+      if (FF.list.some(f => f.id !== id && f.name === nm)) return toast("같은 이름의 폴더가 있어요");
+      const f = FF.list.find(f => f.id === id); if (f) f.name = nm; saveFF(); toast("이름을 바꿨어요"); render();
+    } else if (b.hasAttribute("data-fddel")) {
+      if (!b.dataset.sure) { b.dataset.sure = "1"; b.textContent = "정말?"; setTimeout(() => { if (b.isConnected) { delete b.dataset.sure; b.textContent = "삭제"; } }, 2500); return; }
+      FF.list = FF.list.filter(f => f.id !== id); Object.keys(FF.map).forEach(k => { if (FF.map[k] === id) delete FF.map[k]; });
+      if (favFolder === id) favFolder = ""; saveFF(); drawFolderSheet(); toast("폴더를 지웠어요"); render();
+    }
+  });
+  $("fdNew").addEventListener("submit", e => {
+    e.preventDefault(); const nm = $("fdName").value.trim().slice(0, 12); if (!nm) return toast("폴더 이름을 적어 주세요");
+    if (FF.list.some(f => f.name === nm)) return toast("같은 이름의 폴더가 있어요");
+    if (FF.list.length >= 20) return toast("폴더는 20개까지 만들 수 있어요");
+    const id = "f" + Date.now().toString(36); FF.list.push({ id, name: nm }); $("fdName").value = "";
+    if (fdMode === "pick" && fdV) { FF.map[key(fdV)] = id; saveFF(); closeFolderSheet(); toast("「" + nm + "」 폴더에 넣었어요"); } else { saveFF(); drawFolderSheet(); toast("폴더를 만들었어요"); }
+    render();
+  });
+
+  /* ── 내 취향 추천: 즐겨찾기·열어본 영상의 분류를 보고 안 본 영상을 골라요 (이 기기 안에서만 계산) ── */
+  function recoHtml() {
+    if (favs.size + recent.length < 3) return "";
+    const w = {};
+    favs.forEach(k => { const v = byKey(k); if (v && v.category) w[v.category] = (w[v.category] || 0) + 3; });
+    recent.slice(0, 40).forEach((k, i) => { const v = byKey(k); if (v && v.category) w[v.category] = (w[v.category] || 0) + (i < 10 ? 2 : 1); });
+    const cats = Object.entries(w).sort((a, b) => b[1] - a[1]).slice(0, 2).map(x => x[0]); if (!cats.length) return "";
+    const seen = new Set([...favs, ...recent]);
+    const pool = ranked(all.filter(v => cats.includes(v.category) && !seen.has(key(v)))).slice(0, 40);
+    if (pool.length < 3) return "";
+    const day = new Date().toDateString();
+    const list = pool.map(v => [hash(day + key(v)), v]).sort((a, b) => a[0] - b[0]).slice(0, 14).map(x => x[1]);
+    return rowHtml("내 취향 추천", list, `<span class="more" style="pointer-events:none">${esc(cats.join(" · "))} 위주</span>`);
+  }
+
+  /* ── 내 시청 통계 · 연말 결산 카드 (모두 이 기기에 저장된 기록으로만 계산) ── */
+  function drawStats() {
+    const box = $("statsBox"); if (!box) return;
+    const rv = recent.map(byKey).filter(Boolean);
+    if (!rv.length && !favs.size) { box.innerHTML = `<div class="empty"><b>아직 기록이 없어요</b>영상을 열어 보거나 하트를 눌러 담으면 여기에 쌓여요.<br><a class="btn" href="#">다시보기 둘러보기</a></div>`; return; }
+    const log = store.get("seenlog", []).filter(x => x && x.t), now = Date.now(), DAY = 864e5, kst = t => new Date(t + 9 * 36e5).toISOString().slice(0, 10);
+    const days = []; for (let i = 13; i >= 0; i--) days.push({ d: kst(now - i * DAY), n: 0 });
+    const ix = {}; days.forEach((x, i) => { ix[x.d] = i; });
+    log.forEach(x => { const i = ix[kst(x.t)]; if (i != null) days[i].n++; });
+    const mx = Math.max(1, ...days.map(x => x.n)), ym = kst(now).slice(0, 7), yy = kst(now).slice(0, 4);
+    const monthN = log.filter(x => kst(x.t).slice(0, 7) === ym).length, yearN = log.filter(x => kst(x.t).slice(0, 4) === yy).length;
+    const cc = {}; rv.forEach(v => { const c = v.category || "기타"; cc[c] = (cc[c] || 0) + 1; });
+    const cl = Object.entries(cc).sort((a, b) => b[1] - a[1]).slice(0, 6), tot = Object.values(cc).reduce((a, b) => a + b, 0) || 1, top = cl[0] ? cl[0][1] : 1;
+    const card = (t, n, u) => `<div class="st-c"><small>${t}</small><b>${n}<i>${u}</i></b></div>`;
+    box.innerHTML = `<div class="st-g">${card("열어본 영상", rv.length, "편")}${card("즐겨찾기", favs.size, "편")}${card("이번 달 열어본 횟수", monthN, "번")}${card("올해 열어본 횟수", yearN, "번")}</div>
+      ${cl.length ? `<section class="st-sec"><h3>자주 본 분류</h3>${cl.map(([c, n]) => `<div class="st-bar"><span>${esc(c)}</span><i><u style="width:${Math.max(4, Math.round(n / top * 100))}%;--c:${dot(c)}"></u></i><em>${n}편 · ${Math.round(n / tot * 100)}%</em></div>`).join("")}</section>` : ""}
+      <section class="st-sec"><h3>최근 14일</h3><div class="st-days">${days.map(x => `<div class="${x.n ? "" : "z"}" title="${x.d} · ${x.n}번"><u style="height:${x.n ? Math.max(8, Math.round(x.n / mx * 78)) : 3}px"></u><span>${+x.d.slice(8)}</span></div>`).join("")}</div>
+        <p class="st-note">날짜별 횟수와 이번 달·올해 횟수는 이 기능이 생긴 뒤부터 쌓여요. 열어본 영상·즐겨찾기 수와 분류는 지금까지의 기록이에요.</p></section>
+      <section class="st-sec"><h3>🎁 연말 결산 카드</h3><p class="st-note" style="margin:0 0 12px">내 기록으로 「나의 잉여맨 한 해」 이미지를 만들어요. 이 기기 안에서만 만들어지고, 저장하거나 공유할 때만 밖으로 나가요.</p><button class="btn primary" type="button" id="ycMake">${yy}년 결산 카드 만들기</button><div id="ycOut"></div></section>`;
+    $("ycMake").addEventListener("click", makeYearCard);
+  }
+  const ACC_HEX = { red: "#ff4d5e", teal: "#2dd4bf", violet: "#a78bfa", lime: "#b6f03a", orange: "#ff9f43", blue: "#5b9dff" };
+  function makeYearCard() {
+    const W = 1080, H = 1350, cv = document.createElement("canvas"); cv.width = W; cv.height = H; const x = cv.getContext("2d"); if (!x) return toast("이 브라우저에서는 만들 수 없어요");
+    const acc = ACC_HEX[root.getAttribute("data-accent")] || ACC_HEX.red, yy = new Date(Date.now() + 9 * 36e5).getUTCFullYear(), FONT = '"Pretendard Variable",Pretendard,"Noto Sans KR","Malgun Gothic","Apple SD Gothic Neo",sans-serif';
+    const rv = recent.map(byKey).filter(Boolean), cc = {}; rv.forEach(v => { const c = v.category || "기타"; cc[c] = (cc[c] || 0) + 1; });
+    const cl = Object.entries(cc).sort((a, b) => b[1] - a[1]).slice(0, 3), top = cl[0] ? cl[0][1] : 1;
+    let na = 0, nt = 0; try { nt = ACH.length; na = ACH.filter(a => got[a.id]).length; } catch (e) {}
+    x.fillStyle = "#0d0d0f"; x.fillRect(0, 0, W, H);
+    let g = x.createRadialGradient(120, 60, 0, 120, 60, 760); g.addColorStop(0, acc + "55"); g.addColorStop(1, acc + "00"); x.fillStyle = g; x.fillRect(0, 0, W, H);
+    g = x.createRadialGradient(W - 80, H - 40, 0, W - 80, H - 40, 700); g.addColorStop(0, acc + "33"); g.addColorStop(1, acc + "00"); x.fillStyle = g; x.fillRect(0, 0, W, H);
+    const rr = (px, py, w, h, r, f) => { x.beginPath(); x.moveTo(px + r, py); x.arcTo(px + w, py, px + w, py + h, r); x.arcTo(px + w, py + h, px, py + h, r); x.arcTo(px, py + h, px, py, r); x.arcTo(px, py, px + w, py, r); x.closePath(); x.fillStyle = f; x.fill(); };
+    const T = (t, px, py, sz, wt, col, al, mw) => { x.font = wt + " " + sz + "px " + FONT; x.fillStyle = col; x.textAlign = al || "left"; x.textBaseline = "alphabetic"; mw ? x.fillText(t, px, py, mw) : x.fillText(t, px, py); };
+    T("잉여맨 추억자료실", 80, 120, 36, 700, "#f5f5f7"); T(String(yy), W - 80, 120, 36, 700, acc, "right");
+    T("나의 잉여맨", 80, 300, 96, 800, "#ffffff"); T("한 해", 80, 410, 96, 800, acc);
+    rr(80, 480, W - 160, 300, 36, "rgba(255,255,255,.07)");
+    T("지금까지 열어본 영상", 124, 552, 34, 600, "#a0a0a8"); T(String(rv.length), 124, 720, 168, 800, "#ffffff"); T("편", 124 + (x.measureText(String(rv.length)).width) + 16, 720, 48, 700, acc);
+    rr(80, 810, (W - 160 - 24) / 2, 150, 28, "rgba(255,255,255,.07)"); rr(80 + (W - 160 - 24) / 2 + 24, 810, (W - 160 - 24) / 2, 150, 28, "rgba(255,255,255,.07)");
+    T("즐겨찾기", 112, 868, 28, 600, "#a0a0a8"); T(favs.size + "편", 112, 936, 64, 800, "#ffffff");
+    T("도전과제", 80 + (W - 160 - 24) / 2 + 56, 868, 28, 600, "#a0a0a8"); T(na + " / " + nt, 80 + (W - 160 - 24) / 2 + 56, 936, 64, 800, "#ffffff");
+    T("자주 본 분류", 80, 1040, 32, 700, "#f5f5f7");
+    if (!cl.length) T("아직 기록이 없어요", 80, 1110, 34, 600, "#a0a0a8");
+    cl.forEach(([c, n], i) => { const py = 1070 + i * 66; T(c, 80, py + 36, 30, 600, "#ffffff", "left", 330); rr(420, py + 12, 460, 24, 12, "rgba(255,255,255,.1)"); rr(420, py + 12, Math.max(24, 460 * n / top), 24, 12, acc); T(n + "편", W - 80, py + 36, 30, 700, "#ffffff", "right"); });
+    T("내 기기 기록으로 만든 카드 · sam7599.github.io/ingyoeman_archive", W / 2, H - 56, 24, 500, "#6f6f78", "center");
+    const out = $("ycOut"); out.innerHTML = `<p class="st-note">만드는 중이에요…</p>`;
+    cv.toBlob(b => {
+      if (!b) { out.innerHTML = ""; return toast("만들지 못했어요"); }
+      const url = URL.createObjectURL(b), fn = "잉여맨-" + yy + "-결산.png", file = (() => { try { return new File([b], fn, { type: "image/png" }); } catch (e) { return null; } })();
+      const canFile = !!(file && navigator.canShare && navigator.canShare({ files: [file] }));
+      out.innerHTML = `<img class="yc-img" src="${url}" alt="나의 잉여맨 한 해 결산 카드"><div class="yc-a"><a class="btn primary" href="${url}" download="${fn}">이미지 저장</a>${canFile ? `<button class="btn" type="button" id="ycShare">공유하기</button>` : ""}</div>`;
+      const sb = $("ycShare"); if (sb) sb.addEventListener("click", () => { navigator.share({ files: [file], title: "나의 잉여맨 한 해" }).catch(() => {}); });
+    }, "image/png");
+  }
 })();
