@@ -1907,3 +1907,16 @@ html[data-motion="off"] .nav-ind.go { transition:none; }
 .g-tip::before { background:#1b1b1f !important; border-left:1px solid #2e2e34 !important; border-top:1px solid #2e2e34 !important; }
 
 .g-tip::before { background:#161316 !important; }
+
+/* ═══ 인기 랭킹: 불꽃·번쩍임을 없애고 깔끔하게 ═══ */
+html:not([data-motion="off"]) .card.r1 .thumb, html:not([data-motion="off"]) .card.r2 .thumb, html:not([data-motion="off"]) .card.r3 .thumb, html[data-motion="off"] .card.r1 .thumb, html[data-motion="off"] .card.r2 .thumb, html[data-motion="off"] .card.r3 .thumb { animation:none !important; box-shadow:0 8px 20px -12px rgba(0,0,0,.7) !important; }
+html:not([data-motion="off"]) .card.r1::after, html:not([data-motion="off"]) .card.r2::after, html:not([data-motion="off"]) .card.r3::after, html[data-motion="off"] .card.r1::after, html[data-motion="off"] .card.r2::after, html[data-motion="off"] .card.r3::after, html:not([data-motion="off"]) .card.r1 .thumb::after, html:not([data-motion="off"]) .card.r2 .thumb::after, html:not([data-motion="off"]) .card.r3 .thumb::after, html[data-motion="off"] .card.r1 .thumb::after, html[data-motion="off"] .card.r2 .thumb::after, html[data-motion="off"] .card.r3 .thumb::after { display:none !important; }
+.fire, .crown { display:none !important; }
+html:not([data-motion="off"]) .card.r1 .rkb, html:not([data-motion="off"]) .card.r2 .rkb, html:not([data-motion="off"]) .card.r3 .rkb, html[data-motion="off"] .card.r1 .rkb, html[data-motion="off"] .card.r2 .rkb, html[data-motion="off"] .card.r3 .rkb { animation:none !important; background:rgba(10,10,12,.72) !important; color:#fff !important; box-shadow:none !important; }
+html:not([data-motion="off"]) .card.r1 .rkb, html[data-motion="off"] .card.r1 .rkb { background:var(--accent) !important; color:#fff !important; }
+html:not([data-motion="off"]) .rk.hot, html[data-motion="off"] .rk.hot { animation:none !important; background:none !important; -webkit-text-fill-color:currentColor !important; text-shadow:none !important; color:var(--ink) !important; font-size:22px; font-weight:800; }
+html:not([data-motion="off"]) .card.r1 .rk.hot, html[data-motion="off"] .card.r1 .rk.hot { color:var(--accent) !important; }
+html:not([data-motion="off"]) .rk.t1, html[data-motion="off"] .rk.t1 { font-size:22px; }
+html:not([data-motion="off"]) .rows .card.r1, html:not([data-motion="off"]) .rows .card.r2, html:not([data-motion="off"]) .rows .card.r3, html[data-motion="off"] .rows .card.r1, html[data-motion="off"] .rows .card.r2, html[data-motion="off"] .rows .card.r3 { background:transparent !important; box-shadow:none !important; border-radius:0; padding:10px 4px; margin:0; border-bottom-color:var(--line); }
+.card.rt10 .rk { color:var(--sub); }
+@media (max-width:860px) { .rk.hot, .rk.t1 { font-size:19px !important; } }
