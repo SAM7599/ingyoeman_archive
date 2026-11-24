@@ -31,6 +31,18 @@
   function open() { build(); var a = A(); if (!a || a.vids().length < 20) return; a.closeMenu(); box.hidden = false; document.body.style.overflow = "hidden"; document.documentElement.classList.add("play-open"); home(); }
   function close() { pvClose(); if (!box) return; box.hidden = true; document.body.style.overflow = ""; document.documentElement.classList.remove("play-open"); st = null; }
   window.openPlay = open;
+  /* 휴대폰: 미니게임 중에는 화면을 아래로 끌어도 「당겨서 새로고침」이 되지 않게 막아요 (목록이 스크롤되는 중에는 그대로 스크롤돼요) */
+  (function () {
+    var y0 = 0;
+    function scroller(el) { while (el && el !== document.body) { if (el.scrollHeight > el.clientHeight + 1) { var o = getComputedStyle(el).overflowY; if (o === "auto" || o === "scroll") return el; } el = el.parentElement; } return null; }
+    document.addEventListener("touchstart", function (e) { if (e.touches.length === 1) y0 = e.touches[0].clientY; }, { passive: true });
+    document.addEventListener("touchmove", function (e) {
+      if (!document.documentElement.classList.contains("play-open") || e.touches.length !== 1) return;
+      if (e.touches[0].clientY - y0 <= 0) return;   // 위로 미는 동작은 그대로
+      var sc = scroller(e.target);
+      if (!sc || sc.scrollTop <= 0) { if (e.cancelable) e.preventDefault(); }
+    }, { passive: false });
+  })();
 
   function gate() {
     st = null; setBack();
