@@ -1216,7 +1216,7 @@ html:not([data-motion="off"]) .g-tip { animation:gtip 1.6s ease-in-out infinite;
 @media (prefers-reduced-motion:reduce) { .g-tip { animation:none !important; } }
 
 /* 말풍선 안의 로그인 혜택 */
-.g-tip { width:min(300px, 86vw); max-width:none; padding:16px 14px 8px; border-radius:18px; cursor:default; font-weight:400; background:radial-gradient(90% 80% at 0% 0%, rgba(255,77,94,.28), transparent 60%), radial-gradient(90% 80% at 100% 0%, rgba(255,140,80,.28), transparent 60%), #141417; border:1px solid #2e2e34; box-shadow:0 18px 40px -10px rgba(0,0,0,.65); animation:none !important; }
+.g-tip { width:min(300px, 86vw); max-width:none; padding:16px 14px 8px; border-radius:18px; cursor:default; font-weight:400; background:radial-gradient(90% 80% at 0% 0%, rgba(255,77,94,.28), transparent 60%), #141417; border:1px solid #2e2e34; box-shadow:0 18px 40px -10px rgba(0,0,0,.65); animation:none !important; }
 .g-tip::before { background:#141417; border-left:1px solid #2e2e34; border-top:1px solid #2e2e34; right:16px; }
 .g-tip .g-x { position:absolute; top:8px; right:8px; width:28px; height:28px; border:0; border-radius:50%; background:rgba(255,255,255,.12); color:#fff; font-size:13px; cursor:pointer; }
 .g-tip .g-tt { display:block; margin:8px 0 0; font-size:19px; letter-spacing:-.4px; text-align:left; }
@@ -1230,7 +1230,7 @@ body:has(#noticePop:not([hidden])) .g-tip, html.consent-on .g-tip, html.intro-on
 html:not([data-motion="off"]) .g-tip { animation:gtipin .35s ease 1.2s both !important; }
 @keyframes gtipin { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:none; } }
 /* 말풍선 위쪽 화살표와 본체 색을 똑같이 */
-.g-tip { background:radial-gradient(90% 60% at 0% 0%, rgba(255,77,94,.28), transparent 60%), radial-gradient(90% 60% at 100% 0%, rgba(255,140,80,.28), transparent 60%), #141417 !important; }
+.g-tip { background:radial-gradient(90% 60% at 0% 0%, rgba(255,77,94,.28), transparent 60%), #141417 !important; }
 .g-tip::before { background:#3d2c0e !important; border-color:#2e2e34 !important; }
 
 .g-tip .g-tipoff { display:block; width:100%; margin:2px 0 6px; padding:10px 0 6px; border:0; border-top:1px solid #2a2a2f; background:none; color:#a0a0a8; font:inherit; font-size:12.5px; text-align:center; cursor:pointer; }
@@ -1900,3 +1900,5 @@ body { background:radial-gradient(760px 380px at 0% -6%, rgba(255,77,94,.13), tr
 .row-h h2, .guide h2, .ach-grp h2 { letter-spacing:-.03em; }
 /* 로그인 말풍선 꼬리 */
 .g-tip::before { background:#1b1b1f !important; border-left:1px solid #2e2e34 !important; border-top:1px solid #2e2e34 !important; }
+
+.g-tip::before { background:#161316 !important; }
