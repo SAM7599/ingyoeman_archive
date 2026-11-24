@@ -2038,3 +2038,16 @@ html:not([data-motion="off"]) .rows .card.r1, html:not([data-motion="off"]) .row
 @media (max-width:560px) { .ref-box { flex-wrap:wrap; } .ref-box p { flex:1 1 calc(100% - 40px); } }
 
 .fav-xfer a.btn { display:inline-flex; align-items:center; text-decoration:none; }
+
+/* 오늘의 다시보기: 생방송처럼 */
+.hero .label { display:inline-flex; align-items:center; gap:9px; padding:4px 14px 4px 4px; }
+.live-tag { display:inline-flex; align-items:center; gap:6px; height:24px; padding:0 10px; border-radius:99px; background:#ff2d3d; color:#fff; font-size:12px; font-weight:800; letter-spacing:.6px; }
+.live-tag i { width:7px; height:7px; border-radius:50%; background:#fff; box-shadow:0 0 0 0 rgba(255,255,255,.8); animation:livePulse 1.4s ease-out infinite; }
+.hero { box-shadow:0 28px 56px -34px rgba(20,16,50,.65), 0 0 0 1px rgba(255,45,61,.55), 0 0 26px -6px rgba(255,45,61,.45); }
+.live-bar { position:absolute; left:0; right:0; bottom:0; height:4px; background:rgba(255,255,255,.18); }
+.live-bar b { position:relative; display:block; height:100%; background:#ff2d3d; }
+.live-bar i { position:absolute; right:-5px; top:50%; width:12px; height:12px; margin-top:-6px; border-radius:50%; background:#ff2d3d; box-shadow:0 0 0 0 rgba(255,45,61,.7); animation:livePulse 1.4s ease-out infinite; }
+@keyframes livePulse { 0% { box-shadow:0 0 0 0 rgba(255,80,90,.75); } 70%,100% { box-shadow:0 0 0 9px rgba(255,80,90,0); } }
+html[data-motion="off"] .live-tag i, html[data-motion="off"] .live-bar i { animation:none; }
+@media (prefers-reduced-motion:reduce) { .live-tag i, .live-bar i { animation:none; } }
+.hero .label::before { display:none !important; }
