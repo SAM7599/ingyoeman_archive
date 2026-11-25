@@ -60,6 +60,18 @@
   let favs = new Set(store.get("favs", []));
   let recent = store.get("recent", []);   // 열어본 영상 (자동)
   let FF = store.get("favfolders", null); if (!FF || !Array.isArray(FF.list) || !FF.map || typeof FF.map !== "object") FF = { list: [], map: {} };   // 즐겨찾기 폴더 (이 기기에만 저장)
+  let DN = new Set(store.get("donelist", []));   // 정주행 완료 표시 (이 기기에만 저장)
+  let EG = store.get("egg", {}); if (!EG || typeof EG !== "object" || Array.isArray(EG)) EG = {};   // 찾은 이스터에그
+  const EGGS = [
+    { id: "logo", n: "로고 돌리기", h: "로고와 친해져 보세요" },
+    { id: "konami", n: "전설의 코드", h: "옛날 게임기 시절의 그 순서…" },
+    { id: "laugh", n: "웃음 감지", h: "검색창에 웃음을 가득 담아 보세요" },
+    { id: "live", n: "방송 종료?", h: "LIVE 표시를 여러 번 눌러 보세요" },
+    { id: "dawn", n: "새벽 정주행러", h: "모두가 잠든 시간에 와 보세요" },
+    { id: "foot", n: "제작 비하인드", h: "화면 맨 아래 글씨도 눌러 볼 수 있어요" },
+    { id: "view", n: "시청자 +1", h: "시청자 수가 궁금하면 눌러 보세요" },
+    { id: "top", n: "맨 위 중독", h: "위로 가는 버튼을 쉬지 않고 눌러 보세요" }
+  ];
   let favFolder = "";   // "" = 전체, "_" = 폴더 없음, 그 외 = 폴더 id
   let view = store.get("view2", "grid") === "rows" ? "rows" : "grid";
   const savedSort = store.get("sort", "new");
@@ -438,7 +450,7 @@
     const info = `<div class="t"><h3>${shelf ? esc(v.title) : mark(v.title)}</h3>${meta}</div>`;
     const dots = `<button class="dots" type="button" aria-label="더 보기 메뉴" aria-haspopup="menu">${DOTS}</button>`;
     const heart = `<button class="heart ${on ? "on" : ""} ${k === popKey ? "pop" : ""}" type="button" aria-label="${on ? "즐겨찾기에서 빼기" : "즐겨찾기에 담기"}" title="즐겨찾기">${HEART}</button>`;
-    const thumb = `<div class="thumb" style="--g:${grad(v.category)}">${rank && rank <= 3 && !shelf ? fireHtml(rank) : ""}${picHtml(v, !shelf)}${rank && !rows ? `<span class="rkb">${rank === 1 ? CROWN : ""}${rank}</span>` : seen ? `<span class="seen">열어봄</span>` : ""}${v.duration ? `<span class="dur">${esc(v.duration)}</span>` : ""}</div>`;
+    const thumb = `<div class="thumb" style="--g:${grad(v.category)}">${rank && rank <= 3 && !shelf ? fireHtml(rank) : ""}${picHtml(v, !shelf)}${rank && !rows ? `<span class="rkb">${rank === 1 ? CROWN : ""}${rank}</span>` : DN.has(k) && !shelf ? `<span class="seen done">✓ 정주행 완료</span>` : seen ? `<span class="seen">열어봄</span>` : ""}${v.duration ? `<span class="dur">${esc(v.duration)}</span>` : ""}</div>`;
     const a = `href="${esc(safeUrl(v.url))}" target="_blank" rel="noopener noreferrer"`;
     const tier = rank && rank <= 3 ? " r" + rank : rank && rank <= 10 ? " rt10" : "";
     return `<article class="card ${v.thumb ? "" : "no-thumb"}${tier}" data-k="${esc(k)}" style="--i:${rank ? Math.min(rank, 24) - 1 : 0}">` + (rows
@@ -554,29 +566,51 @@
     return [...base, ...rest];
   }
   let liveT = 0;
-  function startLiveChat() {
-    clearTimeout(liveT); if (!document.querySelector("#today .live-chat")) return;
-    let viewers = 300 + hash("live" + todayKey) % 4200;   // 시청자 수가 많을수록 채팅이 빨라져요
-    const recentN = []; let bag = [];   // 글은 한 바퀴를 다 돌기 전에는 같은 글이 다시 나오지 않아요
-    const ALL = window.__chatAll || (window.__chatAll = buildChat());
-    const nextT = () => { if (!bag.length) { bag = ALL.map((t, i) => [Math.random(), i]).sort((x, y) => x[0] - y[0]).map(x => x[1]); } return ALL[bag.pop()]; };
-    const pick = (arr, used, keep) => { let x, t = 0; do { x = arr[Math.floor(Math.random() * arr.length)]; } while (used.includes(x) && ++t < 12); used.push(x); if (used.length > keep) used.shift(); return x; };
-    const nick = () => { const r = Math.random(), base = CHAT_P[Math.floor(Math.random() * CHAT_P.length)] + CHAT_S[Math.floor(Math.random() * CHAT_S.length)]; return pick([base, base + Math.floor(Math.random() * 99), base + "_" + Math.floor(Math.random() * 9 + 1), r < .1 ? "익명" + Math.floor(Math.random() * 999) : base], recentN, 30); };
-    const line = () => { let t = nextT(); if (Math.random() < .2 && !/[?ㅠㅋ.]/.test(t)) t += " " + "ㅋ".repeat(2 + Math.floor(Math.random() * 6)); return t; };
-    const put = (bx, nk, tx) => { const p = document.createElement("p"); p.innerHTML = '<b style="color:hsl(' + (hash(nk) % 360) + ',80%,72%)">' + esc(nk) + '</b>' + esc(tx); bx.appendChild(p); while (bx.children.length > 7) bx.firstChild.remove(); };
-    const first = document.querySelector("#today .live-chat"); for (let i = 0; i < 5; i++) put(first, nick(), line());
+  const CM_CAT = {
+    "탈출맵": ["이 맵 처음 봤을 때 진짜 막막했는데 ㅋㅋ", "힌트가 하나도 안 보이는데 어떻게 푸는 거지", "탈출맵은 역시 잉여맨이죠", "맵 분위기 좋네요", "여기서 한참 헤맸던 기억 ㅋㅋ", "퍼즐 푸는 거 보니까 대단하네", "저 상황에서 침착한 거 대박", "답 알고 보면 허무한 게 탈출맵의 매력임"],
+    "상황극": ["상황극 대사 진짜 찰지네 ㅋㅋ", "연기력 미쳤다 ㅋㅋㅋ", "이 상황극 다시 봐도 웃김", "즉흥이라는 게 믿기지 않음", "합 맞는 거 보소", "표정 연기 ㅋㅋㅋ", "이런 상황극 또 해주세요", "대사 하나하나가 짤감이네"],
+    "게임": ["게임 실력 ㄷㄷ", "저 판단 맞나 ㅋㅋ", "저도 이 게임 해봤는데 어렵던데", "게임하다 터지는 순간 ㅋㅋ", "플레이 보는 맛이 있네", "다음 판도 궁금함", "이 게임 지금 해도 재밌을까요?", "손 빠른 거 보소"],
+    "하이라이트": ["하이라이트만 모아놓으니까 시간 순삭", "하이라이트 편집 센스 좋네요", "이 장면 짤로 돌았었는데 ㅋㅋ", "클립 좋네요 저장함", "하이라이트 몇 번째 정주행인지 모르겠음", "풀버전도 보고 싶어지네"],
+    "콘텐츠특집": ["특집이라 그런지 구성이 알차네요", "특집 기획 좋네요", "이런 특집 또 해주면 좋겠다", "특집은 믿고 봄", "스케일 커졌네 ㅋㅋ", "준비 많이 한 티가 나네요"],
+    "잉여맨뒷담화": ["뒷담화 편은 수다 듣는 맛이 있음", "뒷담화인데 왜 이렇게 힐링되죠 ㅋㅋ", "썰 푸는 거 재밌네요", "수다 떠는 분위기 좋다", "이런 얘기가 제일 재밌음", "라디오처럼 틀어놓기 좋네요"],
+    "아프리카TV": ["아프리카 때 생각나네요", "옛날 방송 보는 느낌 좋네", "그때 채팅 치던 사람 손 ㅋㅋ", "아프리카 시절 그립네요", "이 시절 방송이 제일 재밌었는데"],
+    "게스트출연": ["게스트 케미 좋네요", "게스트 분 말솜씨 대박", "게스트 나올 때마다 재밌음", "초대 손님 텐션 ㅋㅋ", "다음 게스트도 기대됨", "둘이 합 맞는 거 보소"],
+    "개인녹화본": ["녹화본 남겨줘서 고마워요", "이런 영상 남아 있는 게 대박이네", "녹화본 퀄 좋네요", "찾아줘서 감사합니다", "보존해주신 분 복 받으세요"],
+    "펌녹화본": ["펌이라도 올려줘서 고마워요", "이거 구하기 힘든 건데 감사합니다", "화질 안 좋아도 추억이라 좋음", "어디서 구하셨어요 대박"],
+    "최신 아프리카TV 다시보기": ["어제 라이브 놓쳤는데 다시보기로 봄", "라이브 못 봐서 아쉬웠는데 감사해요", "다시보기 올려줘서 고마워요", "최근 방송도 재밌네요", "방금 막 올라온 거죠?"],
+    "최신 트위치/유튜브 다시보기": ["어제 라이브 놓쳤는데 다시보기로 봄", "라이브 못 봐서 아쉬웠는데 감사해요", "다시보기 올려줘서 고마워요", "최근 방송도 재밌네요", "트위치 다시보기 기다렸어요"]
+  };
+  const CM_KW = [[/라이브/, ["라이브 때 채팅 폭주했던 기억 ㅋㅋ", "라이브로 봤는데 다시 봐도 재밌네요"]], [/뒷풀이|뒷담/, ["뒷풀이 분위기 좋네요", "뒷풀이가 본방보다 재밌을 때 있음"]], [/합방/, ["합방 케미 좋네요", "합방은 항상 재밌음"]], [/특집|기념/, ["기념일 같은 날 이런 방송이라니", "특집 방송 준비 고생하셨어요"]], [/탈출|맵/, ["맵 이름만 봐도 추억이네요"]], [/ㅋㅋ|ㅎㅎ/, ["제목부터 웃기네 ㅋㅋ"]], [/\d+\s*(화|편|부)/, ["시리즈로 쭉 보는 중입니다"]]];
+  function cmFor(v) {   // 영상 제목·분류에 맞는 가짜 댓글 글 (실제 사람 글이 아니에요)
+    const raw = String(v.title || ""), dm = raw.match(/(20\d\d)[.\-](\d{1,2})[.\-](\d{1,2})/), yr = dm ? dm[1] : "", mo = dm ? +dm[2] : 0;
+    const ct = raw.replace(/\[[^\]]*\]|\([^)]*\)|\d{4}[.\-]\d{1,2}[.\-]\d{1,2}|[#~_*]+/g, " ").replace(/\s+/g, " ").trim(), words = ct.split(" ").filter(w => w.length >= 2 && /[가-힣A-Za-z]/.test(w));
+    const kw = (words.sort((a, b) => b.length - a.length)[0] || ct || "이 영상").slice(0, 10), short = (() => { const s = ct || raw; if (s.length <= 16) return s || "이 영상"; const cut = s.slice(0, 16), i = cut.lastIndexOf(" "); return (i > 5 ? cut.slice(0, i) : cut) + "…"; })();
+    const L = [kw + " 편 다시 봐도 웃기네 ㅋㅋ", kw + " 부분에서 진짜 터짐", kw + " 보려고 왔어요", "제목 보고 들어왔는데 " + kw + " 역시 재밌네요", kw + " 이거 기다렸음", kw + " 편집 깔끔하네요", kw + " 이때 진짜 레전드였는데", kw + " 다음 편도 올려주세요", kw + " 몇 번째 보는지 모르겠음 ㅋㅋ", "「" + short + "」 이거 찾았다 ㅠㅠ", kw + " 하면 이 장면이죠", kw + " 편 BGM 뭐예요?", "아 " + kw + " 진짜 오랜만이다", kw + " 보다가 웃참 실패함", "친구한테 " + kw + " 편 링크 보냈어요"];
+    (CM_CAT[v.category] || []).forEach(t => L.push(t, t));
+    CM_KW.forEach(([re, ts]) => { if (re.test(raw)) ts.forEach(t => L.push(t, t, t)); });
+    if (yr) L.push(yr + "년 영상이네 ㅋㅋ 벌써 시간이 이렇게", yr + "년에 처음 봤던 기억 나요", yr + "년 " + mo + "월 방송이구나 그립네", yr + "년에 본 사람 손");
+    return [...new Set(L)];
+  }
+  function startLiveChat(v) {
+    clearTimeout(liveT); const panel = document.querySelector("#today .live-cm"); if (!panel || !v) return;
+    const list = panel.querySelector(".cm-l"), cnt = panel.querySelector(".cm-h b"), own = cmFor(v), ALL = window.__chatAll || (window.__chatAll = buildChat()), dayN = hash("cm" + todayKey);
+    let total = 120 + dayN % 2200, viewers = 300 + hash("live" + todayKey) % 4200; const used = [], nicks = [];
+    const pick = arr => { let x, t = 0; do { x = arr[Math.floor(Math.random() * arr.length)]; } while (used.includes(x) && ++t < 15); used.push(x); if (used.length > 40) used.shift(); return x; };
+    const text = () => Math.random() < .68 && own.length ? pick(own) : pick(ALL);
+    const nick = () => { let n, t = 0; do { n = CHAT_P[Math.floor(Math.random() * CHAT_P.length)] + CHAT_S[Math.floor(Math.random() * CHAT_S.length)] + (Math.random() < .5 ? Math.floor(Math.random() * 99) : ""); } while (nicks.includes(n) && ++t < 10); nicks.push(n); if (nicks.length > 30) nicks.shift(); return n; };
+    const mk = (when, likes, fresh) => { const n = nick(), c = document.createElement("div"); c.className = "cm" + (fresh ? " fresh" : ""); c.innerHTML = '<i style="background:hsl(' + (hash(n) % 360) + ',55%,48%)">' + esc(n.charAt(0)) + '</i><div><p><b>' + esc(n) + '</b><small>' + when + '</small></p><span>' + esc(text()) + '</span><em>👍 ' + likes + '</em></div>'; return c; };
+    const show = () => { cnt.textContent = total.toLocaleString("ko-KR") + "개"; };
+    ["3시간 전", "1시간 전", "42분 전", "9분 전"].forEach(w => list.appendChild(mk(w, Math.floor(Math.random() * 130), false))); show();
     const add = () => {
-      const bx = document.querySelector("#today .live-chat"); if (!bx) return;
+      if (!document.querySelector("#today .live-cm")) return;
       if (!document.hidden) {
-        const f = (viewers - 300) / 4200, burst = Math.random() < .15 + f * .3 ? 2 + (Math.random() < .3 + f * .3 ? 1 : 0) : 1;   // 가끔 여러 글이 한꺼번에 올라와요
-        for (let i = 0; i < burst; i++) put(bx, nick(), line());
-        viewers = Math.max(250, viewers + Math.round((Math.random() - .45) * viewers * .02));   // 시청자 수도 조금씩 오르내려요
+        const c = mk("방금 전", Math.floor(Math.random() * 4), true); list.insertBefore(c, list.firstChild); while (list.children.length > 4) list.lastChild.remove();
+        total++; show(); viewers = Math.max(250, viewers + Math.round((Math.random() - .45) * viewers * .02));
         const lv = document.querySelector("#today .live-view"); if (lv && lv.lastChild) lv.lastChild.textContent = viewers.toLocaleString("ko-KR") + "명 시청 중";
       }
-      liveT = setTimeout(add, 1500 - f0() * 1050 + Math.random() * 700);
+      liveT = setTimeout(add, 2200 + Math.random() * 3200 - Math.min(1500, (viewers - 300) / 3)); 
     };
-    const f0 = () => Math.min(1, Math.max(0, (viewers - 300) / 4200));
-    liveT = setTimeout(add, 700);
+    liveT = setTimeout(add, 1800);
   }
   function renderToday() {
     const box = $("today");
@@ -588,9 +622,9 @@
       <p class="hero-meta"><span class="cat-dot" style="--c:${dot(v.category)}">${esc(v.category || "기타")}</span>${ytId(v) ? "<span>바로 재생돼요</span>" : ""}<span class="live-view"><i></i>${(300 + hash("live" + todayKey) % 4200).toLocaleString("ko-KR")}명 시청 중</span></p>
       <div class="acts"><a class="btn primary" data-go href="${esc(safeUrl(v.url))}" target="_blank" rel="noopener noreferrer">${ytId(v) ? "바로 보기" : "다시보기" + OUT}</a>
       <button class="btn glass" type="button" data-fav>${favs.has(todayKey) ? "♥ 담았어요" : "♡ 즐겨찾기"}</button></div></div>
-      <div class="live-chat" aria-hidden="true"></div>
+      <div class="live-cm" aria-hidden="true"><div class="cm-h">댓글 <b></b></div><div class="cm-l"></div></div>
       <div class="live-bar" aria-hidden="true"><b style="width:${Math.max(4, Math.min(100, ((Date.now() + 9 * 36e5) % 864e5) / 864e3)).toFixed(1)}%"><i></i></b></div>`;
-    startLiveChat();
+    startLiveChat(v);
     if (box.dataset.shown !== todayKey) { box.dataset.shown = todayKey; box.classList.remove("anim"); void box.offsetWidth; box.classList.add("anim"); }
   }
   const ARR = d => `<button class="arr ${d < 0 ? "l" : "r"}" type="button" data-dir="${d}" aria-label="${d < 0 ? "앞으로" : "뒤로"} 넘기기"><svg viewBox="0 0 24 24"><path d="${d < 0 ? "M14 6l-6 6 6 6" : "M10 6l6 6-6 6"}"/></svg></button>`;
@@ -638,8 +672,6 @@
         <div class="rail-wrap">${ARR(-1)}<div class="rail">${top.map((v, i) => cardHtml(v, true, i + 1)).join("")}</div>${ARR(1)}</div></section>` : "") +
       recoHtml() +
       (() => { const b = promoHtml(); return b ? `<div class="promos">${b}</div>` : ""; })() +
-      rowHtml("최근 열어본 영상", recent.map(byKey).filter(Boolean), `<a class="more" href="#recent">전체 보기</a>`) +
-      rowHtml("즐겨찾기", sorted.filter(v => favs.has(key(v))), `<a class="more" href="#fav">전체 보기</a>`) +
       "" ||
       `<div class="empty"><b>아직 등록된 영상이 없어요</b>곧 채워질 예정이에요.</div>`;
     $("home").querySelectorAll(".rail-wrap").forEach(syncArrows);
@@ -666,7 +698,7 @@
     $("home").hidden = !home; $("browse").hidden = home;
     renderChips(); renderToday();
     $("chips").hidden = tiles || tab === "nothumb";
-    $("xferBox").hidden = !(tab === "fav" || tab === "recent");
+    $("xferBox").hidden = !(tab === "fav" || tab === "recent"); $("favClear").hidden = !(tab === "fav" && favs.size); favClearDisarm();
     if (home) { renderHome(); return playIn($("home")); }
     $("pageH").textContent = tiles ? "시리즈" : rank ? "인기 랭킹" : tab === "series" && ser ? ser : q ? "검색 결과" : tab === "fav" ? "즐겨찾기" : tab === "recent" ? "열어본 영상" : tab === "nothumb" ? "썸네일 없는 영상" : cat && cat !== "*" ? cat : "전체 영상";
     $("count").textContent = tiles ? SERIES.length + "개" : list.length + (tab === "series" ? "편" : "개");
@@ -987,7 +1019,7 @@
   const B64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
   const packIds = keys => keys.map(byKey).filter(Boolean).map(num).filter(n => n && +n < 4096).map(n => B64[+n >> 6] + B64[+n & 63]).join("");   // 글 번호 하나를 두 글자로
   const unpackIds = t => { const out = []; for (let i = 0; i + 1 < t.length; i += 2) { const a = B64.indexOf(t[i]), b = B64.indexOf(t[i + 1]); if (a < 0 || b < 0) return null; out.push(String(a * 64 + b)); } return out; };
-  const MV_SET = ["theme", "motion", "accent", "fs", "onehand", "view2", "sort", "sidefav", "sound", "popup", "chipHint1", "dcSeen1", "intro1", "tour1"];   // 설정: 받는 기기에 덮어써요
+  const MV_SET = ["theme", "motion", "accent", "fs", "onehand", "font", "yctheme", "view2", "sort", "sidefav", "sound", "popup", "chipHint1", "dcSeen1", "intro1", "tour1"];   // 설정: 받는 기기에 덮어써요
   const MV_RAW = ["theme", "motion"];   // 이 둘은 글자 그대로 저장돼 있어요
   const rawGet = k => { try { const v = localStorage.getItem(k); if (v == null) return undefined; try { return JSON.parse(v); } catch (e) { return v; } } catch (e) { return undefined; } };
   const rawSet = (k, v) => { try { localStorage.setItem(k, MV_RAW.includes(k) ? String(v) : JSON.stringify(v)); } catch (e) {} };
@@ -995,7 +1027,7 @@
   const unb64u = t => { t = t.replace(/-/g, "+").replace(/_/g, "/"); while (t.length % 4) t += "="; const s = atob(t), u = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i); return u; };
   const pipeZ = async (u8, S) => new Uint8Array(await new Response(new Blob([u8]).stream().pipeThrough(new S("deflate-raw"))).arrayBuffer());
   function buildMove(slim) {
-    const d = { v: 2, f: packIds([...favs]), r: packIds(recent) };
+    const d = { v: 2, f: packIds([...favs]), r: packIds(recent), dn: packIds([...DN]), egg: EG };
     MV_SET.concat(["sov1", "ach", "stat", "notes_seen", "ann_seen"]).forEach(k => { const x = rawGet(k); if (x !== undefined && x !== null) d[k] = x; });
     const sl = rawGet("seenlog"); if (Array.isArray(sl) && sl.length) d.seenlog = slim ? sl.slice(-300) : sl;
     const ff = FF || { list: [], map: {} }, m = {};
@@ -1016,7 +1048,7 @@
   function resolveMove(d) {   // 받은 내용을 이 기기의 영상 글자표로 바꿔요
     if (!d || d.v !== 2) return null;
     const map = new Map(all.map(v => [num(v), key(v)])), un = t => (unpackIds(String(t || "")) || []).map(id => map.get(id)).filter(Boolean);
-    const R = { favs: un(d.f), recent: un(d.r), raw: d, ff: null };
+    const R = { favs: un(d.f), recent: un(d.r), done: un(d.dn), raw: d, ff: null };
     if (d.favfolders && Array.isArray(d.favfolders.list)) { const m = {}; Object.keys(d.favfolders.map || {}).forEach(id => { const k = map.get(id); if (k) m[k] = d.favfolders.map[id]; }); R.ff = { list: d.favfolders.list, map: m }; }
     return R;
   }
@@ -1049,6 +1081,8 @@
     const d = R.raw || {}, g = rawGet;
     const fv = [...favs]; R.favs.forEach(k => { if (!fv.includes(k)) fv.push(k); }); rawSet("favs", fv);
     rawSet("recent", [...recent, ...R.recent.filter(k => !recent.includes(k))].slice(0, RECENT_MAX));
+    if (R.done && R.done.length) rawSet("donelist", [...new Set([...DN, ...R.done])]);
+    if (d.egg && typeof d.egg === "object") rawSet("egg", { ...d.egg, ...EG });
     MV_SET.forEach(k => { if (d[k] !== undefined) rawSet(k, d[k]); });
     ["sov1", "ach"].forEach(k => { if (d[k] && typeof d[k] === "object") rawSet(k, { ...d[k], ...(g(k) || {}) }); });
     if (d.stat && typeof d.stat === "object") {
@@ -1152,6 +1186,7 @@
     const m = $("menu"), k = key(v);
     menuFor = v; openMenu.y = window.scrollY;
     m.querySelector('[data-act="seen"]').hidden = !recent.includes(k);
+    m.querySelector('[data-act="done"]').textContent = DN.has(k) ? "✅ 정주행 완료 표시 지우기" : "✅ 정주행 완료로 표시";
     m.querySelector('[data-act="folder"]').hidden = !favs.has(k);
     m.querySelector('[data-act="report"] .mt').textContent = "썸네일 제보" + (repCount(v) ? " (지금 " + repCount(v) + "건)" : "");
     m.hidden = false;
@@ -1169,6 +1204,7 @@
     if (a === "report") report(v);
     else if (a === "folder") openFolderSheet("pick", v);
     else if (a === "series") openSerEdit(v);
+    else if (a === "done") { if (DN.has(k)) { DN.delete(k); toast("정주행 완료 표시를 지웠어요"); } else { DN.add(k); toast("정주행 완료로 표시했어요 ✓"); } store.set("donelist", [...DN]); render(); }
     else if (a === "seen") {
       recent = recent.filter(x => x !== k); store.set("recent", recent); toast("열어본 기록에서 지웠어요"); render();
     }
@@ -1699,7 +1735,7 @@
   function drawStats() {
     const box = $("statsBox"); if (!box) return;
     const rv = recent.map(byKey).filter(Boolean);
-    if (!rv.length && !favs.size) { box.innerHTML = `<div class="empty"><b>아직 기록이 없어요</b>영상을 열어 보거나 하트를 눌러 담으면 여기에 쌓여요.<br><a class="btn" href="#">다시보기 둘러보기</a></div>`; return; }
+    if (!rv.length && !favs.size) { box.innerHTML = `<div class="empty"><b>아직 기록이 없어요</b>영상을 열어 보거나 하트를 눌러 담으면 여기에 쌓여요.<br><a class="btn" href="#">다시보기 둘러보기</a></div>` + eggHtml(); return; }
     const log = store.get("seenlog", []).filter(x => x && x.t), now = Date.now(), DAY = 864e5, kst = t => new Date(t + 9 * 36e5).toISOString().slice(0, 10);
     const days = []; for (let i = 13; i >= 0; i--) days.push({ d: kst(now - i * DAY), n: 0 });
     const ix = {}; days.forEach((x, i) => { ix[x.d] = i; });
@@ -1709,36 +1745,41 @@
     const cc = {}; rv.forEach(v => { const c = v.category || "기타"; cc[c] = (cc[c] || 0) + 1; });
     const cl = Object.entries(cc).sort((a, b) => b[1] - a[1]).slice(0, 6), tot = Object.values(cc).reduce((a, b) => a + b, 0) || 1, top = cl[0] ? cl[0][1] : 1;
     const card = (t, n, u) => `<div class="st-c"><small>${t}</small><b>${n}<i>${u}</i></b></div>`;
-    box.innerHTML = `<div class="st-g">${card("열어본 영상", rv.length, "편")}${card("즐겨찾기", favs.size, "편")}${card("이번 달 열어본 횟수", monthN, "번")}${card("올해 열어본 횟수", yearN, "번")}</div>
+    box.innerHTML = `<div class="st-g">${card("열어본 영상", rv.length, "편")}${card("즐겨찾기", favs.size, "편")}${card("이번 달 열어본 횟수", monthN, "번")}${card("올해 열어본 횟수", yearN, "번")}${card("정주행 완료", DN.size, "편")}${card("찾은 이스터에그", Object.keys(EG).filter(x => EGGS.some(e => e.id === x)).length + " / " + EGGS.length, "개")}</div>
       ${cl.length ? `<section class="st-sec"><h3>자주 본 분류</h3>${cl.map(([c, n]) => `<div class="st-bar"><span>${esc(c)}</span><i><u style="width:${Math.max(4, Math.round(n / top * 100))}%;--c:${dot(c)}"></u></i><em>${n}편 · ${Math.round(n / tot * 100)}%</em></div>`).join("")}</section>` : ""}
       <section class="st-sec"><h3>최근 14일</h3><div class="st-days">${days.map(x => `<div class="${x.n ? "" : "z"}" title="${x.d} · ${x.n}번"><u style="height:${x.n ? Math.max(8, Math.round(x.n / mx * 78)) : 3}px"></u><span>${+x.d.slice(8)}</span></div>`).join("")}</div>
         <p class="st-note">날짜별 횟수와 이번 달·올해 횟수는 이 기능이 생긴 뒤부터 쌓여요. 열어본 영상·즐겨찾기 수와 분류는 지금까지의 기록이에요.</p></section>
-      <section class="st-sec"><h3>🎁 연말 결산 카드</h3><p class="st-note" style="margin:0 0 12px">내 기록으로 「나의 잉여맨 한 해」 이미지를 만들어요. 이 기기 안에서만 만들어지고, 저장하거나 공유할 때만 밖으로 나가요.</p><button class="btn primary" type="button" id="ycMake">${yy}년 결산 카드 만들기</button><div id="ycOut"></div></section>`;
+      <section class="st-sec"><h3>🎁 연말 결산 카드</h3><p class="st-note" style="margin:0 0 12px">내 기록으로 「나의 잉여맨 한 해」 이미지를 만들어요. 이 기기 안에서만 만들어지고, 저장하거나 공유할 때만 밖으로 나가요.</p><div class="yc-th" role="group" aria-label="카드 디자인">${[["dark", "어두운 밤"], ["light", "밝은 종이"], ["color", "포인트 색 가득"]].map(([id, t]) => `<button type="button" data-yt="${id}" class="yt-${id}" aria-pressed="${store.get("yctheme", "dark") === id}">${t}</button>`).join("")}</div><button class="btn primary" type="button" id="ycMake">${yy}년 결산 카드 만들기</button><div id="ycOut"></div></section>${eggHtml()}`;
     $("ycMake").addEventListener("click", makeYearCard);
+    box.querySelectorAll("[data-yt]").forEach(b => b.addEventListener("click", () => { store.set("yctheme", b.dataset.yt); box.querySelectorAll("[data-yt]").forEach(x => x.setAttribute("aria-pressed", String(x === b))); if ($("ycOut").firstChild) makeYearCard(); }));
   }
   const ACC_HEX = { red: "#ff4d5e", teal: "#2dd4bf", violet: "#a78bfa", lime: "#b6f03a", orange: "#ff9f43", blue: "#5b9dff" };
   function makeYearCard() {
     const W = 1080, H = 1350, cv = document.createElement("canvas"); cv.width = W; cv.height = H; const x = cv.getContext("2d"); if (!x) return toast("이 브라우저에서는 만들 수 없어요");
     const acc = ACC_HEX[root.getAttribute("data-accent")] || ACC_HEX.red, yy = new Date(Date.now() + 9 * 36e5).getUTCFullYear(), FONT = '"Pretendard Variable",Pretendard,"Noto Sans KR","Malgun Gothic","Apple SD Gothic Neo",sans-serif';
+    const th = store.get("yctheme", "dark"), hx = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16)), lum = h => { const c = hx(h); return (.2126 * c[0] + .7152 * c[1] + .0722 * c[2]) / 255; }, shade = (h, f) => "#" + hx(h).map(n => Math.round(n * f).toString(16).padStart(2, "0")).join("");
+    let P = { bg: "#0d0d0f", ink: "#ffffff", sub: "#a0a0a8", panel: "rgba(255,255,255,.07)", track: "rgba(255,255,255,.1)", foot: "#6f6f78", ac: acc, gl: acc };   // 카드 디자인 3가지
+    if (th === "light") P = { bg: "#f3f4f8", ink: "#16161a", sub: "#5c5c66", panel: "rgba(20,20,40,.06)", track: "rgba(20,20,40,.1)", foot: "#8a8a94", ac: shade(acc, .62), gl: acc };
+    else if (th === "color") { const br = lum(acc) > .62, gg = x.createLinearGradient(0, 0, W, H); gg.addColorStop(0, acc); gg.addColorStop(1, shade(acc, br ? .78 : .42)); P = br ? { bg: gg, ink: "#14141a", sub: "rgba(20,20,26,.72)", panel: "rgba(255,255,255,.4)", track: "rgba(20,20,26,.16)", foot: "rgba(20,20,26,.62)", ac: "#14141a", gl: "#ffffff" } : { bg: gg, ink: "#ffffff", sub: "rgba(255,255,255,.8)", panel: "rgba(0,0,0,.2)", track: "rgba(255,255,255,.3)", foot: "rgba(255,255,255,.72)", ac: "#ffffff", gl: "#ffffff" }; }
     const rv = recent.map(byKey).filter(Boolean), cc = {}; rv.forEach(v => { const c = v.category || "기타"; cc[c] = (cc[c] || 0) + 1; });
     const cl = Object.entries(cc).sort((a, b) => b[1] - a[1]).slice(0, 3), top = cl[0] ? cl[0][1] : 1;
     let na = 0, nt = 0; try { nt = ACH.length; na = ACH.filter(a => got[a.id]).length; } catch (e) {}
-    x.fillStyle = "#0d0d0f"; x.fillRect(0, 0, W, H);
-    let g = x.createRadialGradient(120, 60, 0, 120, 60, 760); g.addColorStop(0, acc + "55"); g.addColorStop(1, acc + "00"); x.fillStyle = g; x.fillRect(0, 0, W, H);
-    g = x.createRadialGradient(W - 80, H - 40, 0, W - 80, H - 40, 700); g.addColorStop(0, acc + "33"); g.addColorStop(1, acc + "00"); x.fillStyle = g; x.fillRect(0, 0, W, H);
+    x.fillStyle = P.bg; x.fillRect(0, 0, W, H);
+    let g = x.createRadialGradient(120, 60, 0, 120, 60, 760); g.addColorStop(0, P.gl + "55"); g.addColorStop(1, P.ac + "00"); x.fillStyle = g; x.fillRect(0, 0, W, H);
+    g = x.createRadialGradient(W - 80, H - 40, 0, W - 80, H - 40, 700); g.addColorStop(0, P.gl + "33"); g.addColorStop(1, P.ac + "00"); x.fillStyle = g; x.fillRect(0, 0, W, H);
     const rr = (px, py, w, h, r, f) => { x.beginPath(); x.moveTo(px + r, py); x.arcTo(px + w, py, px + w, py + h, r); x.arcTo(px + w, py + h, px, py + h, r); x.arcTo(px, py + h, px, py, r); x.arcTo(px, py, px + w, py, r); x.closePath(); x.fillStyle = f; x.fill(); };
     const T = (t, px, py, sz, wt, col, al, mw) => { x.font = wt + " " + sz + "px " + FONT; x.fillStyle = col; x.textAlign = al || "left"; x.textBaseline = "alphabetic"; mw ? x.fillText(t, px, py, mw) : x.fillText(t, px, py); };
-    T("잉여맨 추억자료실", 80, 120, 36, 700, "#f5f5f7"); T(String(yy), W - 80, 120, 36, 700, acc, "right");
-    T("나의 잉여맨", 80, 300, 96, 800, "#ffffff"); T("한 해", 80, 410, 96, 800, acc);
-    rr(80, 480, W - 160, 300, 36, "rgba(255,255,255,.07)");
-    T("지금까지 열어본 영상", 124, 552, 34, 600, "#a0a0a8"); T(String(rv.length), 124, 720, 168, 800, "#ffffff"); T("편", 124 + (x.measureText(String(rv.length)).width) + 16, 720, 48, 700, acc);
-    rr(80, 810, (W - 160 - 24) / 2, 150, 28, "rgba(255,255,255,.07)"); rr(80 + (W - 160 - 24) / 2 + 24, 810, (W - 160 - 24) / 2, 150, 28, "rgba(255,255,255,.07)");
-    T("즐겨찾기", 112, 868, 28, 600, "#a0a0a8"); T(favs.size + "편", 112, 936, 64, 800, "#ffffff");
-    T("도전과제", 80 + (W - 160 - 24) / 2 + 56, 868, 28, 600, "#a0a0a8"); T(na + " / " + nt, 80 + (W - 160 - 24) / 2 + 56, 936, 64, 800, "#ffffff");
-    T("자주 본 분류", 80, 1040, 32, 700, "#f5f5f7");
-    if (!cl.length) T("아직 기록이 없어요", 80, 1110, 34, 600, "#a0a0a8");
-    cl.forEach(([c, n], i) => { const py = 1070 + i * 66; T(c, 80, py + 36, 30, 600, "#ffffff", "left", 330); rr(420, py + 12, 460, 24, 12, "rgba(255,255,255,.1)"); rr(420, py + 12, Math.max(24, 460 * n / top), 24, 12, acc); T(n + "편", W - 80, py + 36, 30, 700, "#ffffff", "right"); });
-    T("내 기기 기록으로 만든 카드 · sam7599.github.io/ingyoeman_archive", W / 2, H - 56, 24, 500, "#6f6f78", "center");
+    T("잉여맨 추억자료실", 80, 120, 36, 700, P.ink); T(String(yy), W - 80, 120, 36, 700, P.ac, "right");
+    T("나의 잉여맨", 80, 300, 96, 800, P.ink); T("한 해", 80, 410, 96, 800, P.ac);
+    rr(80, 480, W - 160, 300, 36, P.panel);
+    T("지금까지 열어본 영상", 124, 552, 34, 600, P.sub); T(String(rv.length), 124, 720, 168, 800, P.ink); T("편", 124 + (x.measureText(String(rv.length)).width) + 16, 720, 48, 700, P.ac);
+    rr(80, 810, (W - 160 - 24) / 2, 150, 28, P.panel); rr(80 + (W - 160 - 24) / 2 + 24, 810, (W - 160 - 24) / 2, 150, 28, P.panel);
+    T("즐겨찾기", 112, 868, 28, 600, P.sub); T(favs.size + "편", 112, 936, 64, 800, P.ink);
+    T("도전과제", 80 + (W - 160 - 24) / 2 + 56, 868, 28, 600, P.sub); T(na + " / " + nt, 80 + (W - 160 - 24) / 2 + 56, 936, 64, 800, P.ink);
+    T("자주 본 분류", 80, 1040, 32, 700, P.ink);
+    if (!cl.length) T("아직 기록이 없어요", 80, 1110, 34, 600, P.sub);
+    cl.forEach(([c, n], i) => { const py = 1070 + i * 66; T(c, 80, py + 36, 30, 600, P.ink, "left", 330); rr(420, py + 12, 460, 24, 12, P.track); rr(420, py + 12, Math.max(24, 460 * n / top), 24, 12, P.ac); T(n + "편", W - 80, py + 36, 30, 700, P.ink, "right"); });
+    T("내 기기 기록으로 만든 카드 · sam7599.github.io/ingyoeman_archive", W / 2, H - 56, 24, 500, P.foot, "center");
     const out = $("ycOut"); out.innerHTML = `<p class="st-note">만드는 중이에요…</p>`;
     cv.toBlob(b => {
       if (!b) { out.innerHTML = ""; return toast("만들지 못했어요"); }
@@ -1748,4 +1789,49 @@
       const sb = $("ycShare"); if (sb) sb.addEventListener("click", () => { navigator.share({ files: [file], title: "나의 잉여맨 한 해" }).catch(() => {}); });
     }, "image/png");
   }
+
+  /* ── 즐겨찾기 전체 해제 (한 번 더 확인 + 되돌리기) ── */
+  var fcT = 0;
+  function favClearDisarm() { const b = $("favClear"); if (!b) return; clearTimeout(fcT); b.dataset.arm = ""; b.textContent = "🗑 즐겨찾기 전체 해제"; }
+  function showUndo(msg, fn) {
+    let u = $("undoBar"); if (!u) { u = document.createElement("div"); u.id = "undoBar"; u.setAttribute("role", "status"); u.innerHTML = '<span></span><button type="button">되돌리기</button>'; document.body.appendChild(u); }
+    u.firstChild.textContent = msg; u.classList.add("show"); const bt = u.querySelector("button");
+    bt.onclick = () => { clearTimeout(showUndo.t); u.classList.remove("show"); fn(); };
+    clearTimeout(showUndo.t); showUndo.t = setTimeout(() => u.classList.remove("show"), 12000);
+  }
+  $("favClear").addEventListener("click", () => {
+    const b = $("favClear"); if (!favs.size) return;
+    if (b.dataset.arm !== "1") { b.dataset.arm = "1"; b.textContent = "정말 " + favs.size + "개를 모두 해제할까요? 한 번 더 누르세요"; clearTimeout(fcT); fcT = setTimeout(favClearDisarm, 5000); return; }
+    const snap = [...favs], mapSnap = { ...FF.map }, n = snap.length;
+    favs.clear(); FF.map = {}; store.set("favs", []); saveFF(); favFolder = ""; render();
+    showUndo("즐겨찾기 " + n + "개를 모두 해제했어요", () => { snap.forEach(k => favs.add(k)); FF.map = mapSnap; store.set("favs", [...favs]); saveFF(); render(); toast("되돌렸어요"); });
+  });
+
+  /* ── 숨은 이스터에그 (찾은 것만 이름이 보여요) ── */
+  function eggHtml() {
+    const n = EGGS.filter(e => EG[e.id]).length;
+    return `<section class="st-sec"><h3>🥚 이스터에그 도감 (${n} / ${EGGS.length})</h3><ul class="egg-l">${EGGS.map(e => EG[e.id] ? `<li class="on"><b>${e.n}</b><span>찾았어요 ✓</span></li>` : `<li><b>???</b><span>${e.h}</span></li>`).join("")}</ul></section>`;
+  }
+  function rain(em) {
+    if (document.documentElement.getAttribute("data-motion") === "off" || matchMedia("(prefers-reduced-motion:reduce)").matches) return;
+    const w = document.createElement("div"); w.className = "egg-rain"; w.setAttribute("aria-hidden", "true");
+    for (let i = 0; i < 22; i++) { const s = document.createElement("span"); s.textContent = em; s.style.cssText = "left:" + Math.round(Math.random() * 96) + "%;animation-delay:" + (Math.random() * .9).toFixed(2) + "s;font-size:" + (18 + Math.round(Math.random() * 20)) + "px"; w.appendChild(s); }
+    document.body.appendChild(w); setTimeout(() => w.remove(), 3200);
+  }
+  function egg(id, msg, em) {
+    const first = !EG[id];
+    if (first) { EG[id] = Date.now(); store.set("egg", EG); }
+    toast((first ? "🥚 이스터에그 발견! " + EGGS.find(e => e.id === id).n + " (" + EGGS.filter(e => EG[e.id]).length + " / " + EGGS.length + ")\n" : "") + msg);
+    if (em) rain(em);
+    if (first && location.hash === "#stats") drawStats();
+  }
+  const clicks = (sel, need, ms, fn) => { let n = 0, t = 0; document.addEventListener("click", e => { if (!e.target.closest(sel)) return; if (Date.now() - t > ms) n = 0; t = Date.now(); if (++n >= need) { n = 0; fn(e); } }); };
+  clicks(".logo", 7, 3000, e => { const lg = e.target.closest(".logo"); lg.classList.add("egg-spin"); setTimeout(() => lg.classList.remove("egg-spin"), 1200); egg("logo", "잉여잉여~ 로고가 신나서 돌아요", "✨"); });
+  clicks("#today .live-tag", 5, 4000, () => egg("live", "방송 종료… 는 거짓말이에요 ㅋㅋ 이건 다시보기!", "📺"));
+  clicks("footer", 5, 4000, e => { if (!e.target.closest("a, button")) egg("foot", "만든 사람: 잉여맨 팬 ♥ 모두 와줘서 고마워요", "💌"); });
+  clicks("#today .live-view", 1, 1000, () => { const lv = document.querySelector("#today .live-view"); if (lv && lv.lastChild) { const m = lv.lastChild.textContent.replace(/[^\d]/g, ""); lv.lastChild.textContent = (+m + 1).toLocaleString("ko-KR") + "명 시청 중"; } egg("view", "시청자가 1명 늘었어요. 바로 당신 👋", "👋"); });
+  clicks("#totop", 10, 6000, () => egg("top", "그만 눌러요 ㅋㅋ 이미 맨 위예요", "⬆️"));
+  (() => { const seq = ["ArrowUp", "ArrowUp", "ArrowDown", "ArrowDown", "ArrowLeft", "ArrowRight", "ArrowLeft", "ArrowRight", "b", "a"]; let p = 0; document.addEventListener("keydown", e => { if (/INPUT|TEXTAREA/.test((e.target.tagName || ""))) return; const k = e.key.length === 1 ? e.key.toLowerCase() : e.key; p = k === seq[p] ? p + 1 : (k === seq[0] ? 1 : 0); if (p === seq.length) { p = 0; egg("konami", "↑↑↓↓←→←→BA! 전설의 코드를 아시네요", "🎮"); } }); })();
+  $("q").addEventListener("input", () => { if (/^[ㅋㅎ]{6,}$/.test($("q").value.trim())) egg("laugh", "웃음이 감지됐어요 ㅋㅋㅋㅋㅋ", "😂"); });
+  { const h = new Date(Date.now() + 9 * 36e5).getUTCHours(); if (h >= 3 && h < 5) setTimeout(() => egg("dawn", "새벽 3~5시에 오셨네요. 대단한 정주행러!", "🌙"), 1800); }
 })();
